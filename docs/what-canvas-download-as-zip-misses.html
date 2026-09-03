@@ -95,7 +95,7 @@
             "name": "Does Canvas Download as Zip include everything in a course?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No, and there are two separate reasons. It only ever covers the Files tab, so Pages, announcements, discussions, assignments and quizzes are never in it. And in a course where the instructor has disabled the Files link in course navigation, the button does not exist at all. In 33 real courses measured for this article, that was the case in 3 of the 11 courses that held any material."
+              "text": "No. There are two separate reasons. It only ever covers the Files tab, so Pages, announcements, discussions, assignments and quizzes are never in it. And in a course where the instructor has disabled the Files link in course navigation, the button does not exist at all. In 33 real courses measured for this article, that was the case in 3 of the 11 courses that held any material."
             }
           },
           {
@@ -119,7 +119,7 @@
             "name": "Is this a survey of Canvas?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No, and it should not be quoted as one. It is 33 courses from one student's enrolment at a single European university. It is first-hand and the method is published, which makes it checkable, but a sample of that size at one institution describes those courses rather than Canvas in general. Quote it as \"in 33 courses at one university\"."
+              "text": "No. It should not be quoted as one. It is 33 courses from one student's enrolment at a single European university. It is first-hand and the method is published, which makes it checkable, but a sample of that size at one institution describes those courses rather than Canvas in general. Quote it as \"in 33 courses at one university\"."
             }
           },
           {
@@ -135,7 +135,7 @@
             "name": "How can I download a course when the Files tab is disabled?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Go through the modules. Everything a module links to is downloadable one item at a time, which is tedious but works, and it is what any API-based tool does automatically. In the two blocked courses measured here, 121 and 115 files respectively were reachable that way with nothing missing."
+              "text": "Go through the modules. Everything a module links to is downloadable one item at a time, which is tedious but works. It is what any API-based tool does automatically. In the two blocked courses measured here, 121 and 115 files respectively were reachable that way with nothing missing."
             }
           },
           {
@@ -696,9 +696,7 @@
         outright with "user not authorised to perform that action", because an
         instructor had disabled the Files link in course navigation. Those
         courses held <strong>246 files</strong>. And across all 33 courses the
-        census counted <strong>173 items that are not files at all</strong> -
-        announcements, quizzes, discussions, assignments and Pages - none of
-        which any zip has ever contained. Method and per-course figures
+        census counted <strong>173 items that are not files at all</strong>: announcements, quizzes, discussions, assignments and Pages, none of which any zip has ever contained. Method and per-course figures
         below.</p>
       </div>
 
@@ -744,11 +742,9 @@
       tradition among help desks, which is part of why it has gone so long
       without anybody checking it.</p>
 
-      <p>This project drives a real Canvas account through an audit harness, and
-      part of what that harness records is a census of each course: every file
+      <p>This project drives a real Canvas account through an audit harness. Part of what that harness records is a census of each course: every file
       the Files tab lists, every file a module links to, and the difference.
-      Those censuses have been accumulating for a year, so the question is
-      answerable. Below is the answer, including the part that undercuts the
+      Those censuses have been accumulating for a year. The question is answerable. Below is the answer, including the part that undercuts the
       software I build.</p>
 
       <h2 id="method">Method and sample</h2>
@@ -773,9 +769,7 @@
       <p>Two things about the sample are worth stating because they change how
       you read every figure below.</p>
 
-      <p><strong>22 of the 33 courses hold no material at all.</strong> They are
-      programme shells and unused course sites, and their censuses completed
-      normally in two or three seconds. They are excluded from every count about
+      <p><strong>22 of the 33 courses hold no material at all.</strong> They are programme shells and unused course sites. Their censuses completed normally in two or three seconds. They are excluded from every count about
       files, and reported here so you can see the exclusion rather than take my
       word for the denominator. Eleven courses have files. Everything below is
       about those eleven.</p>
@@ -800,9 +794,7 @@
       same 33 courses within the same few minutes. The mechanism is ordinary.
       From Course Settings, on the
       <a class="src" href="https://community.instructure.com/en/kb/articles/660741-how-do-i-manage-course-navigation-links" target="_blank" rel="noopener">Navigation tab</a>,
-      an instructor can drag Files into the disabled list. Plenty do, usually to
-      keep students out of a folder of draft material, and the side effect is
-      that the whole tab goes.</p>
+      an instructor can drag Files into the disabled list. Plenty do, usually to keep students out of a folder of draft material. The side effect is that the whole tab goes.</p>
 
       <p>So the standard advice, the one on nearly every university help page,
       is <em>open the course, click Files, select all, Download as Zip</em>. In
@@ -817,10 +809,7 @@
       course had three such files, out of 143. Across all eight working courses
       the total is <strong>3 files out of 358, or 0.8%</strong>.</p>
 
-      <p>The famous failure is real. It is also small, and it happens in a
-      minority of courses. If your Files tab opens, you are getting almost
-      everything that is a file, and a guide telling you otherwise is repeating
-      folklore rather than reporting a measurement.</p>
+      <p>The famous failure is real. It is also small, and happens in a minority of courses. If your Files tab opens, you are getting almost everything that is a file. A guide telling you otherwise is repeating folklore rather than reporting a measurement.</p>
 
       <p>I would rather publish that than not, because the alternative is
       quoting the 0.8% as though it justified installing something.</p>
@@ -914,23 +903,20 @@
         That is where the volume is, and no zip has ever touched it.</li>
       </ol>
 
-      <p>If you are about to lose access to a course, the order to do things in
-      matters more than the tooling, and that is in
+      <p>If you are about to lose access to a course, the order to do things in matters more than the tooling. That is in
       <a href="back-up-canvas-course-before-losing-access.html">backing up a
       Canvas course before you lose access</a>.</p>
 
       <h2 id="repro">Check it yourself</h2>
 
       <p>The analysis is a script in this project's repository,
-      <code>scripts/measure_export_gap.py</code>, and it prints every number on
-      this page including the per-course table. It reads the census files the
+      <code>scripts/measure_export_gap.py</code>. It prints every number on this page, including the per-course table. It reads the census files the
       audit harness writes and does nothing cleverer than counting.</p>
 
       <p>If you run a Canvas course and want the same figure for it, the two API
       calls are <code>/api/v1/courses/&lt;id&gt;/files</code> and
       <code>/api/v1/courses/&lt;id&gt;/modules?include[]=items</code>. Compare
-      the file IDs. That is the whole method, and I would rather hand it over
-      than be the only source for a number.</p>
+      the file IDs. That is the whole method. I would rather hand it over than be the only source for a number.</p>
 
       <p>If you measure your own institution and get something different, that
       is a useful result and I would like to hear it. A sample of 33 courses at
@@ -955,7 +941,7 @@
       <h2 id="faq">Common questions</h2>
       <details class="faq">
         <summary>Does Canvas Download as Zip include everything in a course?</summary>
-        <div><p>No, and there are two separate reasons. It only ever covers the Files tab, so Pages, announcements, discussions, assignments and quizzes are never in it. And in a course where the instructor has disabled the Files link in course navigation, the button does not exist at all. In 33 real courses measured for this article, that was the case in 3 of the 11 courses that held any material.</p></div>
+        <div><p>No. There are two separate reasons. It only ever covers the Files tab, so Pages, announcements, discussions, assignments and quizzes are never in it. And in a course where the instructor has disabled the Files link in course navigation, the button does not exist at all. In 33 real courses measured for this article, that was the case in 3 of the 11 courses that held any material.</p></div>
       </details>
       <details class="faq">
         <summary>How many files does Download as Zip actually miss?</summary>
@@ -967,7 +953,7 @@
       </details>
       <details class="faq">
         <summary>Is this a survey of Canvas?</summary>
-        <div><p>No, and it should not be quoted as one. It is 33 courses from one student's enrolment at a single European university. It is first-hand and the method is published, which makes it checkable, but a sample of that size at one institution describes those courses rather than Canvas in general. Quote it as "in 33 courses at one university".</p></div>
+        <div><p>No. It should not be quoted as one. It is 33 courses from one student's enrolment at a single European university. It is first-hand and the method is published, which makes it checkable, but a sample of that size at one institution describes those courses rather than Canvas in general. Quote it as "in 33 courses at one university".</p></div>
       </details>
       <details class="faq">
         <summary>What does Canvas Download as Zip actually contain?</summary>
@@ -975,7 +961,7 @@
       </details>
       <details class="faq">
         <summary>How can I download a course when the Files tab is disabled?</summary>
-        <div><p>Go through the modules. Everything a module links to is downloadable one item at a time, which is tedious but works, and it is what any API-based tool does automatically. In the two blocked courses measured here, 121 and 115 files respectively were reachable that way with nothing missing.</p></div>
+        <div><p>Go through the modules. Everything a module links to is downloadable one item at a time, which is tedious but works. It is what any API-based tool does automatically. In the two blocked courses measured here, 121 and 115 files respectively were reachable that way with nothing missing.</p></div>
       </details>
       <details class="faq">
         <summary>How do I measure this for my own course?</summary>

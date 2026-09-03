@@ -9,6 +9,239 @@ paths:
 > Extracted from CLAUDE.md. Loads only when Claude opens a matching file.
 > Each entry states the mechanism, the measurement, and why the obvious fix is wrong.
 
+## The real tell was CADENCE, and no surface metric could see it (2026-09-02)
+The entry below this one reported the articles as clean. **The product owner
+rejected that verdict, and he was right.** Every metric the scanner had was a
+SURFACE feature - a word, a dash, a sentence length - and the articles passed all
+of them while still reading as machine-written. What he identified, with a second
+model's grammatical breakdown, is a STRUCTURAL habit: the periodic sentence on
+repeat, where the payload is held back to the final clause, so every sentence is
+a setup and a kicker.
+
+The worked example was this article lede, since rewritten:
+
+> *"A transcript is the most useful form of a lecture and the least demanded. It
+> is searchable, it is a few hundred kilobytes against a few hundred megabytes,
+> it opens on anything, and it is the only form an AI study tool will read. It is
+> also, right now, easier to get than it has ever been - and for most people it
+> already exists."*
+
+Four separate habits in three sentences: a manufactured antithesis (*most useful
+... least demanded*), clause anaphora (*it is* opening three of four clauses), an
+ascending tricolon, and two sentences ending in a coordinator plus a fresh
+subject.
+
+### The number, and where the baseline came from
+`kicker()` counts sentences whose FINAL clause is a coordinator introducing a
+fresh subject. A number like that is worthless without a human control, so one
+was built from prose already on the machine: **README and METADATA files from
+installed packages, n=11 documents, 35+ sentences each.**
+
+| | kicker % |
+|---|---|
+| Human-written package docs | median **2%**, range 0-7 |
+| `index.html`, the owner's own page | **5%** |
+| The AI-written articles, before | **10 to 22%**, median 14 |
+| Everything, after | median **2%**, max **5%** |
+
+- **`index.html` landing inside the human range while the articles sat at three
+  to eleven times the human median is the whole finding.** The page a person
+  wrote reads like a person wrote it, measurably.
+- **Sentence-length variance does NOT separate human from machine here**: the
+  human corpus runs a median sd of 8.0 and the articles were already 7.9 to 11.2.
+  So `BLOG_PLAN.md` section 10's "sd near 9 to 10" benchmark cannot be a quality
+  bar - **it was calibrated on this site's own AI-written articles, so it
+  certifies the house style.** Use it to avoid overcorrecting into uniform short
+  sentences, and nothing else.
+- **`ascending_list` came back a NON-finding** and should not be chased: human
+  median 33%, this site 37%. The Law of Increasing Members is just English.
+
+### The metric was wrong the first time, and a human control is what caught it
+The first `KICKER` was one regex matching a coordinator ANYWHERE, with `[^.!?]*`
+running to the end of the sentence - so *"If you want several videos, and they
+lack the same formats, you can set the order yourself"* scored as a kicker. That
+is an ordinary mid-sentence compound, which is most of English, and it inflated
+both sides. It only became visible when the human corpus was scored and its hits
+were read one by one. **It is a function over `clauses()` now: the LAST clause,
+or nothing.** Fifth time this file records a checker needing a fix before its
+number meant anything, and the first time a control corpus rather than a unit
+test is what exposed it.
+
+The metric is still slightly loose - `and the format most study tools accept` is
+a noun phrase, not a clause, and it fires. That is acceptable *because the human
+corpus is scored with the identical metric*, so the comparison holds; it just
+means reading each hit before rewriting it.
+
+### How to fix it, and how not to
+Not by deleting every tail. The fix is that sentences must stop arriving at their
+point in the same place: split some into two, drop the tails that carried
+nothing, move a payload to the front, and let some sentences end flat. Measured
+after, every page keeps a healthy spread (sd 8.0 to 11.3, 16 to 32% short
+sentences), so this did not become the uniform-short-sentence tell in different
+clothes.
+
+**Do not chase 0%.** The human range is 0-7 and the median is 2. A page at 0
+would be its own artefact.
+
+## The AI tell on this site was the PRODUCT pages, and the scanner could not see them (2026-09-02)
+Site-wide anti-slop audit, driven from `marketing/anti-slop-field-manual.md`.
+The finding is not what anyone expected: **the thirteen articles were already
+clean, and the pages nobody had ever measured were three to five times worse
+than the worst article ever recorded here.**
+
+`check_ai_writing_tells.py` picked its page list by looking for the author box,
+which exists on the 13 articles and on nothing else. The homepage, both product
+guides, both setup guides, the release, thanks, privacy and disclaimer pages -
+**13 of the site's 26 pages, including every page in the download funnel** - had
+never been scored once. It reads `<main>` now, so all 26 are covered.
+
+**Measured on first inclusion, dashes per 1k words** (`" - "` used the way an em
+dash is used; `BLOG_PLAN.md` section 10 set the article target at 3.0 and the
+worst article ever measured at 9.1):
+
+| Page | Before | After |
+|---|---|---|
+| `thanks-mac` / `releases` | 25.6 | 0.0 / 12.8 (labels only) |
+| `win-setup` | 23.3 | 0.0 |
+| `guide` | 23.0 | 9.6 (glossary rows only) |
+| `mac-setup` | 16.7 | 1.3 |
+| `engine` | 14.7 | 5.6 |
+| `index` | 12.8 | not edited, owner's copy |
+
+- **`guide.html` was one sentence template used 52 times**: 52 of its paragraphs
+  hung a clause off a dash. That is the field manual's "em-dash relaunch", where
+  the tell is the HABIT and not the glyph. Site-wide the pass removed **38 dash
+  sandwiches** (a PAIR carrying a parenthetical, the documented Claude
+  signature) and **43 dashes standing in for a full stop before a conjunction**.
+- **Do not strip every dash.** Half of `guide.html`'s remaining count is
+  `Term - definition` glossary rows, which are a list convention, not prose
+  rhythm. The metric now separates them; a page can read 9.6 and be fine.
+- **`fetch` was a 35-instance vocabulary defect across 10 pages**, and it was
+  invisible to every check because it is not on any AI-word list. See the
+  vocabulary entry below. **15 of those 35 were inside the JSON-LD FAQ block**,
+  a verbatim twin of the visible `<details>`; changing only the visible half
+  leaves structured data quoting wording the page no longer uses. Grep the
+  JSON-LD whenever you touch an FAQ answer.
+- **`guide.html` was the only Title Case outlier**: 24 of 67 multi-word headings
+  against a site average of 10%, and every hit on the other 25 pages turned out
+  to be an app label the site is required to quote character-exact ("All in One
+  Folder", "Saved Groups & Pairs", "Export Course Content"). Seven were genuinely
+  Title Case prose and are now sentence case. **Check a heading against the app
+  before downcasing it.**
+- **`bold-first bullets` and `unicode decoration` came back as NON-findings, and
+  that is worth recording so nobody re-opens them.** 179 of 453 bullets open with
+  a bold label, but the ones examined are genuinely parallel discrete items
+  (each data type on `privacy.html`, each conversion on `guide.html`), which is
+  what bold labels are for. 82 of 88 "decoration" characters are `→` in a UI
+  path (`System Settings → Privacy & Security`), which is clearer than prose.
+- **Zero em dashes anywhere on the site**, so the standing no-em-dash rule is
+  holding on its own.
+
+### The checker needed seven fixes before any number meant anything
+Fourth time this file records that. Every one of these was making the guard
+read something it never claimed to read:
+- **HTML comments were being scored as prose.** `index.html` carries several
+  hundred words of engineering notes in `<!-- -->`, one of which supplied a
+  "rhetorical question" reading `div.hero-gif-wrap > div.hero-media`.
+- **Quotations were scored as this site's writing.** Echo360's own policy
+  wording flagged as our use of "aspect of". Any quoted run of four words or
+  more is stripped now, wherever it sits - most citations here are an `<em>`
+  inside a source link, not a `<blockquote>`.
+- **`<summary>` is a heading** and supplied 6 of the homepage's 8 rhetorical
+  questions. Rather than add a fifth strip rule, `RHETORICAL_Q` now runs over
+  the PARAGRAPHS, which ends the whole class: headings, summaries, table cells
+  and link-card titles at once.
+- **Three domain words were pure noise**: `unlock` (Canvas module locking),
+  `harness` (the audit harness), `underscore` (the character). 8 hits, 8 false
+  positives. The marketing senses are still caught by verb patterns needing an
+  object.
+- **`represents`/`marks` need an inflating adjective** or "if you represent an
+  institution" and "mark a missing file as present" both score.
+- **`guide.html` and `engine.html` put their `<h1>` OUTSIDE `<main>`**, so the
+  headline and standfirst of the two longest pages were never scored.
+- **The control harness applied `re.I` to a pattern the product runs
+  case-sensitively**, so it reported a failure the real code could not produce.
+  A control that does not run the pattern the way the product runs it is testing
+  a different regex.
+
+### Two traps in the EDIT scripts, both of which reported success while doing nothing
+- **`subn` counts matches, not changes.** A verb-swap rule whose replacement was
+  a no-op ("Canvas Downloader fetches all" - the verb is not the last token)
+  passed its count assertion and changed nothing, and one produced `Only Only
+  downloads what changed` on a live page. Assert `text != before`, not just the
+  count.
+- **Literal multi-line anchors miss on wrapping.** 15 of 33 failed because the
+  source wraps differently than assumed. Build the regex by joining the words
+  with `\s+`; then the anchor does not care how the file is wrapped.
+
+### Left alone deliberately, with the reason
+- **The 13 blog card deks are byte-identical to the articles' `<meta
+  name="description">`** (checked, all 13). Eight of the thirteen end in a
+  three- or four-item parallel list, which stacked on one index page is a
+  visible template. Fixing it is 26 coordinated edits that change what Google
+  prints for every page at once, and `page_fingerprint.py` counts the meta
+  description, so it would move `lastmod` on all 13 URLs together - the exact
+  signal the 2026-09-01 entry above was written to stop. Worth doing in small
+  batches, on purpose, not inside a style pass.
+- **`index.html`** - see the entry below.
+
+## `docs/index.html` is the product owner's copy. Do not rewrite it (2026-09-02)
+Stated during the anti-slop audit, after the pass changed the hero standfirst
+unasked: *"I edited index.html to be PERFECT - no AI should touch more copy
+there, only edits by me are allowed."* The homepage is the conversion funnel and
+the one page he has personally tuned, so an unrequested wording change costs more
+than it can gain and he cannot review every edit an agent makes across 26 pages.
+- **Scan it and REPORT the findings** - measuring the homepage is useful, and the
+  scanner covers it deliberately. Then stop. Only a replacement he dictates gets
+  written.
+- Every other page under `docs/` is editable under the normal rules.
+
+## Two vocabulary rules that are worth as much as the whole tell lexicon (2026-09-02)
+From the same review, and they are about how the copy reads to the READER rather
+than about any countable tell.
+- **Use the target group's words.** The readers are university students.
+  *"Fetch"* is what an agent or a script does; the application **downloads**
+  files, or **pulls them from Canvas**. Prefer the verb on the app's own buttons.
+  A word that is exact to a developer and unfamiliar to a student reads as sloppy
+  in precisely the way an anti-slop pass exists to fix.
+- **Never manufacture a problem the reader has not noticed.** A rewrite added
+  *"including everything the Files tab leaves out"* to the homepage standfirst.
+  The reader has not thought about the Files tab, so the line invents a pain point
+  instead of describing the product. Describe what the app does; the articles are
+  where a reader who came looking for the gaps finds them.
+- Both faults make the copy read as written by somebody who is not the reader,
+  which is the same distrust signal as AI phrasing. **The test is whether a
+  student recognises themselves in the sentence**, not whether it scores clean.
+
+## The click-to-load embed is a PAGE-WEIGHT trick, and the privacy claim it carried is retired (2026-09-02)
+
+`.guide-embed[data-yt]` on `guide.html` and `mac-setup.html` swaps a local poster
+for the real `<iframe>` on the first play click. **Keep the mechanism. It is worth
+it because a YouTube player is a few hundred KB of someone else's script and
+`mac-setup.html` now hosts three embeds, so the page was paying for three players
+to show one.**
+
+What is retired is the *reason* five places used to give for it. The site claimed,
+in `privacy.html` and in four code comments, that a plain iframe would "contact
+YouTube - and therefore Google - before the reader had asked for anything", and
+the JS comment went as far as calling the facade "what makes the privacy policy's
+statement about this page true".
+
+**The owner's ruling, 2026-09-02: that is a hallucinated rule and it does not
+belong on the site.** The privacy posture this project actually sells is *the
+app's* - no account, no server, no telemetry, nothing leaves the user's machine.
+A static marketing site embedding a YouTube video is ordinary and nobody objects
+to it. Dressing a lazy-load up as a privacy guarantee invented a promise the
+project never needed to make, and a promise on a policy page is a liability: the
+wizard's own `ytEmbed()` in `mac-wizard.js` builds an eager iframe with no facade,
+so the page already contradicted its own policy.
+
+Five sites were carrying it and all five were fixed together: `privacy.html`
+(the bullet, plus "contacts GitHub **and YouTube** and Microsoft"), the HTML and
+JS comments in `mac-setup.html`, and the HTML and JS comments in `guide.html`.
+`marketing/CHANGELOG.md` was amended too. **Do not reinstate the privacy framing.
+If you are tempted to justify the facade, justify it with the kilobytes.**
+
 ## There is ONE text ramp and it lives in 25 separate `:root` blocks (2026-08-28)
 `docs/` is twenty-five inline stylesheets with no shared file, so every token is
 written twenty-five times and drifts independently. Measured before the fix:
@@ -285,6 +518,178 @@ rewrites, with contractions at 6.8 to 14.4 per 1k against 35 to 51.
   greeting (there is no name to put in it), the first sentence carries the finding, and it must
   ADD to the subject rather than repeat it.
 
+## `lastmod` and IndexNow now ask whether the CONTENT changed, not the bytes (2026-09-01)
+`scripts/page_fingerprint.py` is new and is the single implementation;
+`sync_sitemap_lastmod.py` and `ping_indexnow.py` both call it, so the two engines
+cannot be told different things. The entry below this one (2026-08-31) said moving
+`lastmod` on a markup-only change is correct because the resource did change. That
+is true of one file and wrong in aggregate, and the aggregate is what Google reads.
+
+- **Measured across the five most recent website commits: 83 page writes, 76 of
+  them (92%) with nothing a search engine reads changed.** All 27 pages carried
+  the same last-commit date, so the sitemap told Google that all 24 URLs changed
+  together, every other day. Crawl for 16-31 Aug was **82.38% refresh against
+  17.62% discovery** while seven pages had never been fetched once.
+- **After: 5 distinct dates instead of 1**, and IndexNow submits 0, 2, 0, 5 and 0
+  URLs for those same five commits instead of 8, 20, 27, 16 and 12.
+- **The fingerprint is title + meta description + canonical + JSON-LD + `<a href>`
+  list + visible text.** It ignores `<style>`, ordinary `<script>`, comments and
+  attribute churn, which is exactly the accessibility, heading-level and
+  stylesheet work that produced the 76.
+- **`src` is NOT in it, and that was measured rather than assumed.** A first
+  version captured every `href` and `src` and reported commit `50fc5923` as 27
+  real content changes; the entire diff was `icon.png` ->
+  `assets/icon-128.webp`, the touch-icon swap from the performance pass. An asset
+  path is plumbing. An `<a>` is content. Including `src` moved the cosmetic share
+  from 92% to 59% and every one of those "changes" was noise.
+- **`git show <rev>:<path>` takes ONLY a repo-relative POSIX path.** Handed the
+  absolute path `sync_sitemap_lastmod.py` builds, it exits non-zero, `blob_at`
+  returns None for every revision, and the walk falls through to the file's
+  OLDEST commit. The homepage came back as **2026-05-01** while its content had
+  changed on 08-31, and all 24 dates looked plausible while being wrong. `_rel()`
+  normalises once, and the check is that both path forms return the same date.
+- **Controlled both ways before believing it**: a reworded sentence, a changed
+  `<title>`, a changed meta description, an added `<a>` and a changed canonical
+  are all detected; a CSS-only edit, a comment-only edit and an asset swap are all
+  correctly reported unchanged. A checker that only ever says "unchanged" has been
+  broken, not tuned.
+- **This does not touch the visible byline or `dateModified`.** The 2026-08-31
+  entry below still governs those, and it is still right: bump them only when the
+  prose changes.
+
+## BOTH engines discovered the same 7 pages and NEITHER has fetched them (2026-09-01)
+The most useful measurement taken in this whole session, and it points away from
+the site-side hypotheses rather than at them. All seven pages Google has never
+fetched were inspected in Bing Webmaster on their canonical URLs. **Every one
+returns "Discovered but not crawled".**
+
+| Page | Published | Bing discovered | Google | Bing |
+|---|---|---|---|---|
+| `how-to-download-all-canvas-files` | 20 Aug | 24 Aug | never crawled | never crawled |
+| `canvas-files-into-notebooklm` | 23 Aug | 24 Aug | never crawled | never crawled |
+| `canvas-download-tools-compared` | 27 Aug | 27 Aug | never crawled | never crawled |
+| `canvas-url-directory` | 27 Aug | 27 Aug | never crawled | never crawled |
+| `download-lecture-videos-from-canvas` | 27 Aug | 27 Aug | never crawled | never crawled |
+| `save-canvas-pages-quizzes-discussions` | 27 Aug | 27 Aug | never crawled | never crawled |
+| `what-canvas-download-as-zip-misses` | 27 Aug | 27 Aug | never crawled | never crawled |
+
+- **Two independent crawlers agreeing means the common factor is the SITE, not the
+  engine.** Different schedulers, different discovery paths (Google: sitemap plus
+  external links; Bing: IndexNow plus sitemap), same outcome on all seven.
+- **It rules out the whole technical family, without a single further check.**
+  Robots, canonicals, rendering, response codes, thin content: an engine has to
+  FETCH a page to judge any of those, and neither has. Whatever is happening
+  precedes reading the page.
+- **No engine has formed a quality judgement on any of these seven**, because
+  neither has read one. That settles the shape of the 26 September decision:
+  retiring or rewriting articles on "they did not get indexed" would be acting on a
+  verdict nobody has issued. The four Google DID fetch are the only pages where
+  "crawled, not indexed" means anything.
+- **It weakens the `lastmod` hypothesis and that must be said plainly.** If sitemap
+  noise were the driver, Google should be worse than Bing, which reads a different
+  signal. They are identical. The fix stays - we were asserting something untrue,
+  and 120 submissions for 24 URLs is noise by IndexNow's own definition - but **it
+  is not the lever, and the expected gain from it should be treated as near zero.**
+  What is left is crawl demand, which is authority, which is referring domains,
+  which both engines report as 0.
+- **Do not click Request Indexing on these.** IndexNow has already submitted each
+  of them about five times and Bing crawled none. Manual submission is the same
+  lever, pulled a sixth time.
+
+### IndexNow measurably works, and this is the first evidence that it does
+Discovery lag against publication date: pages published **before** the IndexNow
+wiring landed on 27 Aug took **2.5 days** to be discovered (4 and 1); the five
+published **after** it were discovered the **same day**, 0.0 days, n=5. The
+2026-08-27 fix was recorded as done but never shown to have an effect. It has one.
+Note what it is and is not: it buys **discovery**, not crawling, and crawling is
+the step that is stuck.
+
+## Bing, read 2026-09-01: 120 IndexNow submissions produced 0 crawls and 0 indexed
+The strongest available evidence that the `lastmod`/IndexNow defect above was real,
+and it is Bing's own counter. **IndexNow Insights: Submitted 120, Crawled 0,
+Indexed 0**, over 28-31 August. The submitted list is **24 unique URLs repeated
+about five times**, and the timestamps name the commits: 31 Aug 01:26 (2 URLs),
+01:44 (17 URLs), 02:27 (7 URLs). Run through `page_fingerprint`, that night's three
+pushes contained **2 real content changes** between them; the 02:27 batch of seven
+was commit `ac51dad9`, which changed no content on any page.
+
+- **Do not read "Indexed 0" as "Bing has indexed nothing".** That panel counts
+  outcomes attributed to IndexNow submissions. The homepage is plainly in Bing's
+  index: AI Performance shows it cited three times. Total Bing coverage is a
+  DIFFERENT question and is still unmeasured - Site Explorer answers it.
+- **A new domain with no referring domains also has low crawl demand on Bing**, so
+  0 of 120 is consistent with the noise diagnosis without proving it. What it does
+  settle is that repeated submission of unchanged URLs buys nothing at all.
+- **Backlinks: "No data available."** Zero referring domains, confirming the
+  register from the other engine. AlternativeTo and Product Hunt being live has not
+  produced a link Bing counts.
+
+### AI Performance is NO LONGER zero, correcting the 2026-08-29 entry
+That entry records *"0 total citations, 0 cited pages, 0 grounding queries"*.
+Measured 2026-09-01 on the 7-day view: **3 total citations, all of them
+`https://canvasdownloader.app/`**, peaking on 27 August and **0 on every day from
+28 August onward**. So the site has been grounded on by Microsoft Copilot and
+partners, once, briefly. Three is a number to record and not to reason from.
+
+### The URL Inspection trap, and it is this repo's own habit biting the measurement
+Seven inspections were run to test whether Bing had indexed the pages Google never
+fetched. All seven returned *"The inspected URL is not known to Bing"*, and **all
+seven were the wrong URL**: `http://canvasdownloader.app/how-to-download-all-canvas-files`,
+with no scheme upgrade and no `.html`. That form 301s, is absent from the sitemap,
+and was never submitted to IndexNow, so "not known" is the correct answer about
+that string and says nothing about the page. **BWT's URL Inspection is exact match:
+paste `https://` and the `.html`.**
+- It is the same extensionless habit recorded below, now contaminating the
+  instrument rather than the crawl budget. Worth keeping as the example of why a
+  negative needs its control.
+- **One real thing does fall out of it**: Bing does not know the extensionless
+  variants at all, whereas Google crawled four of them. Bing's discovery here comes
+  from IndexNow, which submits repo paths and therefore always `.html`. That
+  confirms the extensionless URLs reached Google purely through external links.
+
+## Eleven `.edu` emails, one page edit, zero links (measured 2026-09-01)
+All twelve target pages were fetched and every outbound `href` extracted, four
+days after the last email went out. **0 of 12 link to canvasdownloader.app.**
+Michigan remains the only page with a post-outreach modification date
+(`Modified Mon 8/31/26`); every other page that exposes a date shows one from
+before 28 August (Cornell 8 May and 16 Feb 2022, UW-Eau Claire 7 July, Dartmouth
+8 May, Boston College 18 Oct 2024). Northwestern, Penn, Illinois, UBC, Pitt and
+MSU Denver publish no date.
+
+- **The negative was controlled before it was believed**, which is the part worth
+  copying. The link check was first pointed at Michigan, whose outbound links are
+  documented in `marketing/edu-outreach.html`: it found Instructure KB 661234 and
+  umich KB 13096, so it can say yes. Northwestern was checked for being a
+  JavaScript shell and is not - 43 KB of real rendered article text. Without both
+  controls "0 of 12" would have been worth nothing.
+- **`urllib` fails on `teaching.pitt.edu` with `CERTIFICATE_VERIFY_FAILED`** where
+  `curl` succeeds, because curl carries its own CA bundle. A fetch sweep here uses
+  curl, or it silently drops a target and reports 11 of 12 as though that were all.
+- This confirms the 31 August prediction in `edu-outreach.html`: **expect more
+  edits than links.** It is not a reason to chase; rule 5 of that page stands.
+
+## An outreach link is also a CRAWL INSTRUCTION, so write the `.html` (2026-09-01)
+Links posted in mail and on Reddit were written without the extension because the
+prettier form looks better and clicks through correctly. It does: GitHub Pages
+serves `/panopto-lecture-transcript` with `200` and the page's own canonical
+correctly names the `.html`. Nothing is broken for a reader, which is exactly why
+this went unnoticed for a week.
+- **It cost four crawls out of a budget of about seven a day.** Search Console
+  listed four extensionless URLs under "crawled - currently not indexed",
+  all fetched 29 Aug, and they were then miscounted as pages (see the indexing
+  entry above).
+- **On one page it is worse than waste.** `/canvas-url-directory` was fetched
+  29 Aug; `/canvas-url-directory.html`, the canonical it points at, has **never**
+  been fetched. Google holds a page whose canonical target it has never seen.
+- **The rule: write the full `.html` URL in anything published off-site.** Do not
+  go back and rewrite sent mail; fix posts that are still editable.
+- **A second pattern from the same outreach was genuinely broken**: two 404s of
+  the form `https://canvasdownloader.app/](https://canvasdownloader.app/)`, from
+  editing a Reddit post in the app, which broke the markdown and left `](` inside
+  the href. That post was deleted, so the defect is gone **and so is the link**.
+  A deleted post is not a repaired link; it is one fewer referring page on a site
+  measured at zero.
+
 ## Structural furniture holds `--txt`; only META stays `--txt3` (2026-08-29)
 "SHORT ANSWER" and "ON THIS PAGE", their body copy and the TOC's numbers were `--txt3` /
 `--txt2` on all twelve article pages, and the product owner read them as secondary: these are
@@ -517,6 +922,39 @@ been the standing reason not to write anything new.
 and Google fetched them. Discovery works, scheduling works, and adding a page does
 not starve the others.
 
+### WRONG, and the count is where it went wrong (corrected 2026-09-01)
+The paragraph above and the "six pages" reading it rests on are both mistaken.
+The Search Console **URL lists** for each non-indexing reason were exported
+2026-09-01 and they do not say what the 29 August screen was read as saying. Of
+the **eight** pages published 2026-08-27, Google fetched **three**:
+
+| Crawled 27 Aug | Never crawled, `lastmod` reads `1970-01-01` |
+|---|---|
+| `back-up-canvas-course-before-losing-access` | `canvas-download-tools-compared` |
+| `canvas-access-token-explained` | `canvas-url-directory` |
+| `panopto-lecture-transcript` | `download-lecture-videos-from-canvas` |
+| | `save-canvas-pages-quizzes-discussions` |
+| | `what-canvas-download-as-zip-misses` |
+
+- **The six was three pages plus three DUPLICATES.** Four extensionless URLs
+  (`/panopto-lecture-transcript` with no `.html`, and three more) were crawled on
+  **29 August, the same day the reading was taken**, so the list on screen held
+  three `.html` rows and three extensionless rows. Six rows, three pages. They
+  came from outreach mail and Reddit, where the product owner wrote the prettier
+  form; GitHub Pages serves them `200` with a correct canonical, so nothing ever
+  looked broken. **A row in that list is a URL, not a page: dedupe before counting.**
+- **Across the whole site, 7 of the 11 waiting content pages have never been
+  fetched once**, against 4 fetched and declined. So this is a crawl problem AND a
+  selection problem, and the crawl half is the bigger one.
+  `how-to-download-all-canvas-files` has now gone **12 days with 15 internal links
+  from 12 pages** and has still never been fetched, which strengthens rather than
+  weakens the anti-correlation recorded above.
+- **"Discovery works, scheduling works" does not hold** and must not be re-derived
+  from this entry. Five of eight pages from one commit were never fetched at all.
+- **What does survive**: "crawled - currently not indexed" really is a selection
+  verdict, for the four pages that have actually reached it. Everything in the
+  "Do not" list at the end of the next entry stands.
+
 - **"Crawled - currently not indexed" is a SELECTION verdict, not a budget one.**
   Google fetched the page and declined to store it. The levers are therefore
   distinctness and authority, not internal links, not sitemap priority, and not
@@ -592,6 +1030,16 @@ nothing has indexed, the thing to reconsider is not the writing but whether
 thirteen articles is more than a three-week-old domain's authority supports -
 Mueller is explicit that every indexed page counts toward the site's quality
 judgement. Do not act on that before the wait.
+
+**The prediction is NOT TESTABLE yet, measured 2026-09-01.** Of its two pages,
+`panopto-lecture-transcript` was fetched 27 Aug and declined, and
+`what-canvas-download-as-zip-misses` **has never been fetched**. Google has not
+seen one of the two, so nothing about the writing can be concluded either way.
+This also fixes the shape of the four-to-six-week decision: **it must be taken on
+crawl status, not on the indexed count.** A page that was never fetched says
+nothing about the quality of what was written on it, and retiring articles on that
+evidence would be the "confident verdict from the wrong measurement" this repo
+already records as its worst historical error. The window runs to 26 September.
 
 **Do not:** re-request indexing (stated useless), touch the Indexing API (policy),
 buy an indexing service (the entire search result set for that query is link

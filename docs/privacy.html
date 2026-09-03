@@ -495,8 +495,7 @@
           <strong>The short version</strong>
           <span>Canvas Downloader runs 100% on your own computer. It has no backend, no servers, no accounts, no
             analytics, and no telemetry. Your Canvas Access Token and your files never leave your device, except when the
-            app talks directly to your own university's Canvas server to download your content. We - the developer -
-            never see, receive, or store any of your data.</span>
+            app talks directly to your own university's Canvas server to download your content. The developer never sees, receives, or stores any of your data.</span>
         </div>
       </div>
 
@@ -517,16 +516,15 @@
           courses, files, assignments, announcements, and similar content that <em>your</em> account already has access
           to.</li>
         <li><strong>Your course's Panopto lecture recordings (optional).</strong> If you enable lecture recording
-          downloads, the app follows the Panopto links in your Canvas courses and fetches the recordings your account
-          can already watch, directly from your university's Panopto server. Transcription of those recordings happens
-          entirely on your own computer - audio is never uploaded anywhere.</li>
+          downloads, the app follows the Panopto links in your Canvas courses and downloads the recordings your account
+          can already watch, directly from your university's Panopto server. Transcription of those recordings happens entirely on your own computer, and audio is never uploaded anywhere.</li>
         <li><strong>The files you choose to download.</strong> These are saved to the folder you select on your own
           computer.</li>
         <li><strong>Local app settings.</strong> Your preferences, saved sync folders, and download history are stored
           locally so the app remembers your setup between sessions.</li>
       </ul>
       <p>The app does <strong>not</strong> ask for your name, email, password, payment details, location, or contacts.
-        Your Canvas login password is never entered into or seen by the app - only the Canvas Access Token you create.</p>
+        Your Canvas login password is never entered into or seen by the app, only the Canvas Access Token you create.</p>
 
       <h2>How your information is used</h2>
       <p>Your information is used for one purpose only: to let the app authenticate to your university's Canvas server
@@ -535,8 +533,7 @@
 
       <h2>Where your data is stored</h2>
       <ul>
-        <li><strong>Canvas Access Token:</strong> stored securely in your operating system's credential vault - Windows Credential
-          Manager on Windows, the Keychain on macOS. It is never written to a plain text file and never transmitted to
+        <li><strong>Canvas Access Token:</strong> stored securely in your operating system's credential vault, which is Windows Credential Manager on Windows and the Keychain on macOS. It is never written to a plain text file and never transmitted to
           the developer.</li>
         <li><strong>Downloaded files &amp; settings:</strong> stored only on your local disk, in the locations you
           choose
@@ -577,30 +574,27 @@
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          <span>We do not modify, submit, or upload anything to your Canvas account - the app only reads and
-            downloads.</span>
+          <span>We do not modify, submit, or upload anything to your Canvas account. The app only reads and downloads.</span>
         </li>
       </ul>
 
       <h2>Third parties</h2>
       <ul>
         <li><strong>Your university's Canvas (Instructure).</strong> The app connects directly to the Canvas server your
-          token belongs to in order to fetch your content. Your use of Canvas is governed by your institution's and
+          token belongs to in order to download your content. Your use of Canvas is governed by your institution's and
           Instructure's own privacy policies.</li>
         <li><strong>Your university's Panopto server (optional).</strong> Only if you enable lecture recording
           downloads: the app connects to the Panopto instance your university links from Canvas, authenticated through
-          your own Canvas session, to fetch recordings you already have access to. Your use of Panopto is governed by
+          your own Canvas session, to download recordings you already have access to. Your use of Panopto is governed by
           your institution's and Panopto's own privacy policies.</li>
         <li><strong>Hugging Face (optional, one-time model download).</strong> Only if you set up local transcription:
           the app downloads the speech-recognition model you pick from Hugging Face's public model hub, the same way a
-          browser downloads a file. No personal data, no account, and none of your content is sent - after the
-          download, transcription runs fully offline.</li>
+          browser downloads a file. No personal data, no account, and none of your content is sent, and after the download transcription runs fully offline.</li>
         <li><strong>PyPI (optional, one-time library download).</strong> Only if you opt into GPU acceleration for
           transcription on a Windows PC with an NVIDIA card: the app downloads NVIDIA's official CUDA library packages
-          from the Python Package Index. Again, a plain file download - no account, nothing sent.</li>
+          from the Python Package Index. Again, a plain file download, with no account and nothing sent.</li>
         <li><strong>GitHub (version check).</strong> When the app starts, it asks GitHub's public releases API whether a
-          newer version has been published, so it can show you an update notice. The request carries nothing but the
-          request itself - no token, no course data, no identifier of any kind - and GitHub sees only what any website
+          newer version has been published, so it can show you an update notice. The request carries nothing but the request itself: no token, no course data, no identifier of any kind. GitHub sees only what any website
           sees when you visit it. If it fails or you are offline, the app simply shows no notice. The
           <a class="link" href="releases.html">Downloads &amp; Releases</a> page makes the same call in your browser.</li>
         <li><strong>Microsoft Store (Windows).</strong> If you install the app from the Microsoft Store, Microsoft
@@ -612,22 +606,21 @@
 
       <h2>This website</h2>
       <p>
-        This policy says it covers the project website, so here is exactly what the website itself does. It is a set of
-        static pages hosted on GitHub Pages. <strong>It sets no cookies, runs no analytics, and has no tracking of any
-        kind</strong> - there is no script here that records who you are or what you clicked.
+        This policy says it covers the project website, so here is exactly what the website itself does. This site is a set of static pages hosted on GitHub Pages. <strong>It sets no cookies, runs no analytics, and has no tracking of any
+        kind</strong>, and there is no script here that records who you are or what you clicked.
       </p>
       <ul>
         <li><strong>Fonts are served from this site</strong>, not from Google. They used to be loaded from Google Fonts,
           which meant your IP address reached Google before the page had even rendered. They are now part of the site.</li>
         <li><strong>GitHub.</strong> The download buttons ask GitHub's public API which release is newest, so the links
           never point at a stale file. GitHub sees that request the same way it sees any visit.</li>
-        <li><strong>YouTube.</strong> Two pages embed a short how-to video. Nothing is requested from YouTube until you
-          click play - the video is a still image until then, so simply reading the page contacts no one.</li>
+        <li><strong>YouTube.</strong> Some pages embed a how-to video. When you play one, YouTube serves it and sees
+          that request the same way it sees any visit.</li>
         <li><strong>Microsoft.</strong> The "Get it from Microsoft" badge is an image served by Microsoft, and the
           button links to the Store listing.</li>
       </ul>
       <p>
-        Your browser contacts GitHub and Microsoft only for the reasons above. Nothing on this website is sent to the
+        Your browser contacts GitHub, YouTube and Microsoft only for the reasons above. Nothing on this website is sent to the
         developer, because there is no developer server to send it to.
       </p>
 
@@ -647,8 +640,7 @@
         children and does not knowingly collect any information from anyone, regardless of age.</p>
 
       <h2>Open source</h2>
-      <p>Canvas Downloader is fully open source. You don't have to take our word for any of the above - the complete
-        source code is publicly readable on
+      <p>Canvas Downloader is fully open source. You don't have to take our word for any of the above, because the complete source code is publicly readable on
         <a class="link" href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank"
           rel="noopener">GitHub</a>.
       </p>

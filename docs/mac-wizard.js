@@ -14,6 +14,7 @@
 
   var VIDEO_INSTALL = 'assets/mac_inst_dmgToApplications.mp4';
   var YT_GATEKEEPER = '0_NuZndZvi8';   // full Sequoia open-flow walkthrough
+  var YT_SONOMA     = 'E7HZqzIUmDg';   // the macOS 14 right-click -> Open route
   var YT_TOKEN      = 'VadvcIvrrhU';   // how to create a Canvas API token
 
   var GUIDE_HREF  = mount.getAttribute('data-guide-href') || '';
@@ -256,6 +257,8 @@
       sub: 'Good news - on Sonoma it’s just two clicks.',
       body:
         note('cyan', ICO.shield(18), 'Apple blocks unsigned apps from independent developers. To keep this app completely free for students, I don\'t pay Apple the $99/year developer fee required to sign it. This is completely normal for free, independent apps. The quickest way around it:') +
+        ytEmbed(YT_SONOMA, 'Opening Canvas Downloader on macOS 14 Sonoma') +
+        '<p class="mw-media-cap">The whole thing on Sonoma, in about half a minute.</p>' +
         '<ul class="mw-steps">' +
           '<li>In your <strong>Applications</strong> folder, <strong>right-click</strong> (or Control-click) Canvas Downloader and choose <strong>Open</strong>.</li>' +
           '<li>A warning appears - click <strong>Open</strong>. The app launches and is trusted from now on.</li>' +

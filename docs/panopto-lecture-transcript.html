@@ -119,7 +119,7 @@
             "name": "How long does it take to transcribe a lecture on my own laptop?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "It depends entirely on the model, and the range is about tenfold. Measured on a 10-core laptop CPU with no GPU: roughly 2 minutes per hour of lecture on the smallest model, about 10 minutes on a mid-sized one, and about 24 minutes on a large one. That is one machine on one clip rather than a benchmark, but the ordering holds."
+              "text": "It depends entirely on the model. The range is about tenfold. Measured on a 10-core laptop CPU with no GPU: roughly 2 minutes per hour of lecture on the smallest model, about 10 minutes on a mid-sized one, and about 24 minutes on a large one. That is one machine on one clip rather than a benchmark, but the ordering holds."
             }
           },
           {
@@ -127,7 +127,7 @@
             "name": "Should I use Large v3 Turbo for transcription?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "On a GPU, yes. On a CPU, no, and the reason is structural. Turbo is fast because its decoder has four layers instead of thirty-two. Its encoder is unchanged from the full model, and on a CPU the encoder is what dominates the time, so almost none of the speed-up arrives. On a laptop it lands in the group that is too slow to be practical."
+              "text": "On a GPU, yes. On a CPU, no. The reason is structural. Turbo is fast because its decoder has four layers instead of thirty-two. Its encoder is unchanged from the full model. On a CPU the encoder is what dominates the time, so almost none of the speed-up arrives. On a laptop it lands in the group that is too slow to be practical."
             }
           },
           {
@@ -135,7 +135,7 @@
             "name": "Is machine transcription accurate enough to revise from?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "For following the argument, yes. Panopto states its automatic captions are typically 90 to 95% accurate depending on audio quality, and the open models are in a similar band. The errors are not spread evenly, though: proper nouns and technical terms are where both fail, which is exactly what you were going to search for. Treat a transcript as a searchable index into the recording rather than as a document of record."
+              "text": "For following the argument, yes. Panopto states its automatic captions are typically 90 to 95% accurate depending on audio quality. The open models sit in a similar band. The errors are not spread evenly, though: proper nouns and technical terms are where both fail, which is exactly what you were going to search for. Treat a transcript as a searchable index into the recording rather than as a document of record."
             }
           },
           {
@@ -693,9 +693,7 @@
         or Transcript panel, and look for a download option - what you get is a
         subtitle file, which is plain text with timestamps.</p>
         <p>Captions are usually a <strong>separate permission</strong> from the
-        video, so they are often available when downloading is not. If there is
-        no transcript - an older recording, the wrong language, or downloads
-        switched off - you can make one yourself on your own computer with an
+        video. They are often available when downloading is not. If there is no transcript, because it is an older recording, the wrong language, or downloads are switched off, you can make one yourself on your own computer with an
         offline speech-recognition model, with no upload and no account. Expect
         roughly 2 to 24 minutes per hour of lecture depending on the model; the
         measured table is below.</p>
@@ -717,14 +715,14 @@
         </ol>
       </div>
 
-      <p class="lede">A transcript is the most useful form of a lecture and the
-      least demanded. It is searchable, it is a few hundred kilobytes against a
-      few hundred megabytes, it opens on anything, and it is the only form an AI
-      study tool will read. It is also, right now, easier to get than it has ever
-      been - and for most people it already exists.</p>
+      <p class="lede">Panopto has probably already transcribed your lecture,
+      because captioning a recording is no longer something a lecturer has to
+      remember to switch on. It is worth thirty seconds to check. A transcript
+      runs a few hundred kilobytes where the video runs a few hundred megabytes.
+      You can search it. It opens in anything. NotebookLM will read a transcript
+      and will not read a local video file.</p>
 
-      <p>So this page starts with the free one that needs no software, and only
-      then covers making your own.</p>
+      <p>The free route comes first here; making your own comes after.</p>
 
       <h2 id="free">Panopto has probably already made one</h2>
 
@@ -737,7 +735,7 @@
       to meet the US Section 504 ruling and WCAG 2.1 Level AA. That is one
       institution documenting one rollout, and tenants are configured
       independently, so read it as "check yours" rather than as a guarantee. The
-      direction only goes one way, though, and it is driven by accessibility law
+      direction only goes one way, though, driven by accessibility law
       rather than by anybody's product roadmap. <strong>Captions are far more likely to
       be present on a 2026 recording than on a 2023 one.</strong></p>
 
@@ -830,12 +828,11 @@
         <code>.srt</code> to navigate with.</li>
       </ol>
 
-      <p>The catch is not accuracy. It is time, and almost nothing published
-      about this is specific about how much.</p>
+      <p>The catch is not accuracy. It is time. Almost nothing published about this is specific about how much.</p>
 
       <h2 id="speed">How long it actually takes, measured</h2>
 
-      <p>Here is a real measurement rather than an estimate. Six models on the
+      <p>Here is a real measurement rather than an estimate. Five models on the
       same clip, on one machine, timed as <strong>multiples of realtime</strong> -
       so 6x means an hour of lecture takes ten minutes.</p>
 
@@ -862,8 +859,7 @@
       </div>
 
       <div class="note">
-        <p><strong>The method, and how small the sample is.</strong> One machine -
-        an Apple M4 with 10 CPU cores, running on the CPU - over 180 seconds of
+        <p><strong>The method, and how small the sample is.</strong> One machine, an Apple M4 with 10 CPU cores running on the CPU, over 180 seconds of
         real Danish lecture audio, at int8 quantisation, beam size 5, with
         voice-activity filtering on. That is a single clip on a single laptop, not a benchmark suite. It
         is published because the relative ordering is stable and useful and
@@ -873,8 +869,7 @@
       </div>
 
       <p>Two things fall out of it that matter more than the exact numbers.
-      First, on a CPU the range across models is <strong>ten-fold</strong>, so
-      the choice is not a detail. Second, a semester is not one lecture: at
+      First, on a CPU the range across models is <strong>ten-fold</strong>, so the choice is not a detail at all. Second, a semester is not one lecture: at
       2.5x realtime, thirty two-hour lectures is about a full day of your laptop
       running flat out, and at 25x it is under three hours.</p>
 
@@ -882,14 +877,11 @@
 
       <p>The standard advice is to use Large v3 Turbo, because it is nearly as
       accurate as Large v3 and several times faster. On a GPU that is correct.
-      <strong>On a CPU it is wrong, and the reason is structural rather than a
-      matter of degree.</strong></p>
+      <strong>On a CPU it is wrong. The reason is structural rather than a matter of degree.</strong></p>
 
       <p>Turbo's speed comes from its <strong>decoder</strong>, which has four
       layers where Large v3 has thirty-two. Its <strong>encoder</strong> is Large
-      v3's, unchanged. On a GPU the decoder dominates the time, so cutting it to
-      an eighth is transformative. On a CPU the encoder dominates - and the
-      encoder did not change, so almost none of that speed-up arrives. In the
+      v3's, unchanged. On a GPU the decoder dominates the time, so cutting it to an eighth shows up almost in full. On a CPU the encoder dominates. The encoder did not change, so almost none of that speed-up arrives. In the
       table above Turbo lands between Small and Medium, in the group that is too
       slow to be practical.</p>
 
@@ -913,8 +905,7 @@
 
       <h2 id="accurate">How accurate any of this is</h2>
 
-      <p>Both routes are machine transcription and both are wrong sometimes, so
-      it is worth knowing where.</p>
+      <p>Both routes are machine transcription and both are wrong sometimes. Worth knowing where.</p>
 
       <p>Panopto states that
       <a class="src" href="https://www.panopto.com/blog/frequently-asked-questions-faqs-about-video-captioning-answered/" target="_blank" rel="noopener">"ASR captions are typically 90-95% accurate depending on the audio quality in the recording"</a>,
@@ -928,7 +919,7 @@
       <p>The open models sit in a similar band. They were trained at a scale
       that makes them fairly tolerant of accents and background noise: the
       current large model was built on
-      <a class="src" href="https://huggingface.co/openai/whisper-large-v3" target="_blank" rel="noopener">1 million hours of weakly labelled audio and 4 million hours of pseudo-labelled audio</a>,
+      <a class="src" href="https://huggingface.co/openai/whisper-large-v3" target="_blank" rel="noopener">1 million hours of weakly labelled audio and 4 million hours of pseudo-labelled audio</a>.
       Its own model card claims a "10% to 20% reduction of errors" over the
       version before it, across a wide range of languages.</p>
 
@@ -1015,15 +1006,15 @@
       </details>
       <details class="faq">
         <summary>How long does it take to transcribe a lecture on my own laptop?</summary>
-        <div><p>It depends entirely on the model, and the range is about tenfold. Measured on a 10-core laptop CPU with no GPU: roughly 2 minutes per hour of lecture on the smallest model, about 10 minutes on a mid-sized one, and about 24 minutes on a large one. That is one machine on one clip rather than a benchmark, but the ordering holds.</p></div>
+        <div><p>It depends entirely on the model. The range is about tenfold. Measured on a 10-core laptop CPU with no GPU: roughly 2 minutes per hour of lecture on the smallest model, about 10 minutes on a mid-sized one, and about 24 minutes on a large one. That is one machine on one clip rather than a benchmark, but the ordering holds.</p></div>
       </details>
       <details class="faq">
         <summary>Should I use Large v3 Turbo for transcription?</summary>
-        <div><p>On a GPU, yes. On a CPU, no, and the reason is structural. Turbo is fast because its decoder has four layers instead of thirty-two. Its encoder is unchanged from the full model, and on a CPU the encoder is what dominates the time, so almost none of the speed-up arrives. On a laptop it lands in the group that is too slow to be practical.</p></div>
+        <div><p>On a GPU, yes. On a CPU, no. The reason is structural. Turbo is fast because its decoder has four layers instead of thirty-two. Its encoder is unchanged from the full model. On a CPU the encoder is what dominates the time, so almost none of the speed-up arrives. On a laptop it lands in the group that is too slow to be practical.</p></div>
       </details>
       <details class="faq">
         <summary>Is machine transcription accurate enough to revise from?</summary>
-        <div><p>For following the argument, yes. Panopto states its automatic captions are typically 90 to 95% accurate depending on audio quality, and the open models are in a similar band. The errors are not spread evenly, though: proper nouns and technical terms are where both fail, which is exactly what you were going to search for. Treat a transcript as a searchable index into the recording rather than as a document of record.</p></div>
+        <div><p>For following the argument, yes. Panopto states its automatic captions are typically 90 to 95% accurate depending on audio quality. The open models sit in a similar band. The errors are not spread evenly, though: proper nouns and technical terms are where both fail, which is exactly what you were going to search for. Treat a transcript as a searchable index into the recording rather than as a document of record.</p></div>
       </details>
       <details class="faq">
         <summary>Does transcribing a lecture upload it anywhere?</summary>

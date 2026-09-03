@@ -210,6 +210,11 @@
     }
     .below-wizard a:hover { text-decoration: underline; }
     .below-wizard p { font-size: 13px; color: var(--txt3); margin: 4px 0 0; }
+    /* inline-block so the second option can take a top margin, and so the
+       tap target grows with the text rather than staying line-height tall. */
+    .below-wizard a { display: inline-block; }
+    .below-wizard .wz-alt { margin-top: 20px; }
+    .yt-mark { vertical-align: -2px; margin-right: 7px; }
 
     footer { margin-top: auto; padding: 36px 0 40px; text-align: center; color: var(--txt3); font-size: 13px; }
     footer a { color: var(--txt2); text-decoration: none; margin: 0 12px;
@@ -264,7 +269,7 @@
            one IP - read a cheerful success message next to nothing happening.
            The heading now states what is actually true at each moment. -->
       <h1 id="dl-headline">Getting your download ready…</h1>
-      <p class="sub" id="dl-sub">Canvas Downloader is a free solo project, so macOS needs you to approve it by hand the first time. The assistant below walks you through every step - it takes about two minutes.</p>
+      <p class="sub" id="dl-sub">Canvas Downloader is a free solo project, so macOS needs you to approve it by hand the first time. The assistant below walks you through every step, and it takes about two minutes.</p>
       <a href="https://github.com/BrkBuilds/Canvas-Downloader/releases/latest" id="dmg-link" class="dl-fallback">Download didn’t start? Click here</a>
     </div>
   </div>
@@ -274,8 +279,10 @@
     <div id="mac-wizard" data-guide-href="mac-setup.html" data-guide-label="Open the full written guide"></div>
 
     <div class="below-wizard">
-      <a href="mac-setup.html">Prefer a written walkthrough? Open the full step-by-step guide &#8594;</a>
-      <p>Every dialog, every macOS version, with screenshots - bookmark it for later.</p>
+      <a href="https://www.youtube.com/watch?v=2vk1Ki9wF-c" target="_blank" rel="noopener"><svg class="yt-mark" width="18" height="13" viewBox="0 0 20 14" aria-hidden="true" focusable="false"><rect width="20" height="14" rx="4" fill="#e50914"/><polygon points="8 4.2 13.6 7 8 9.8" fill="#fff"/></svg>Prefer to watch? Follow the full setup on video &#8594;</a>
+      <p>Every step in order, in about nine minutes.</p>
+      <a class="wz-alt" href="mac-setup.html">Prefer a written walkthrough? Open the full step-by-step guide &#8594;</a>
+      <p>Every dialog, every macOS version, with screenshots. Bookmark it for later.</p>
     </div>
   </div>
 

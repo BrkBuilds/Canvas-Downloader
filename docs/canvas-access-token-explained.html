@@ -95,7 +95,7 @@
             "name": "What can someone do with my Canvas access token?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Exactly what you can do, and nothing else. Instructure puts it as \"the same Canvas resources that you can access\", so a token cannot reach courses you are not on or give anyone a teacher view. It can do the things you can do, though, including submitting work, which is why it is worth treating like a password."
+              "text": "Exactly what you can do, and nothing else. Instructure puts it as \"the same Canvas resources that you can access\", A token cannot reach courses you are not on, or give anyone a teacher view. It can do the things you can do, though, including submitting work, which is why it is worth treating like a password."
             }
           },
           {
@@ -111,7 +111,7 @@
             "name": "Why does my Canvas token keep expiring?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Because Canvas now requires an expiry date. Users with only student roles were capped at 120 days in October 2025, and Instructure's July 2026 update gives 90 days for instructor tokens and 30 for student ones. Your own page may offer something different - a real student account checked in August 2026 was offered 90 - because the short cap applies only to accounts holding nothing but student roles, and an extra role anywhere lifts it. Whatever the number, expect to make a new token periodically."
+              "text": "Because Canvas now requires an expiry date. Users with only student roles were capped at 120 days in October 2025, and Instructure's July 2026 update gives 90 days for instructor tokens and 30 for student ones. Your own page may offer something different; a real student account checked in August 2026 was offered 90, because the short cap applies only to accounts holding nothing but student roles. An extra role anywhere lifts it. Whatever the number, expect to make a new token periodically."
             }
           },
           {
@@ -135,7 +135,7 @@
             "name": "Is it against Canvas policy to paste a token into an app?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Instructure's documentation says applications should use approved authentication instead, meaning OAuth. The difficulty is that OAuth needs a developer key, and Canvas's API docs say those \"are issued by the admin of the institution\" and are scoped to it - so an independent tool would need one from every university separately. That is why user tokens are how nearly every independent Canvas tool works. If your institution offers an approved route, use that instead."
+              "text": "Instructure's documentation says applications should use approved authentication instead, meaning OAuth. The difficulty is that OAuth needs a developer key, and Canvas's API docs say those \"are issued by the admin of the institution\" and are scoped to it. An independent tool would therefore need one from every university separately. That is why user tokens are how nearly every independent Canvas tool works. If your institution offers an approved route, use that instead."
             }
           },
           {
@@ -151,7 +151,7 @@
             "name": "Can my university see that I made a token?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes. Since October 2025 administrators can view every user-generated token on an account, read the purpose you set for it, and delete any of them. Tokens are not a way to do anything quietly, and it is better to know that than to assume otherwise."
+              "text": "Yes. Since October 2025 administrators can view every user-generated token on an account, read the purpose you set for it, and delete any of them. Tokens are not a way to do anything quietly. Better to know that than to assume otherwise."
             }
           }
         ]
@@ -694,8 +694,7 @@
         way to log in as you.</p>
         <p>Make one under <strong>Account</strong>, then
         <strong>Settings</strong>, then <strong>+ New Access Token</strong>.
-        Canvas now requires a purpose and an expiry date, and caps how far ahead
-        that can be, so a token is something you renew rather than set once.
+        Canvas now requires a purpose and an expiry date, and caps how far ahead that can be. A token is something you renew rather than set once.
         Delete it from the same page whenever you want; it stops working
         immediately.</p>
       </div>
@@ -718,8 +717,7 @@
       the question underneath is always the same one: how much am I handing
       over?</p>
 
-      <p>Instructure answers it in a single sentence, and it is worth reading
-      twice.</p>
+      <p>Instructure answers it in a single sentence. It is worth reading twice.</p>
 
       <h2 id="what">What a token actually is</h2>
 
@@ -731,8 +729,7 @@
       <a class="src" href="https://community.instructure.com/en/kb/articles/662901-how-do-i-manage-api-access-tokens-in-my-user-account" target="_blank" rel="noopener">"Using the Canvas API allows the access token holder to access the same Canvas resources that you can access."</a></p>
 
       <p>The same resources. Nothing extra. A token gives nobody a teacher
-      view and reaches no course you are not enrolled on. It is your own access,
-      handed to you in a form a program can use, and that is all it is.</p>
+      view and reaches no course you are not enrolled on. It is your own access, handed to you in a form a program can use. That is all it is.</p>
 
       <p>You already rely on this without thinking about it. The Canvas mobile
       app holds one. So does every calendar feed, every plagiarism checker your
@@ -759,15 +756,13 @@
       </ul>
 
       <p>What a token <em>can</em> do is everything you can do, which includes
-      submitting work and posting to discussions. That is the real risk, and it
-      is a risk about the software you paste it into rather than about tokens as
-      an idea.</p>
+      submitting work and posting to discussions. That is the real risk. It is about the software you paste the token into, not about tokens as an idea.</p>
 
       <h2 id="expiry">Why yours now expires, and why your number differs</h2>
 
       <p>Canvas tokens used to last forever. Most guides still say to leave the
       expiry field blank, and Instructure's own help video still demonstrates
-      it. That advice is out of date, and it went out of date in stages.</p>
+      it. That advice is out of date. It went out of date in stages.</p>
 
       <p>Instructure
       <a class="src" href="https://community.instructure.com/en/discussion/660299/strengthening-security-in-canvas-updates-to-user-access-token-management" target="_blank" rel="noopener">walked through the changes</a>
@@ -785,11 +780,9 @@
 
       <p><strong>Do not take those numbers as your numbers.</strong> A real
       student account checked in August 2026 was offered <strong>90 days</strong>,
-      not 30, having previously been offered 120. The announcement and the
-      settings page disagreed, and the settings page is the one that counts.</p>
+      not 30, having previously been offered 120. The announcement and the settings page disagreed. The settings page is the one that counts.</p>
 
-      <p>The mechanism is in the same post, and it is about roles rather than
-      institutions. The short cap applies to "users with only student roles", and
+      <p>The mechanism is in the same post. It turns on roles rather than institutions. The short cap applies to "users with only student roles", and
       Instructure notes that a longer life "can be achieved by giving the user
       any role other than student (even with all permissions locked down)".
       Universities hand out extra roles constantly. A TA enrolment, a designer
@@ -797,14 +790,10 @@
       something other than a student: any of those can be why your page offers
       more time than the headline says.</p>
 
-      <p>So the honest version is that the direction is one way and shortening,
-      the exact figure is whatever your own page offers you, and a tool that
-      reads Canvas on your behalf will need a fresh token every month or
-      quarter. That is Canvas working as designed, not the tool failing.</p>
+      <p>The direction is one way and shortening. The exact figure is whatever your own settings page offers you. Either way, a tool that reads Canvas on your behalf needs a fresh token every month or quarter. That is Canvas working as designed, not the tool failing.</p>
 
       <div class="note">
-        <p><strong>The reason is stated openly, and it isn't really about
-        downloading.</strong> Instructure's post says: "we have seen an uptick in
+        <p><strong>The reason is stated openly. It is not really about downloading.</strong> Instructure's post says: "we have seen an uptick in
         students setting up AI integrations to automatically review and complete
         assignments on their behalf". The tightening is aimed at homework bots.
         Everything else that reads Canvas through a token pays for it, which is
@@ -924,9 +913,7 @@
         course in one run, with the slides, the readings, the
         <strong>Panopto lecture recordings</strong>, the quizzes, the discussions
         and the feedback you were given.</p>
-        <p>Free and open source, Windows and macOS. It reads and never writes,
-        there is no account and no server, and the token never leaves your
-        machine.</p>
+        <p>Free and open source, Windows and macOS. It reads and never writes; there is no account and no server. The token never leaves your machine.</p>
         <div class="cta-row">
           <a href="releases.html" class="btn-nav">Download</a>
           <a href="index.html#features" class="btn-nav-ghost"><span>See it in action</span></a>
@@ -937,7 +924,7 @@
       <h2 id="faq">Common questions</h2>
       <details class="faq">
         <summary>What can someone do with my Canvas access token?</summary>
-        <div><p>Exactly what you can do, and nothing else. Instructure puts it as "the same Canvas resources that you can access", so a token cannot reach courses you are not on or give anyone a teacher view. It can do the things you can do, though, including submitting work, which is why it is worth treating like a password.</p></div>
+        <div><p>Exactly what you can do, and nothing else. Instructure puts it as "the same Canvas resources that you can access", A token cannot reach courses you are not on, or give anyone a teacher view. It can do the things you can do, though, including submitting work, which is why it is worth treating like a password.</p></div>
       </details>
       <details class="faq">
         <summary>Is an access token the same as my Canvas password?</summary>
@@ -945,7 +932,7 @@
       </details>
       <details class="faq">
         <summary>Why does my Canvas token keep expiring?</summary>
-        <div><p>Because Canvas now requires an expiry date. Users with only student roles were capped at 120 days in October 2025, and Instructure's July 2026 update gives 90 days for instructor tokens and 30 for student ones. Your own page may offer something different - a real student account checked in August 2026 was offered 90 - because the short cap applies only to accounts holding nothing but student roles, and an extra role anywhere lifts it. Whatever the number, expect to make a new token periodically.</p></div>
+        <div><p>Because Canvas now requires an expiry date. Users with only student roles were capped at 120 days in October 2025, and Instructure's July 2026 update gives 90 days for instructor tokens and 30 for student ones. Your own page may offer something different; a real student account checked in August 2026 was offered 90, because the short cap applies only to accounts holding nothing but student roles. An extra role anywhere lifts it. Whatever the number, expect to make a new token periodically.</p></div>
       </details>
       <details class="faq">
         <summary>Why did Canvas restrict access tokens?</summary>
@@ -957,7 +944,7 @@
       </details>
       <details class="faq">
         <summary>Is it against Canvas policy to paste a token into an app?</summary>
-        <div><p>Instructure's documentation says applications should use approved authentication instead, meaning OAuth. The difficulty is that OAuth needs a developer key, and Canvas's API docs say those "are issued by the admin of the institution" and are scoped to it - so an independent tool would need one from every university separately. That is why user tokens are how nearly every independent Canvas tool works. If your institution offers an approved route, use that instead.</p></div>
+        <div><p>Instructure's documentation says applications should use approved authentication instead, meaning OAuth. The difficulty is that OAuth needs a developer key, and Canvas's API docs say those "are issued by the admin of the institution" and are scoped to it. An independent tool would therefore need one from every university separately. That is why user tokens are how nearly every independent Canvas tool works. If your institution offers an approved route, use that instead.</p></div>
       </details>
       <details class="faq">
         <summary>How do I delete a Canvas access token?</summary>
@@ -965,7 +952,7 @@
       </details>
       <details class="faq">
         <summary>Can my university see that I made a token?</summary>
-        <div><p>Yes. Since October 2025 administrators can view every user-generated token on an account, read the purpose you set for it, and delete any of them. Tokens are not a way to do anything quietly, and it is better to know that than to assume otherwise.</p></div>
+        <div><p>Yes. Since October 2025 administrators can view every user-generated token on an account, read the purpose you set for it, and delete any of them. Tokens are not a way to do anything quietly. Better to know that than to assume otherwise.</p></div>
       </details>
 
       <div class="author-box" id="about-the-author">

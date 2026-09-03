@@ -438,8 +438,8 @@
        animation - it is genuinely waiting to be scrolled to. -->
       <h1>What actually happens to <span>your files</span></h1>
     <p>
-      This page is the honest version. Not "it downloads your course" - but exactly how every file is found, where it
-      lands, which ones get rewritten, which ones get deleted, and precisely what a sync will and will not touch.
+      This page is the honest version of "it downloads your course": how every file is found, where it lands,
+      which ones get rewritten, which ones get deleted, and exactly what a sync will and will not touch.
       If you have ever wondered <em>why</em> the app did something, the answer is here.
     </p>
   </div>
@@ -483,15 +483,14 @@
 
         <div class="callout why">
           <div class="callout-t">The whole model in one line</div>
-          <p><strong>One file on Canvas becomes exactly one file in your folder - and your course folder remembers
+          <p><strong>One file on Canvas becomes exactly one file in your folder. Your course folder remembers
             which is which.</strong></p>
         </div>
 
         <p class="body">
           When a file is saved, the app records the link between the thing on Canvas and the thing on your disk. That
           record lives inside your course folder itself, in a small hidden file called <code>.canvas_sync.db</code>.
-          It is what makes a sync possible months later: without it, the app could only compare filenames, and a
-          filename is a terrible way to identify a document.
+          It is what makes a sync possible months later: without it, the app could only compare filenames. A filename is a terrible way to identify a document.
         </p>
         <p class="body">
           Because the link is one-to-one, a file can never be quietly downloaded twice under two names. And because
@@ -526,8 +525,7 @@
 
         <p class="body">
           The obvious place is the course's <strong>Files</strong> tab. The catch is that teachers can switch it off -
-          and a lot of them do. On a course with the Files tab disabled, opening it yourself gives you a permission
-          error, and a naive downloader would conclude the course is empty.
+          and a lot of them do. On a course with the Files tab disabled, opening it yourself gives you a permission error. A naive downloader would conclude the course is empty.
         </p>
         <p class="body">So the Files tab is only the first of several passes:</p>
 
@@ -536,7 +534,7 @@
             <div class="step-n">1</div>
             <div class="step-b">
               <h3>Canvas content first</h3>
-              <p>Assignments, pages, announcements and the rest are fetched before anything else. This ordering is
+              <p>Assignments, pages, announcements and the rest are downloaded before anything else. This ordering is
                 deliberate - see the note below.</p>
             </div>
           </div>
@@ -559,8 +557,7 @@
             <div class="step-n">4</div>
             <div class="step-b">
               <h3>Links inside page text</h3>
-              <p>Teachers often link a PDF inside the body of an assignment or page rather than attaching it. Those
-                links are read out of the text and followed, so the file comes down with everything else.</p>
+              <p>Teachers often link a PDF inside the body of an assignment or page rather than attaching it. Those links are read out of the text and followed. The file comes down with everything else.</p>
             </div>
           </div>
         </div>
@@ -570,8 +567,8 @@
           <p>A file can legitimately be in two places at once - sitting in the Files tab <em>and</em> attached to an
             announcement. If the sweep ran first, it would save a copy, then the announcement pass would come along,
             not know about it, and save a second copy under a different path. That genuinely happened: one file was
-            fetched twice, twenty-one seconds apart, and landed as two copies.</p>
-          <p>Running content first means the later sweep already knows the file has been placed, so it steps aside.
+            downloaded twice, twenty-one seconds apart, and landed as two copies.</p>
+          <p>Running content first means the later sweep already knows the file has been placed. It steps aside.
             One file on Canvas, one file on your disk, one trip over the network.</p>
         </div>
       </section>
@@ -604,9 +601,9 @@
 
         <h3 class="sub-h"><svg class="shi" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Keeping generated content separate</h3>
         <p class="body">
-          Things the app <em>creates</em> from Canvas - an assignment brief saved as a web page, a quiz, an
-          announcement - can either sit inline next to the real course files, or be routed into their own tidy
-          folders. Turn the separation on and you get:
+          Things the app <em>creates</em> from Canvas can either sit inline next to the real course files, or be
+          routed into their own tidy folders. That covers an assignment brief saved as a web page, a quiz, an
+          announcement. Turn the separation on and you get:
         </p>
 
         <div class="tbl-wrap">
@@ -628,7 +625,7 @@
         <div class="callout">
           <div class="callout-t">That last folder name is deliberate</div>
           <p>It says <strong>Submission Feedback</strong>, not "Submissions", because it does not contain your
-            submissions. The app never downloads files you uploaded - you already have those on the machine you
+            submissions. The app never downloads files you uploaded. You already have those on the machine you
             submitted them from. What it saves is the <em>feedback</em>: your grade, the rubric assessment, teacher
             comments, and any file a teacher attached to a comment.</p>
         </div>
@@ -726,9 +723,9 @@
         <div class="callout warn">
           <div class="callout-t">Notice what "convert" really means</div>
           <p>Most conversions <strong>replace</strong> the original rather than sitting beside it. Turn on
-            PowerPoint&nbsp;&rarr;&nbsp;PDF and you get the PDF - the <code>.pptx</code> is gone. That is intentional
-            (you asked for a PDF, not both), but it is worth knowing before you run it on a folder you care about.
-            Every conversion on the card works this way - what you end up with is the converted file.</p>
+            PowerPoint&nbsp;&rarr;&nbsp;PDF and you get the PDF. The <code>.pptx</code> is gone. That is intentional:
+            you asked for a PDF, not for both. Still worth knowing before you run it on a folder you care
+            about, because every conversion on the card works this way.</p>
         </div>
       </section>
 
@@ -740,7 +737,7 @@
         </div>
 
         <p class="body">
-          An assignment brief isn't a document you can download - it's a web page inside Canvas. The app rebuilds
+          An assignment brief lives as a web page inside Canvas, so there is no file to download. The app rebuilds
           these as self-contained HTML files you can open, search and keep after you lose access to the course.
         </p>
 
@@ -760,7 +757,7 @@
 
         <div class="callout">
           <div class="callout-t">Attachments are real files</div>
-          <p>When an assignment has a PDF attached, that PDF is downloaded as an ordinary file - not embedded in the
+          <p>When an assignment has a PDF attached, that PDF is downloaded as an ordinary file, not embedded in the
             HTML. If the same PDF also appears in the Files tab, you still get exactly one copy, for the reason
             explained above.</p>
         </div>
@@ -782,7 +779,7 @@
           <table>
             <thead><tr><th>Output</th><th>What it is</th><th>Notes</th></tr></thead>
             <tbody>
-              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_url.png" alt="" />Shortcut</td><td>A small link file that reopens the lecture on Panopto</td><td>Costs nothing to fetch; a pointer, not a copy</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_url.png" alt="" />Shortcut</td><td>A small link file that reopens the lecture on Panopto</td><td>Costs nothing to save; a pointer, not a copy</td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_mp4.png" alt="" />Video</td><td>The full lecture as MP4</td><td>By far the largest option</td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_mp3.png" alt="" />Audio</td><td>Audio only, as MP3</td><td>A fraction of the size; enough to re-listen</td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_txt.png" alt="" />Transcript</td><td>Plain-text transcript</td><td><span class="pill need">Needs a model</span></td></tr>
@@ -792,7 +789,7 @@
         </div>
 
         <p class="body">
-          The shortcut is the cheap one. It costs nothing to fetch, and it keeps the things a downloaded copy loses -
+          The shortcut is the cheap one. It costs nothing to save, and it keeps the things a downloaded copy loses -
           the slide navigation, the screen capture and Panopto's own search. It is a pointer rather than a copy, so it
           stops working when your access to the course does: a companion to an offline file, not a substitute for one.
         </p>
@@ -802,14 +799,14 @@
           <p>Transcripts and subtitles are produced locally by a speech model you download once. Your lectures are
             never uploaded to a transcription service. It will use your graphics card if it can, and fall back to the
             processor if not - slower, same result.</p>
-          <p>Each recording is transcribed in a separate, isolated process. If one recording fails, it cannot take the
-            rest of the run - or the app - down with it.</p>
+          <p>Each recording is transcribed in a separate, isolated process. If one recording fails, it cannot bring
+            down the rest of the run, or the app.</p>
         </div>
 
         <p class="body">
           Recordings can either sit alongside the course material they belong to, or be collected in their own folder.
-          You can also permanently ignore individual recordings - a guest lecture you'll never rewatch - and they stay
-          out of every future sync until you restore them.
+          You can also permanently ignore individual recordings, say a guest lecture you will never rewatch. Those
+          stay out of every future sync until you restore them.
         </p>
       </section>
 
@@ -817,12 +814,12 @@
       <section class="guide-section" id="conversions">
         <div class="sh">
           <div class="icon-h2"><svg viewBox="0 0 24 24"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M4 10a8 8 0 0114-3l2 3"/><path d="M20 14a8 8 0 01-14 3l-2-3"/></svg><h2>File conversions</h2></div>
-          <p>Eight optional conversions - the app calls this card <strong>AI Optimization</strong>. The important
+          <p>Eight optional conversions. The app calls this card <strong>AI Optimization</strong>. The important
             column is the last one.</p>
         </div>
 
         <p class="body">
-          Conversions run <em>after</em> everything is downloaded, and only over the files this run actually fetched.
+          Conversions run <em>after</em> everything is downloaded, over the files this run actually downloaded.
           A second run doesn't re-convert your whole folder.
         </p>
 
@@ -871,13 +868,13 @@
         <div class="sh">
           <div class="label org">A rule with a story</div>
           <div class="icon-h2"><svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5" rx="1"/><path d="M10 12h4"/></svg><h2>Why archives are unpacked but never converted</h2></div>
-          <p>The single most counter-intuitive rule in the app, and the measurements that produced it.</p>
+          <p>The single most counter-intuitive rule in the app, with the measurements that produced it.</p>
         </div>
 
         <p class="body">
           Turn on <strong>Unpack Archives</strong> and a zip is extracted. Turn on <strong>Code &amp; Data &rarr;
           .txt</strong> as well, and you might reasonably expect the code inside that zip to be converted too. It
-          isn't. <strong>Nothing inside an archive is ever converted</strong> - it's unpacked and then left exactly as
+          isn't. <strong>Nothing inside an archive is ever converted.</strong> It is unpacked, then left exactly as
           it is.
         </p>
         <p class="body">This was tried the other way round first. Here is what happened on one real lecture zip:</p>
@@ -899,16 +896,14 @@
 
         <div class="callout why">
           <div class="callout-t">The argument that settled it</div>
-          <p>An archive is a payload your teacher uploaded as a unit. Unpacking it is a convenience. Rewriting its
-            insides is not - and most of these conversions <em>delete the original</em>. A student's own
+          <p>An archive is a payload your teacher uploaded as a unit. Unpacking it is a convenience. Rewriting its insides is not. Most of these conversions <em>delete the original</em>. A student's own
             <code>.js</code> file inside their own project would simply stop being a <code>.js</code> file.</p>
           <p>So the rule is deliberately blunt: the archive's edge is where conversion stops. Your project structure
             comes out of the zip exactly as your teacher packed it.</p>
         </div>
 
         <p class="body">
-          Sync follows the identical rule, so a folder can never drift into a different state just because it was
-          synced rather than downloaded.
+          Sync follows the identical rule. A folder can never drift into a different state just because it was synced rather than downloaded.
         </p>
       </section>
 
@@ -923,13 +918,12 @@
         <p class="body">
           Narrows the download to slide decks and PDFs, and nothing else: <code>.pdf</code>, <code>.ppt</code>,
           <code>.pptx</code>, <code>.pptm</code>, <code>.pot</code> and <code>.potx</code>. Datasets, images, videos
-          and code are skipped - and so are <b>Word documents</b>. If your reading list is a <code>.docx</code>,
+          and code are skipped, and so are <b>Word documents</b>. If your reading list is a <code>.docx</code>,
           this filter will not bring it down; use <b>All files</b> instead.
         </p>
         <p class="body">
           The choice is written into the folder, so every later sync keeps to it: a filtered folder stays a filtered
-          folder, and files outside it are never offered. The review and completion screens say so, with a count of
-          what the filter is holding back, so a folder never quietly pretends to be a complete copy. To change it,
+          folder, and files outside it are never offered. The review and completion screens say so, with a count of what the filter is holding back. A folder never quietly pretends to be a complete copy. To change it,
           download the course again into a fresh folder with <b>All files</b> selected.
         </p>
 
@@ -942,11 +936,11 @@
         <div class="callout">
           <div class="callout-t">An oversized file is set aside, not forgotten</div>
           <p>A file the cap skips is recorded in your folder as <b>ignored</b>, so later syncs stop listing it as new
-            every time - which is the point, since otherwise the same enormous video would be offered on every run
+            every time. That is the point: otherwise the same enormous video would be offered on every run,
             forever.</p>
           <p>It stays visible in <b>Ignored Files</b> on the pair's card. To bring one in later, raise the cap,
             restore the file there, and sync - the restore is what puts it back in play, so raising the cap on its
-            own won't fetch it.</p>
+            own won't download it.</p>
         </div>
       </section>
 
@@ -978,7 +972,7 @@
               </tr>
               <tr>
                 <td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#9599a1"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M1 1l22 22"/></svg>Deleted or unpublished</td>
-                <td>If it isn't visible to you in Canvas, it isn't visible to the app either - it uses your account and
+                <td>If it isn't visible to you in Canvas, it isn't visible to the app either. It uses your account and
                   sees exactly what you see.</td>
               </tr>
             </tbody>
@@ -987,8 +981,7 @@
 
         <div class="callout warn">
           <div class="callout-t">A locked file is a permanent state, not an error to retry</div>
-          <p>It stays listed as locked on every future run rather than quietly disappearing, so you always know the
-            file exists and why you haven't got it. If the teacher unlocks it later, the next sync picks it up.</p>
+          <p>It stays listed as locked on every future run rather than quietly disappearing. You always know the file exists, and why you haven't got it. If the teacher unlocks it later, the next sync picks it up.</p>
         </div>
       </section>
 
@@ -1001,9 +994,9 @@
         </div>
 
         <p class="body">
-          When you first download a course, your choices - subfolders or flat, which conversions, which Canvas content
-          - are written into the folder alongside the file records. A sync reads them back and applies exactly the same
-          rules.
+          When you first download a course, your choices are written into the folder alongside the file records:
+          subfolders or flat, which conversions, which Canvas content. A sync reads them back and applies
+          exactly the same rules.
         </p>
         <p class="body">
           That's why a synced file lands where you'd expect and gets converted the same way, months later, without you
@@ -1014,7 +1007,7 @@
         <div class="callout why">
           <div class="callout-t">Changing your mind</div>
           <p>To change how a folder is organised, download the course again into a fresh folder with the new settings.
-            A sync will never restructure a folder underneath you - that's the kind of surprise it exists to avoid.</p>
+            A sync will never restructure a folder underneath you. That is the kind of surprise it exists to avoid.</p>
         </div>
       </section>
 
@@ -1027,8 +1020,8 @@
 
         <p class="body">
           Before a sync touches anything, it compares three things: what's on Canvas now, what your folder's record
-          says it saved, and what's actually on disk right now. Any disagreement becomes one of six categories - and
-          two of them are <strong>unchecked by default</strong>, because they represent decisions you made.
+          says it saved, and what's actually on disk right now. Any disagreement becomes one of six categories. Two
+          of them are <strong>unchecked by default</strong>, because they represent decisions you made.
         </p>
 
         <div class="tbl-wrap">
@@ -1078,7 +1071,7 @@
         <div class="callout why">
           <div class="callout-t">Why two are unchecked</div>
           <p>Each of the unchecked categories represents something you did on purpose. You edited that file. You
-            deleted that one. The app's job is to bring you new material, not to undo your decisions - so those
+            deleted that one. The app's job is to bring you new material, not to undo your decisions, so those
             actions need an explicit tick before anything happens.</p>
         </div>
       </section>
@@ -1087,7 +1080,7 @@
       <section class="guide-section" id="renames">
         <div class="sh">
           <div class="icon-h2"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg><h2>Renames &amp; moves</h2></div>
-          <p>You reorganise your folder. Sync is supposed to cope - and mostly it does.</p>
+          <p>You reorganise your folder. Sync is supposed to cope, and mostly it does.</p>
         </div>
 
         <p class="body">
@@ -1105,7 +1098,7 @@
         </ol>
 
         <p class="body">
-          When one of these matches, the record quietly updates to your new name and location, and the file stays
+          When one of these matches, the record quietly updates to your new name and location. The file stays
           <em>up to date</em>. No duplicate, no download.
         </p>
 
@@ -1149,14 +1142,14 @@
 
         <p class="body">
           This holds for converted files too, which is the harder case. If your annotated file is itself the output of
-          a conversion, the protection applies to the <em>file you edited</em>, not the file that was downloaded - so
+          a conversion, the protection applies to the <em>file you edited</em>, not the file that was downloaded, so
           re-running the conversion can't quietly regenerate over your work.
         </p>
 
         <div class="callout safe">
           <div class="callout-t">This is tested on every release</div>
           <p>The project's automated audit runs real syncs against real courses with deliberately edited files, and
-            checks the edited file's contents are <em>identical</em> afterwards - not merely that the file still
+            checks the edited file's contents are <em>identical</em> afterwards, not merely that the file still
             exists. Anything else counts as data loss and blocks the release.</p>
         </div>
       </section>
@@ -1183,8 +1176,8 @@
         <div class="callout">
           <div class="callout-t">Quick Sync is the cautious one</div>
           <p>Because it can't ask, it never does anything that needs your judgement. It <strong>always</strong> skips
-            files you edited locally and files you deleted locally - it won't fork a <code>_NewVersion</code> and it
-            won't resurrect something you removed. If you want either of those, use the review flow and tick them.</p>
+            files you edited locally and files you deleted locally. There is no <code>_NewVersion</code> fork, and
+            nothing you removed comes back. If you want either of those, use the review flow and tick them.</p>
         </div>
       </section>
 
@@ -1474,7 +1467,7 @@
     if (S.html && mdExtra) notes.push('Each Canvas page became a <code>.md</code> - the <code>.html</code> it was built from is <b>replaced</b>, exactly like the other conversions.');
     if (S.layout === 'flat' && S.zip) notes.push('Even in &ldquo;All in One Folder&rdquo;, an unpacked archive keeps its own folder - its internal structure is the point.');
     if (typesOff === 6) notes.push('Every Canvas content type is off, so no assignments, announcements or quizzes are saved at all.');
-    else if (typesOff) notes.push('<b>' + typesOff + ' Canvas content type' + (typesOff > 1 ? 's are' : ' is') + ' switched off</b> - those are simply never fetched.');
+    else if (typesOff) notes.push('<b>' + typesOff + ' Canvas content type' + (typesOff > 1 ? 's are' : ' is') + ' switched off</b> - those are simply never downloaded.');
     if (nConv)    notes.push('<b>' + nConv + ' original' + (nConv > 1 ? 's were' : ' was') + ' replaced.</b> Conversions swap the file out rather than sitting beside it - what you keep is the converted version.');
     if (!notes.length) notes.push('This is close to the <b>default download</b> - files kept exactly as your teacher uploaded them, nothing converted, nothing skipped. Turn something on to see what changes.');
 

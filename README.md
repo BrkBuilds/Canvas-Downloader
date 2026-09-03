@@ -4,12 +4,15 @@
 
 # Canvas Downloader
 
-### Download all your Canvas files at once - then keep the folder in sync, automatically.
+### Download all your Canvas files at once, then let the folder keep itself up to date.
 
-A free, open source desktop app for **Canvas LMS**. Batch-download every file from every course,
-keep your folders up to date by itself, save **Panopto** lecture recordings with on-device
-transcription, and convert everything into AI-ready study material. Windows and macOS. No cloud, no
-account, no telemetry.
+A free, open source desktop app for **Canvas** (Canvas LMS). Batch-download every file from every
+course, back up a whole semester before you lose access, and let it auto-download new course files
+each day. It saves **Panopto** lecture recordings with transcription that runs on your own machine,
+and converts everything into AI-ready study material for **NotebookLM**, ChatGPT and Claude.
+Windows and macOS. No cloud, no account, no telemetry.
+
+Built to be opened every day of a degree, not once at the end of it.
 
 [![Latest release](https://img.shields.io/github/v/release/BrkBuilds/Canvas-Downloader?style=flat-square&color=2563eb&label=release)](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)
 [![GitHub downloads](https://img.shields.io/github/downloads/BrkBuilds/Canvas-Downloader/total?style=flat-square&color=16a34a&label=GitHub%20downloads)](https://github.com/BrkBuilds/Canvas-Downloader/releases)
@@ -26,11 +29,14 @@ account, no telemetry.
 ## Contents
 
 - [What it does](#what-it-does)
+- [At a glance](#at-a-glance)
+- [Who it is for](#who-it-is-for)
 - [Download](#download)
 - [Screenshots](#screenshots)
 - [Features](#features)
 - [How it compares](#how-it-compares)
 - [Quick start](#quick-start)
+- [Backup, end of semester and graduation](#backup-end-of-semester-and-graduation)
 - [FAQ](#faq)
 - [Privacy and security](#privacy-and-security)
 - [Architecture](#architecture)
@@ -44,11 +50,11 @@ account, no telemetry.
 ## What it does
 
 Canvas Downloader is a **standalone desktop application** that connects to your university's Canvas
-LMS through the official Canvas API and downloads every file from every course you select. No
-browser extension, no web scraping, no cloud middleman, no account to create. It signs in as you,
-with your own Canvas access token, and runs entirely on your own machine.
+through the official Canvas API and downloads every file from every course you select. No browser
+extension, no web scraping, no cloud middleman, no account to create. It signs in as you, with your
+own Canvas access token, and runs entirely on your own machine.
 
-Four things it does that a manual download cannot:
+Five things it does that downloading by hand cannot:
 
 **Batch download entire courses.** Select any combination of courses and pull everything in one run
 - module files, assignments, syllabi, announcements, discussions, quizzes and your own submission
@@ -67,6 +73,54 @@ that runs on your own computer. Nothing is uploaded anywhere. Please read the
 **Turn downloads into AI-ready study material.** One toggle converts every PowerPoint, Word
 document, spreadsheet, video, web page and code file into a format NotebookLM, ChatGPT or Claude can
 read and reason over.
+
+**Back up a course, a semester or a whole degree.** Canvas zips one course's Files tab at a time,
+and its own offline export refuses to run once a course has been concluded, which is usually the
+moment people go looking for it. Tick every course you have ever taken, press Start once, and the
+copy you keep includes the categories no Canvas export contains: assignment briefs, announcements,
+discussions, quizzes and the feedback you were given.
+
+---
+
+## At a glance
+
+| | |
+|---|---|
+| **What it is** | A desktop app that batch-downloads Canvas course material, then keeps the folder in sync |
+| **Price** | Free and open source, GPL-3.0. No premium tier, no ads, no account |
+| **Platforms** | Windows 10/11, and macOS 14+ on Apple Silicon |
+| **Sign-in** | Your own Canvas access token, stored in the OS keyring. No Canvas password, no account with us |
+| **What it can reach** | Only what your own Canvas account can already open. It breaks no copy protection |
+| **Where your data goes** | Nowhere. No backend, no analytics, no telemetry, nothing uploaded |
+| **Lecture recordings** | Panopto, as video, audio, transcript or subtitles, transcribed on your own machine |
+| **AI tools** | Converts on the way down, so a course folder drags straight into NotebookLM, ChatGPT or Claude |
+| **Affiliation** | Not affiliated with Instructure, Canvas or Panopto |
+
+---
+
+## Who it is for
+
+A university student who uses Canvas, on Windows or a Mac, who would rather have the material on
+their own disk than three clicks deep inside a course page. Students arrive at it at one of four
+moments:
+
+- **"Downloading these one at a time is absurd."** Mid-semester. Slides go up twice a week, across
+  five courses, and Canvas will zip one course's Files tab at a time. This is the biggest group and
+  it is what the app was built for.
+- **"I need everything before I lose access."** A course is concluding, or you are graduating. The
+  deadline is not one date but three, and the first one can pass while you are still enrolled. See
+  [Backup, end of semester and graduation](#backup-end-of-semester-and-graduation).
+- **"I want my course inside an AI tool."** NotebookLM, ChatGPT and Claude do not accept `.pptx`,
+  `.doc` or the HTML Canvas exports its Pages as. The app converts as it downloads, so the folder is
+  drag-and-drop ready when it lands.
+- **"I want the lecture recordings."** Panopto, as video, as audio, or as a transcript produced on
+  your own machine.
+
+**It is a desktop app, and that is the whole design.** An installed app can remember what it did
+last time, run on a schedule, and drive software already on your machine. That is what makes sync,
+daily auto-download and file conversion possible at all, and it is why a browser extension or a
+terminal script cannot do those three things. It is meant to sit on your machine for a degree, not
+to be run once and uninstalled.
 
 ---
 
@@ -154,7 +208,20 @@ app to the Trash, and optionally delete `~/Library/Application Support/CanvasDow
 
 ## Features
 
-### Batch download engine
+### Three modes, and which one you want
+
+| Mode | For | In one line |
+|---|---|---|
+| **Download** | The first run, or a full backup | Tick courses, choose what to include, get everything in one pass |
+| **Sync** | The rest of the semester | Compares your folder against Canvas and fetches only what is new or changed |
+| **Today** | Every day, without thinking about it | Auto-downloads new Canvas files the first time you open the app each day |
+
+A download is a snapshot: run it, get a folder, and the folder is out of date the next time your
+lecturer uploads something. A sync is the same courses kept current, which needs a record of what
+happened last time - which is exactly what a popup or a one-off script has nowhere to put. Today is
+Sync mode running by itself.
+
+### Mode 1: Download - every file from every course, in one run
 
 - **Multi-course batch download** - select any combination of courses and pull everything in one run
 - **Canvas structure preserved** - files land in the same folder hierarchy Canvas uses, or flat
@@ -181,7 +248,7 @@ Skip configuration entirely. Pick a preset, pick a folder, press Start.
 
 Or use **Custom Download** for control over every individual setting.
 
-### Sync mode
+### Mode 2: Sync - keep a folder current all semester
 
 Keep any folder **permanently in sync** with its Canvas course. One click pulls every new lecture,
 updated slide deck and freshly posted file since your last run. The engine tracks seven distinct
@@ -209,7 +276,7 @@ Two ways to run it:
 - **Analyze, Review & Sync** - a full per-file diff across all seven states, with bulk selection,
   extension filters and per-file ignore or restore.
 
-### The Today page - sync on autopilot
+### Mode 3: Today - auto-download new Canvas files every day
 
 A daily dashboard built around one idea: you should not have to think about syncing at all.
 
@@ -315,16 +382,69 @@ Keychain) and never written to disk in plain text.
 
 ## How it compares
 
-| | Canvas Downloader | Browser extension | Downloading by hand |
-|---|---|---|---|
-| Whole course in one action | Yes | Usually per page | No |
-| Keeps folders in sync later | Yes, and automatically | No | No |
-| Panopto lecture recordings | Yes, with transcripts | Rarely | No |
-| Converts to AI-ready formats | Yes | No | No |
-| Needs your Canvas password | No, an access token you create and can revoke | Often reads your live session | n/a |
-| Where your files and token go | Only your computer | Varies by extension | Your computer |
-| Works after the semester ends | Yes, you keep the files | n/a | Yes |
-| Cost | Free and open source | Varies | Free, but slow |
+There are four ways to get a Canvas course onto your computer: Canvas's own **Download as Zip**, a
+**browser extension**, a **script**, or a **desktop app**. The shape decides more than any feature
+list does, because the shape decides how long the tool is around. This section is written by the
+person who built one of them, so every row is checkable, and the losses are two tables down. The
+long version, with links into each project's own documentation, is
+[Canvas download tools compared](https://canvasdownloader.app/canvas-download-tools-compared.html).
+
+| What you want | Download as Zip | Browser extension | Script | Canvas Downloader |
+|---|---|---|---|---|
+| Nothing to install | Yes | An add-on | No | No |
+| No access token needed | Yes | Yes | No | No |
+| No terminal, no code | Yes | Yes | No | Yes |
+| Several courses in one run | No | Yes | Varies | Yes |
+| Pages, assignments, announcements | No | Yes | Varies | Yes |
+| The feedback and grades you were given | No | No | Varies | Yes |
+| Shows you what changed before it downloads | No | No | No | Yes |
+| Fetches new material on its own each day | No | No | If you script it | Yes |
+| Leaves the copies you annotated alone | n/a | No | No | Yes |
+| Converts as it downloads, ready for AI tools | No | No | No | Yes |
+| Panopto lecture recordings | No | Some, one at a time | No | Yes, every course at once |
+| Transcribes a recording that has no captions | No | No | No | Yes, on your machine |
+| Cost | Free | Usually free | Free | Free and open source |
+
+Checked August 2026 against each project's own documentation.
+
+**Canvas's own Download as Zip is better than its reputation, and the gap is not where people
+think.** Measured across 33 real Canvas courses at one university: where the Files tab worked, the
+zip missed 3 files out of 358. But in 3 of the 11 courses that held material, Canvas refused the
+Files listing entirely, and those courses held 246 files. And 173 items in the same sample were not
+files at all - Pages, assignment briefs, announcements, discussions, quizzes, feedback - so no zip
+of any kind contains them. Method and numbers:
+[what Canvas's Download as Zip actually misses](https://canvasdownloader.app/what-canvas-download-as-zip-misses.html).
+
+### The specific alternatives, and where each one wins
+
+| Tool | Where it beats this app | Where this app is ahead |
+|---|---|---|
+| **Canvas's own Download as Zip** | Nothing to install, no token, already in front of you | One course at a time, files only, and Canvas's offline export refuses to run once a course is concluded |
+| **[jasp-nerd/canvas-course-downloader](https://github.com/jasp-nerd/canvas-course-downloader)**, a browser extension | **No access token at all** - it rides the Canvas session you already have. Zero setup, several courses, and it skips files it fetched before | Its own README rules out content hosted by third-party LTI tools, so no Panopto. No conversion, no protection for files you edited, and Pages arrive as HTML summaries |
+| **[davekats/canvas-student-data-export](https://github.com/davekats/canvas-student-data-export)**, a script | Far more established, and endlessly flexible if a terminal is somewhere you are comfortable | Needs Python, a credentials file and a token. Its own notes say it cannot capture quiz data, and the maintenance is yours when Canvas changes something |
+| **Panopto caption and video extensions** | Simpler for one recording you are already looking at | Per video, and manual. They export a caption Panopto already made; this app finds every recording across every ticked course and transcribes locally when no caption exists |
+
+### When another tool is the better answer
+
+- **One course, today, nothing installed:** Canvas's own **Download as Zip**.
+- **Your institution has switched off student access tokens:** a browser extension is your only
+  option, because every API tool is closed to you. Worth checking before you install anything.
+- **A tidy archive of a few courses, without installing a desktop app:** a browser extension. No
+  token to renew, and it will cover most of what you want.
+- **You can write code and want it exactly your way:** a script built on `canvasapi`.
+- **You will be doing this all semester, or all degree:** that is the case this app was built for,
+  and the one the other shapes were not built for.
+
+### Where this app loses
+
+- It needs an **access token**, which an extension does not, and Canvas keeps making tokens
+  shorter-lived. Some institutions disable them for students entirely.
+- The install is a **few hundred megabytes** against an extension's few hundred kilobytes.
+- It ships **unsigned** outside the Microsoft Store, so Windows and macOS both warn you the first
+  time you open it.
+- **Office conversions need Microsoft Office installed.** Without it those files are kept exactly as
+  they are rather than converted.
+- It is the **newest and least proven** of the tools listed here.
 
 ---
 
@@ -364,7 +484,219 @@ each day fetches everything new and lists today's files per course.
 
 ---
 
+## Backup, end of semester and graduation
+
+The deadline is not one date. It is three, they belong to different systems, and they close in
+roughly the reverse of the order you would want.
+
+1. **The lecture recordings go first.** Panopto is a separate system with its own retention rules,
+   usually tied to the teaching term rather than to your enrolment. Stanford tells staff that
+   viewers lose access to course recordings "typically the Sunday after grades are due". The same
+   university gives graduating students 120 days of Canvas. Days against months, for two halves of
+   the same course.
+2. **The course concludes.** It goes read-only, and Canvas's own offline export,
+   **Modules → Export Course Content**, will not run any more. The tool built to back a course up
+   has a shorter life than the course. Conclusion is tied to the course rather than to you, so a
+   first-year module can close behind you while you are three years from graduating.
+3. **Your enrolment or your account ends.** Everything goes at once, including any access token you
+   created for a downloading tool.
+
+**How long do you have?** Your university decides, not Instructure, and the published range is
+wide: **120 days** at Stanford, **365 days** after the semester at Washington University, **five
+years** of course-site retention at Penn. Assume less time than you think.
+
+**What to save, in the order the doors close.** Lecture recordings first, because they expire
+soonest and take longest to fetch. Then quiz descriptions and the feedback on your work, neither of
+which appears in any Canvas export. Then Pages, announcements and discussions. Files last, because
+files are the best-protected category on the list.
+
+**Doing it for a whole degree.** Tick every course in the list, choose the **Complete Canvas
+Download** preset, pick a folder, and leave it running. Selecting takes a couple of minutes and the
+run is unattended. Do it while the courses are still open, not after.
+
+Full detail, with sources:
+[how to back up a Canvas course before you lose access](https://canvasdownloader.app/back-up-canvas-course-before-losing-access.html) ·
+[the end-of-semester Canvas checklist](https://canvasdownloader.app/canvas-end-of-semester-checklist.html) ·
+[Canvas access after graduation](https://canvasdownloader.app/canvas-access-after-graduation.html)
+
+---
+
 ## FAQ
+
+### Downloading, syncing and backing up
+
+<details>
+<summary><b>How do I download all the files from a Canvas course at once?</b></summary>
+
+Canvas can zip one course's Files tab at a time, and only what lives in that tab. This app takes any
+number of courses in one run and adds the categories Canvas has no bulk export for: assignment
+briefs, the syllabus, announcements, discussions, quizzes and the feedback you were given. Pick a
+preset, pick a folder, press Start. All five built-in Canvas routes are compared on the website in
+[how to download all files from Canvas](https://canvasdownloader.app/how-to-download-all-canvas-files.html).
+
+</details>
+
+<details>
+<summary><b>Can I download all of my Canvas courses at once, not just one?</b></summary>
+
+Yes. Select as many courses as you like in a single run - a semester, a year, or every course you
+have ever been enrolled in. Each course gets its own folder, laid out the way Canvas lays it out, or
+flat if you prefer. Choosing the courses takes a couple of minutes and the run itself is unattended.
+
+</details>
+
+<details>
+<summary><b>Can I back up my Canvas courses before I lose access?</b></summary>
+
+That is what most people install it for. Tick every course, choose the **Complete Canvas Download**
+preset and pick a folder. Do it while the courses are still open: Canvas's own offline export
+refuses to run once a course has been concluded, and lecture recordings usually disappear before
+your login does. The order to save things in is under
+[Backup, end of semester and graduation](#backup-end-of-semester-and-graduation).
+
+</details>
+
+<details>
+<summary><b>How long do I have access to Canvas after I graduate?</b></summary>
+
+Your university decides this, not Instructure, and the published range is wide: 120 days at
+Stanford, 365 days after the semester at Washington University, five years of course-site retention
+at Penn. Access also ends in three separate ways - the course concludes, your enrolment ends, or
+your account is deactivated - and the first can happen while you are still a student. The full
+answer, with sources, is
+[Canvas access after graduation](https://canvasdownloader.app/canvas-access-after-graduation.html).
+
+</details>
+
+<details>
+<summary><b>Does it still work after a course has ended?</b></summary>
+
+Yes, for as long as you can still open the course in Canvas. A concluded course is read-only rather
+than gone, and the API still serves what you can see. What stops working at that point is Canvas's
+own **Export Course Content** button, which refuses to run on a concluded course. When your
+enrolment ends, everything stops, including your access token.
+
+</details>
+
+<details>
+<summary><b>Can it download new Canvas files automatically every day?</b></summary>
+
+Yes, that is the **Today** page. Pick your courses once, switch on daily sync, and the first time
+you open the app each day it fetches everything new from those courses on its own and lists what
+arrived, grouped per course. The day rolls over at 4 AM, so a late-night session does not count as
+tomorrow. It is a desktop app rather than a background service, so it runs when you open it, not
+while your machine is asleep.
+
+</details>
+
+<details>
+<summary><b>What is the difference between Download mode and Sync mode?</b></summary>
+
+A download is a snapshot: you run it, you get a folder, and the folder is out of date the next time
+your lecturer uploads something. A sync compares the folder on your disk against the course on
+Canvas and fetches only the difference, which is also what lets it show you what changed, skip files
+you have edited, and run on a schedule. Use Download mode for the first run or a full backup, and
+Sync mode for the rest of the semester.
+
+</details>
+
+<details>
+<summary><b>Will it download everything again every time?</b></summary>
+
+No. Every file is fingerprinted with MD5 in a hidden per-folder SQLite manifest, so a sync fetches
+only what is new or genuinely changed. A file your lecturer renamed is matched by similarity rather
+than downloaded a second time, and files you told it to ignore stay ignored.
+
+</details>
+
+<details>
+<summary><b>Can I download Canvas quizzes, Pages, discussions and announcements?</b></summary>
+
+Yes, as readable files, one per item. None of that is a file inside Canvas, so no file download of
+any kind reaches it. One honest limit on quizzes: **Canvas serves quiz questions to teachers only**,
+so a student download saves the quiz's title, instructions and description and then says plainly
+that the questions could not be served, rather than saving a file that looks empty.
+
+</details>
+
+<details>
+<summary><b>Can I save the feedback and grades I was given?</b></summary>
+
+Yes. **Submissions** saves the grade, the rubric assessment, your teacher's written comments and any
+file the teacher attached, per assignment. Canvas's own submissions export hands back the files you
+uploaded and nothing that was said about them, which is the wrong half. It reads only; it never
+uploads or changes anything, and your instructor is not notified.
+
+</details>
+
+<details>
+<summary><b>How do I get my Canvas files into NotebookLM?</b></summary>
+
+Turn on the AI conversions, or pick the **100% AI and NotebookLM ready** preset, and the folder is
+drag-and-drop ready when it lands: PowerPoint and Word become PDF, Canvas Pages become Markdown,
+code files become plain text, lecture video becomes audio. NotebookLM does not accept `.pptx`,
+`.doc` or Canvas's exported HTML, and neither do ChatGPT or Claude. There is a full breakdown of
+what each tool takes in
+[getting Canvas files into NotebookLM](https://canvasdownloader.app/canvas-files-into-notebooklm.html).
+
+</details>
+
+<details>
+<summary><b>Can it download Panopto lecture recordings and transcripts?</b></summary>
+
+Yes. It finds every recording linked in the courses you ticked, without you having to know where
+they are, and saves any combination of MP4 video, MP3 audio, a `.txt` transcript, `.srt` subtitles,
+and a shortcut back to the lecture. Transcription runs on your own machine, so it also works when
+Panopto never produced a caption. Please read the permission question below, and the
+[disclaimer](DISCLAIMER.md), before enabling it.
+
+</details>
+
+<details>
+<summary><b>How is this different from Canvas's Download as Zip?</b></summary>
+
+Download as Zip is one course, files only. It is better than its reputation: measured across 33 real
+Canvas courses, it missed 3 files out of 358 wherever the Files tab worked. The gaps are elsewhere.
+In 3 of the 11 courses holding material, Canvas refused the Files listing entirely, and those held
+246 files. And 173 items in the sample were not files at all, so no zip contains them. Full method:
+[what Canvas's Download as Zip actually misses](https://canvasdownloader.app/what-canvas-download-as-zip-misses.html).
+
+</details>
+
+<details>
+<summary><b>Where do I find my university's Canvas URL?</b></summary>
+
+The login screen has a searchable directory of 4,757 verified Canvas institutions, so you can type
+your university's name instead of its address. There is a crawlable copy on the website at
+[the Canvas URL directory](https://canvasdownloader.app/canvas-url-directory.html), and the same
+data as an open dataset under CC BY 4.0. Any Canvas address works whether or not it is on the list.
+
+</details>
+
+<details>
+<summary><b>Is it really free? What is the catch?</b></summary>
+
+It is free and GPL-3.0 licensed. No premium tier, no ads, no account, no trial. There is no server
+to pay for, because there is no server: the app talks to your university's Canvas from your own
+machine and to nothing else. The nearest thing to a catch is that the direct installer is unsigned,
+so you click through one warning the first time, and that the Windows and macOS builds are a few
+hundred megabytes because everything is bundled.
+
+</details>
+
+<details>
+<summary><b>Will it overwrite work I have edited?</b></summary>
+
+No. If Canvas has a newer version of a file you have edited locally, your copy is kept and the new
+version is saved alongside it with a `_NewVersion` suffix. The same protection covers files the app
+converted for you, such as a PDF made from a slide deck.
+
+Files you deleted on purpose are not downloaded again, and files removed from Canvas are never
+deleted from your disk.
+
+</details>
+
+### Permission, privacy and safety
 
 <details>
 <summary><b>Is this allowed? Will my university know?</b></summary>
@@ -408,24 +740,31 @@ own university's Canvas. You can revoke it from Canvas at any time.
 </details>
 
 <details>
+<summary><b>Does transcription send my lectures to a server?</b></summary>
+
+No. Speech recognition runs on your own computer through faster-whisper. The only thing downloaded
+is the model itself, once, from Hugging Face. Audio never leaves your machine.
+
+</details>
+
+<details>
+<summary><b>Can I use it on a shared or lab computer?</b></summary>
+
+It is better not to. The app signs in automatically from your keyring, and a local server on
+`127.0.0.1` is reachable by other users signed in to the same machine at the same time. Prefer your
+own device.
+
+</details>
+
+### Installing and running
+
+<details>
 <summary><b>Does it work with my university?</b></summary>
 
 If your university uses Canvas, yes. The app talks to the standard Canvas API, not to anything
 institution-specific. The login screen lists 4,757 verified Canvas institutions to save you typing
 the address, but that list is only a convenience - schools not on it work exactly the same way once
 you paste your Canvas URL.
-
-</details>
-
-<details>
-<summary><b>Will it overwrite work I have edited?</b></summary>
-
-No. If Canvas has a newer version of a file you have edited locally, your copy is kept and the new
-version is saved alongside it with a `_NewVersion` suffix. The same protection covers files the app
-converted for you, such as a PDF made from a slide deck.
-
-Files you deleted on purpose are not downloaded again, and files removed from Canvas are never
-deleted from your disk.
 
 </details>
 
@@ -448,27 +787,10 @@ source is in this repository if you would rather build it yourself.
 </details>
 
 <details>
-<summary><b>Does transcription send my lectures to a server?</b></summary>
-
-No. Speech recognition runs on your own computer through faster-whisper. The only thing downloaded
-is the model itself, once, from Hugging Face. Audio never leaves your machine.
-
-</details>
-
-<details>
 <summary><b>Does it work on an Intel Mac?</b></summary>
 
 No. The macOS build is Apple Silicon only (M1 or later). Running from source on an Intel Mac may
 work but is not tested or supported.
-
-</details>
-
-<details>
-<summary><b>Can I use it on a shared or lab computer?</b></summary>
-
-It is better not to. The app signs in automatically from your keyring, and a local server on
-`127.0.0.1` is reachable by other users signed in to the same machine at the same time. Prefer your
-own device.
 
 </details>
 
@@ -496,7 +818,7 @@ own device.
 
 ## Architecture
 
-Canvas Downloader is 81 Python modules (about 4.3 MB of source) covered by **3,827 tests**, in a
+Canvas Downloader is 82 Python modules (about 4.4 MB of source) covered by **4,521 tests**, in a
 deliberately modular structure.
 
 ```text
@@ -572,7 +894,7 @@ shared/                      Cross-cutting utilities
 
 styles/                      Static CSS injected via inject_css()
 scripts/                     Build and maintenance tooling, not bundled in the app
-tests/                       3,827 tests
+tests/                       4,521 tests
 ```
 
 ### Notable engineering decisions

@@ -31,6 +31,9 @@ import subprocess
 import sys
 import pathlib
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import page_fingerprint  # noqa: E402  (needs the path line above)
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 SITEMAP = DOCS / "sitemap.xml"
@@ -38,22 +41,29 @@ BASE = "https://canvasdownloader.app/"
 
 
 def commit_date(path: pathlib.Path) -> str | None:
-    """Last commit date for one file, as YYYY-MM-DD, or None if unknown.
+    """Date this page's CONTENT last changed, as YYYY-MM-DD, or None if unknown.
 
-    Returns None rather than raising on a shallow checkout: GitHub Actions
-    clones with `fetch-depth: 1` by default, where `git log` for a path is
-    legitimately empty. A guard that cannot see history must say so instead of
-    reporting every page as stale.
+    Not the file's last commit date. Every page under `docs/` carries its own copy
+    of the shared stylesheet, so a cosmetic sweep rewrites all of them: measured
+    2026-09-01 over the five most recent website commits, **83 page writes and 76
+    of them (92%) with nothing a search engine reads changed**, every one of which
+    used to move a `lastmod` here. Google reads that as "all 24 URLs change
+    together, every other day", which is the pattern that makes it stop trusting
+    the field - on a site whose crawl was 82.38% refresh against 17.62% discovery
+    while seven pages had never been fetched at all.
+
+    `page_fingerprint` is the single implementation of "did the content change",
+    shared with `ping_indexnow.py`. Do not inline a second copy of that rule here.
+
+    Returns None rather than raising on a shallow checkout: GitHub Actions clones
+    with `fetch-depth: 1` by default, where `git log` for a path is legitimately
+    empty. A guard that cannot see history must say so instead of reporting every
+    page as stale.
     """
     try:
-        out = subprocess.run(
-            ["git", "log", "-1", "--format=%cs", "--", str(path)],
-            cwd=ROOT, capture_output=True, text=True, timeout=30,
-        )
+        return page_fingerprint.content_commit_date(str(path))
     except (OSError, subprocess.SubprocessError):
         return None
-    date = out.stdout.strip()
-    return date or None
 
 
 def local_path(loc: str) -> pathlib.Path:

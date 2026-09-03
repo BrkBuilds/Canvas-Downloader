@@ -103,7 +103,7 @@
             "name": "What is Export Course Content on the Modules page?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Canvas's offline content feature. It packages the course as HTML you can read with no login, and students can use it. The catch is that it is an administrator setting, so it is simply absent at many institutions. Instructure also states that offline content cannot be downloaded once a course is concluded."
+              "text": "Canvas's offline content feature. It packages the course as HTML you can read with no login, and students can use it. The catch is that it is an administrator setting. At many institutions it is simply absent. Instructure also states that offline content cannot be downloaded once a course is concluded."
             }
           },
           {
@@ -119,7 +119,7 @@
             "name": "Why can students not export a Canvas course the way instructors can?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "The complete export - the .imscc course export package containing settings, syllabus, modules, assignments, quizzes, question banks, discussions, pages, announcements, rubrics and files - requires a teacher role. It exists and is well documented, which is why so many guides describe a button students do not have. Asking a lecturer to run one takes them about a minute."
+              "text": "The complete export, the .imscc package containing settings, syllabus, modules, assignments, quizzes, question banks, discussions, pages, announcements, rubrics and files, requires a teacher role. It exists and is well documented, which is why so many guides describe a button students do not have. Asking a lecturer to run one takes them about a minute."
             }
           },
           {
@@ -135,7 +135,7 @@
             "name": "How do I save a Canvas discussion with all the replies?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Expand the whole thread first, including any \"show more replies\" links, then print the page to PDF. The offline HTML export will not do it - replies count as submissions and are online-only - so it is either printing or a tool that reads the discussions API."
+              "text": "Expand the whole thread first, including any \"show more replies\" links, then print the page to PDF. The offline HTML export will not do it, because replies count as submissions and are online-only. That leaves printing, or a tool that reads the discussions API."
             }
           },
           {
@@ -151,7 +151,7 @@
             "name": "Does this include New Quizzes?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "The offline HTML export gives only the description for any quiz, new or classic. Canvas Downloader fetches Classic Quizzes with their questions; New Quizzes is a separate Instructure product delivered as an external tool and is not covered, so for those the reliable route is still printing the results page while you can see it."
+              "text": "The offline HTML export gives only the description for any quiz, new or classic. Canvas Downloader saves Classic Quizzes with their questions; New Quizzes is a separate Instructure product delivered as an external tool and is not covered. For those the reliable route is still printing the results page while you can see it."
             }
           }
         ]
@@ -677,7 +677,7 @@
   <div class="hero">
     <div class="container wide">
       <h1>How to save Canvas quizzes, Pages, discussions and announcements</h1>
-      <p class="sub">Half a Canvas course is not made of files. There is one built-in route to the other half, it has a hard deadline, and almost nobody knows about either.</p>
+      <p class="sub">Half a Canvas course is not made of files. One built-in route reaches the other half, on a hard deadline. Almost nobody knows it exists.</p>
       <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-27">27 August 2026</time></span></p>
     </div>
   </div>
@@ -691,9 +691,9 @@
         an <strong>Export Course Content</strong> button on the
         <strong>Modules</strong> page that packages the course as browsable
         HTML. Students can use it, but it is an administrator setting that is
-        absent at many institutions - and Instructure states that offline
+        absent at many institutions. Instructure also states that offline
         content <strong>cannot be downloaded once a course is concluded</strong>,
-        so it closes at exactly the moment people go looking. <a href="back-up-canvas-course-before-losing-access.html">Backing up a course before you lose access</a> is the procedure that follows from that.</p>
+        which closes it at exactly the moment people go looking. <a href="back-up-canvas-course-before-losing-access.html">Backing up a course before you lose access</a> is the procedure that follows from that.</p>
         <p>It also leaves out the two things most worth having: "Discussions and
         quizzes only include the description", and discussion replies must be
         viewed online. The complete <code>.imscc</code> course export needs a
@@ -720,8 +720,7 @@
       <p class="lede">Half of a Canvas course is not made of files. The quiz you
       revised from, the thread where the answer finally appeared, the Page with
       the reading list on it, the announcement that changed the exam format:
-      none of that is in the Files tab. So none of it comes down when you zip
-      that tab, and most guides to downloading Canvas never mention it.</p>
+      none of that is in the Files tab. So none of it comes down when you zip that tab. Most guides to downloading Canvas never mention it.</p>
 
       <p>There is one built-in route to it. It has a hard deadline, and almost
       nobody knows about either.</p>
@@ -749,7 +748,7 @@
 
       <p>Most people have never seen it, for two reasons. It is
       <a class="src" href="https://community.instructure.com/en/kb/articles/661133-how-do-i-allow-course-content-to-be-exported-as-an-offline-html-file" target="_blank" rel="noopener">an administrator setting</a>
-      that has to be switched on, so it is simply absent at many institutions.
+      that has to be switched on. At many institutions it is simply absent.
       And it lives on the Modules page, which is not where anybody looks for a
       download.</p>
 
@@ -806,8 +805,7 @@
         The same article states: "When exporting course content, you may not
         reproduce or communicate any of the content in the course, including
         exported files, without your institution's prior written permission."
-        That is about redistribution rather than about keeping a personal study
-        copy, and it is the same line every route on this page sits behind.</p>
+        That is about redistribution rather than about keeping a personal study copy. Every route on this page sits behind the same line.</p>
       </div>
 
       <h2 id="imscc">The export your lecturer can do and you cannot</h2>
@@ -834,8 +832,7 @@
       <p>With no offline export, this is the fallback, and the mechanism is the
       same everywhere: <strong>print the page to PDF</strong>
       (<code>Ctrl</code>+<code>P</code> or <code>Cmd</code>+<code>P</code>, then
-      Save as PDF). It is crude, it works everywhere, and it captures what you
-      can see.</p>
+      Save as PDF). Crude, but it works everywhere and captures what you can see.</p>
 
       <ul>
         <li><strong>Pages.</strong> Open each one and print it. Check the Pages
@@ -854,14 +851,12 @@
         <li><strong>Quizzes.</strong> See below - this one has a timer on it.</li>
       </ul>
 
-      <p>Budget realistically. A course with 30 Pages, 20 announcements and a
-      dozen discussions is an afternoon, and you have several courses.</p>
+      <p>Budget realistically. A course with 30 Pages, 20 announcements and a dozen discussions is an afternoon. You have several courses.</p>
 
       <h2 id="quizzes">Quizzes are the urgent one</h2>
 
       <p>Everything else on this page stays visible for as long as you can open
-      the course. Quiz questions and your answers may not, and the reason is a
-      setting your lecturer chose before you ever took it.</p>
+      the course. Quiz questions and your answers may not. The reason is a setting your lecturer chose before you ever took it.</p>
 
       <p>Canvas offers <em>Let Students See Their Quiz Responses</em> with an
       option called <strong>Only Once After Each Attempt</strong>. Rice
@@ -875,10 +870,7 @@
       front of you, that may be the only time they ever will be.</strong> Print
       it to PDF before you close the tab.</p>
 
-      <p>This matters more than it sounds for revision. A past quiz is the
-      closest thing most courses give you to a specimen exam paper, and the
-      version with your own wrong answers marked on it is worth considerably more
-      than a clean copy.</p>
+      <p>This matters more than it sounds for revision. A past quiz is the closest thing most courses give you to a specimen exam paper. The version with your own wrong answers marked on it is worth considerably more than a clean copy.</p>
 
       <h2 id="worth">What is actually worth saving</h2>
 
@@ -902,17 +894,14 @@
 
       <h2 id="app">What this app does with it</h2>
 
-      <p>Canvas Downloader reads the Canvas API directly rather than the Files
-      tab, so it can fetch the things that are not files and write them out as
+      <p>Canvas Downloader reads the Canvas API directly rather than the Files tab. That lets it save the things that are not files and write them out as
       readable documents beside the slides: <strong>assignments, announcements,
       discussions with their replies, quizzes with their questions, the syllabus,
-      rubrics, and the feedback on your own submissions</strong>. It does that
-      for every course you select in one run, and it can put each kind in its own
-      folder or leave everything inline.</p>
+      rubrics, and the feedback on your own submissions</strong>. It does that for every course you select in one run. Each kind can go in its own folder, or everything can stay inline.</p>
 
-      <p>Two limits worth stating. It fetches <strong>Classic Quizzes</strong>;
+      <p>Two limits worth stating. It saves <strong>Classic Quizzes</strong>;
       <em>New Quizzes</em> is a separate Instructure product delivered as an
-      external tool, and it is not covered. It can also only ever save what
+      external tool, and is not covered. It can also only ever save what
       your account is allowed to see. If a quiz's results are hidden from you by
       the setting above, they are hidden from any tool acting as you, which is
       exactly as it should be.</p>
@@ -941,7 +930,7 @@
       </details>
       <details class="faq">
         <summary>What is Export Course Content on the Modules page?</summary>
-        <div><p>Canvas's offline content feature. It packages the course as HTML you can read with no login, and students can use it. The catch is that it is an administrator setting, so it is simply absent at many institutions. Instructure also states that offline content cannot be downloaded once a course is concluded.</p></div>
+        <div><p>Canvas's offline content feature. It packages the course as HTML you can read with no login, and students can use it. The catch is that it is an administrator setting. At many institutions it is simply absent. Instructure also states that offline content cannot be downloaded once a course is concluded.</p></div>
       </details>
       <details class="faq">
         <summary>Does the offline HTML export include quiz questions and discussion replies?</summary>
@@ -949,7 +938,7 @@
       </details>
       <details class="faq">
         <summary>Why can students not export a Canvas course the way instructors can?</summary>
-        <div><p>The complete export - the .imscc course export package containing settings, syllabus, modules, assignments, quizzes, question banks, discussions, pages, announcements, rubrics and files - requires a teacher role. It exists and is well documented, which is why so many guides describe a button students do not have. Asking a lecturer to run one takes them about a minute.</p></div>
+        <div><p>The complete export, the .imscc package containing settings, syllabus, modules, assignments, quizzes, question banks, discussions, pages, announcements, rubrics and files, requires a teacher role. It exists and is well documented, which is why so many guides describe a button students do not have. Asking a lecturer to run one takes them about a minute.</p></div>
       </details>
       <details class="faq">
         <summary>Can I still see my quiz answers after the course ends?</summary>
@@ -957,7 +946,7 @@
       </details>
       <details class="faq">
         <summary>How do I save a Canvas discussion with all the replies?</summary>
-        <div><p>Expand the whole thread first, including any "show more replies" links, then print the page to PDF. The offline HTML export will not do it - replies count as submissions and are online-only - so it is either printing or a tool that reads the discussions API.</p></div>
+        <div><p>Expand the whole thread first, including any "show more replies" links, then print the page to PDF. The offline HTML export will not do it, because replies count as submissions and are online-only. That leaves printing, or a tool that reads the discussions API.</p></div>
       </details>
       <details class="faq">
         <summary>Is it against the rules to save course content?</summary>
@@ -965,7 +954,7 @@
       </details>
       <details class="faq">
         <summary>Does this include New Quizzes?</summary>
-        <div><p>The offline HTML export gives only the description for any quiz, new or classic. Canvas Downloader fetches Classic Quizzes with their questions; New Quizzes is a separate Instructure product delivered as an external tool and is not covered, so for those the reliable route is still printing the results page while you can see it.</p></div>
+        <div><p>The offline HTML export gives only the description for any quiz, new or classic. Canvas Downloader saves Classic Quizzes with their questions; New Quizzes is a separate Instructure product delivered as an external tool and is not covered. For those the reliable route is still printing the results page while you can see it.</p></div>
       </details>
 
       <div class="author-box" id="about-the-author">

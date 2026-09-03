@@ -111,7 +111,7 @@
             "name": "My course has no Files link in the navigation. What now?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Teachers can hide the Files tab, and that removes the built-in bulk download for that course. You can still open each file through the modules, use a browser extension on the module page, or use an API-based tool, which reads the modules rather than the Files tab."
+              "text": "Teachers can hide the Files tab. That removes the built-in bulk download for that course. You can still open each file through the modules, use a browser extension on the module page, or use an API-based tool, which reads the modules rather than the Files tab."
             }
           },
           {
@@ -135,7 +135,7 @@
             "name": "What is a Canvas access token and is it safe to use one?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "It is a key you generate yourself in Canvas under Account then Settings, and it grants exactly what your own account can already reach - your courses, your files, your grades. It cannot reach other students' data, it is not your password, and you can revoke it at any time from the same screen."
+              "text": "It is a key you generate yourself in Canvas under Account then Settings, and it grants exactly what your own account can already reach - your courses, your files, your grades. A token cannot reach other students' data, and it is not your password. You can revoke it at any time from the same screen."
             }
           },
           {
@@ -143,7 +143,7 @@
             "name": "Can I download Panopto lecture recordings from Canvas?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Not through any Canvas export. Panopto is a separate system that Canvas links out to, so recordings have to be fetched from Panopto itself. Some tools handle this; check your institution's rules first, because recordings are the material universities restrict most often."
+              "text": "Not through any Canvas export. Panopto is a separate system that Canvas links out to, so recordings have to be downloaded from Panopto itself. Some tools handle this; check your institution's rules first, because recordings are the material universities restrict most often."
             }
           },
           {
@@ -687,8 +687,7 @@
       <div class="short-answer">
         <p class="sa-label">Short answer</p>
         <p>Canvas has no single button for this. It can zip <strong>one
-        course's Files tab at a time</strong> - open the course, click Files,
-        press Ctrl or Cmd + A, then Download as Zip - and it can export
+        course's Files tab at a time</strong> (open the course, click Files, press Ctrl or Cmd + A, then Download as Zip), and it can export
         <strong>every file you have submitted</strong>, from Account then
         Settings then Download Submissions.</p>
         <p>Neither one includes Pages, assignment briefs, announcements,
@@ -717,10 +716,7 @@
       </div>
 
       <p class="lede">There is no button in Canvas that downloads everything from
-      every course. That is the honest starting point, and it is why this
-      question gets asked so often. What Canvas gives you is a per-course zip of
-      one particular tab, and that tab is frequently not where your slides
-      actually live.</p>
+      every course. That is the honest starting point. It is why this question gets asked so often. What Canvas gives you is a per-course zip of one particular tab. That tab is frequently not where your slides actually live.</p>
 
       <p>Below is every route that works, what each one really collects, and
       where each one stops. Four of the five need no software at all, so start
@@ -728,8 +724,7 @@
 
       <h2 id="builtin">What Canvas can do on its own</h2>
 
-      <p>Canvas has exactly two bulk exports available to a student, and they
-      cover different things:</p>
+      <p>Canvas has exactly two bulk exports available to a student. They cover different things:</p>
 
       <ul>
         <li><strong>A course's Files tab</strong>, zipped. One course per zip.</li>
@@ -745,8 +740,7 @@
       That is still the state of it.</p>
 
       <div class="note">
-        <p><strong>"Can't I just export the course?"</strong> No, and this trips
-        up a lot of people. Canvas does have a full course export that produces
+        <p><strong>"Can't I just export the course?"</strong> No. This trips up a lot of people. Canvas does have a full course export that produces
         an <code>.imscc</code> package containing everything, but it is an
         instructor permission. As a student you will not see the option, and
         asking your instructor to run one for you is a real request rather than a
@@ -831,8 +825,7 @@
 
       <div class="note warn">
         <p>The export contains the files exactly as <em>you</em> submitted them.
-        It does <strong>not</strong> include instructor-annotated versions, and it
-        carries none of your grades or feedback comments. That is worth knowing
+        It does <strong>not</strong> include instructor-annotated versions, and carries none of your grades or feedback comments. That is worth knowing
         before you assume you have saved everything: the annotated copy of your
         dissertation draft is not in this zip.</p>
       </div>
@@ -844,29 +837,24 @@
       further and follow links into Pages to find attachments the Files tab does
       not list.</p>
 
-      <p><strong>What they are good at:</strong> speed and zero setup. You are
-      already logged in, so there is no token to create and nothing to install
-      beyond the extension. For grabbing one messy module quickly, an extension
+      <p><strong>What they are good at:</strong> speed and zero setup. You are already logged in. There is no token to create and nothing to install beyond the extension. For grabbing one messy module quickly, an extension
       is hard to beat.</p>
 
       <p><strong>What to weigh up:</strong> an extension that can read your
-      Canvas pages can read whatever else you have told it it can read, so the
-      permissions it asks for are worth reading before you click Add. They work
+      Canvas pages can read whatever else you have granted it. The permissions it asks for are worth reading before you click Add. They work
       per page rather than per account, so "all my courses at once" is not
-      normally on offer. They cannot fetch anything that is not reachable from a
-      page you have open, and they have no memory of what they fetched last
+      normally on offer. They cannot reach anything that is not reachable from a
+      page you have open, and they have no memory of what they downloaded last
       time, so every run starts from scratch.</p>
 
       <h2 id="scripts">Method 4: Scripts and command-line tools</h2>
 
       <p>There are good open-source scripts that talk to the Canvas API directly.
       They tend to be the most flexible option in existence: if you can read the
-      code, you can make it fetch exactly what you want, in exactly the layout
+      code, you can make it download exactly what you want, in exactly the layout
       you want, on a schedule.</p>
 
-      <p>The cost is that you need Python or Node installed, you need to be
-      comfortable in a terminal, and you need to keep the thing working when
-      something changes. That is a fine trade for some people and a wall for
+      <p>The cost is Python or Node installed, a terminal you are comfortable in, and the upkeep when something changes. That is a fine trade for some people and a wall for
       most. If you are studying computer science, this is probably your best
       option and you should ignore the rest of this page.</p>
 
@@ -876,8 +864,7 @@
       this is our site you should read this section knowing that. It is free,
       open source and the entire codebase is
       <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank"
-      rel="noopener">public on GitHub</a>, so you can check every claim below
-      rather than take our word for it.</p>
+      rel="noopener">public on GitHub</a>, so every claim below can be checked rather than taken on trust.</p>
 
       <p>It signs in with
       <a href="canvas-access-token-explained.html">an access token you create
@@ -896,14 +883,13 @@
       </ul>
 
       <p>Two things it adds that a one-off download cannot: it can
-      <strong>sync</strong>, meaning the second run fetches only what is new or
+      <strong>sync</strong>, meaning the second run downloads only what is new or
       changed and leaves everything else alone, and it can save
       <strong>Panopto lecture recordings</strong> as video, audio, a transcript
       or subtitles, with the transcription running on your own machine.</p>
 
       <div class="note warn">
-        <p><strong>The honest caveat:</strong> it needs an access token, and a
-        small number of institutions have turned off students' ability to create
+        <p><strong>The honest caveat:</strong> it needs an access token. A small number of institutions have turned off students' ability to create
         one. If your Canvas account settings have no "New Access Token" button,
         no API-based tool can work for you, and Methods 1 to 3 are your options.
         Check before you install anything, and see
@@ -954,7 +940,7 @@
               <td class="no">No</td><td class="part">Rarely</td><td class="yes">Yes</td>
             </tr>
             <tr>
-              <td>Only fetches what changed</td>
+              <td>Only downloads what changed</td>
               <td class="no">No</td><td class="no">No</td>
               <td class="no">No</td><td class="part">Varies</td><td class="yes">Yes</td>
             </tr>
@@ -1002,7 +988,7 @@
       assignment feedback</a>.</p>
 
       <p><strong>You want the Pages, quizzes, discussions and announcements.</strong>
-      None of them is a file, so nothing on this page reaches them. There is one
+      None of them is a file. Nothing on this page reaches them. There is one
       built-in route with a deadline on it -
       <a href="save-canvas-pages-quizzes-discussions.html">how to save Canvas
       quizzes, Pages and discussions</a>.</p>
@@ -1018,11 +1004,11 @@
 
       <div class="cta-box">
         <h3>Every course, in one run</h3>
-        <p>Tick the courses you want and Canvas Downloader fetches all of them:
+        <p>Tick the courses you want and Canvas Downloader downloads all of them:
         the Files tab, the files hidden in modules and Pages that the zip misses,
         and the categories Canvas has no export for at all - assignments,
         announcements, discussions, quizzes, the syllabus, and the feedback on
-        your own work. Run it again next month and it fetches only what
+        your own work. Run it again next month and it downloads only what
         changed.</p>
         <p>Free and open source, for Windows and macOS. Runs on your own
         computer: no account, no server, nothing uploaded.</p>
@@ -1044,7 +1030,7 @@
       </details>
       <details class="faq">
         <summary>My course has no Files link in the navigation. What now?</summary>
-        <div><p>Teachers can hide the Files tab, and that removes the built-in bulk download for that course. You can still open each file through the modules, use a browser extension on the module page, or use an API-based tool, which reads the modules rather than the Files tab.</p></div>
+        <div><p>Teachers can hide the Files tab. That removes the built-in bulk download for that course. You can still open each file through the modules, use a browser extension on the module page, or use an API-based tool, which reads the modules rather than the Files tab.</p></div>
       </details>
       <details class="faq">
         <summary>Is it legal to download my Canvas course files?</summary>
@@ -1056,11 +1042,11 @@
       </details>
       <details class="faq">
         <summary>What is a Canvas access token and is it safe to use one?</summary>
-        <div><p>It is a key you generate yourself in Canvas under Account then Settings, and it grants exactly what your own account can already reach - your courses, your files, your grades. It cannot reach other students' data, it is not your password, and you can revoke it at any time from the same screen.</p></div>
+        <div><p>It is a key you generate yourself in Canvas under Account then Settings, and it grants exactly what your own account can already reach - your courses, your files, your grades. A token cannot reach other students' data, and it is not your password. You can revoke it at any time from the same screen.</p></div>
       </details>
       <details class="faq">
         <summary>Can I download Panopto lecture recordings from Canvas?</summary>
-        <div><p>Not through any Canvas export. Panopto is a separate system that Canvas links out to, so recordings have to be fetched from Panopto itself. Some tools handle this; check your institution's rules first, because recordings are the material universities restrict most often.</p></div>
+        <div><p>Not through any Canvas export. Panopto is a separate system that Canvas links out to, so recordings have to be downloaded from Panopto itself. Some tools handle this; check your institution's rules first, because recordings are the material universities restrict most often.</p></div>
       </details>
       <details class="faq">
         <summary>Will these methods work after my course ends?</summary>

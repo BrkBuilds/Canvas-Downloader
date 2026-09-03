@@ -103,7 +103,7 @@
             "name": "What is the difference between downloading a Canvas course and syncing it?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "A download is a snapshot. You run it, you get a folder, and the folder is wrong again the next time your lecturer uploads something. A sync compares what is on your disk against what is on Canvas and fetches only the difference, which means it can also tell you what changed, skip files you have edited, and run on a schedule. Most tools in this category download. Syncing needs somewhere to keep a record between runs, which is why it tends to be a desktop app that does it."
+              "text": "A download is a snapshot. You run it and you get a folder. The folder is wrong again the next time your lecturer uploads something. A sync compares what is on your disk against what is on Canvas and downloads only the difference, which means it can also tell you what changed, skip files you have edited, and run on a schedule. Most tools in this category download. Syncing needs somewhere to keep a record between runs, which is why it tends to be a desktop app that does it."
             }
           },
           {
@@ -111,7 +111,7 @@
             "name": "Do Canvas downloader extensions need an API token?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No, and it is their main advantage. They use the Canvas session your browser already has, so there is nothing to generate and nothing to renew. Since Canvas now forces access tokens to expire, that advantage has grown rather than shrunk."
+              "text": "No. It is their main advantage. They use the Canvas session your browser already has, so nothing has to be generated or renewed. Since Canvas now forces access tokens to expire, that advantage has grown rather than shrunk."
             }
           },
           {
@@ -143,7 +143,7 @@
             "name": "Will these tools overwrite files I have annotated?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Most of them will, and it is worth knowing before it costs you a semester of notes. From the outside your annotated PDF is the same file with an older timestamp than the one now on Canvas, so a tool that fetches updates will replace it. Canvas Downloader checks whether you changed the file and saves the new version beside yours instead. If you use anything else, keep your annotated copies in a separate folder the tool never writes to."
+              "text": "Most of them will. Worth knowing before it costs you a semester of notes. From the outside your annotated PDF is the same file with an older timestamp than the one now on Canvas, so a tool that downloads updates will replace it. Canvas Downloader checks whether you changed the file and saves the new version beside yours instead. If you use anything else, keep your annotated copies in a separate folder the tool never writes to."
             }
           },
           {
@@ -167,7 +167,7 @@
             "name": "Can I use more than one of these?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes, and it is often sensible. An extension for a quick grab of one messy module, something API-based for the material you keep all semester. They read the same Canvas and write ordinary files, so nothing conflicts as long as you point them at different folders."
+              "text": "Yes. It is often sensible. An extension for a quick grab of one messy module, something API-based for the material you keep all semester. They read the same Canvas and write ordinary files, so nothing conflicts, as long as you point them at different folders."
             }
           }
         ]
@@ -693,7 +693,7 @@
   <div class="hero">
     <div class="container wide">
       <h1>Canvas download tools compared: extension, script or app</h1>
-      <p class="sub">Three shapes, three trade-offs, and the choice turns on how long you need it to keep working. Written by someone who built one of them, which you should know first.</p>
+      <p class="sub">Three shapes and three trade-offs. The choice turns on how long you need it to keep working. Written by someone who built one of them, which you should know first.</p>
       <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-27">27 August 2026</time></span></p>
     </div>
   </div>
@@ -702,10 +702,8 @@
     <div class="art">
       <div class="short-answer">
         <p class="sa-label">Short answer</p>
-        <p>Three shapes, and the shape decides most of it. A <strong>browser
-        extension</strong> rides your existing Canvas login, so there is no
-        access token to generate or renew, and it runs only while you have the
-        popup open. A <strong>script</strong> gives total control if you can
+        <p>Three shapes. The shape decides most of it. A <strong>browser
+        extension</strong> rides your existing Canvas login, so there is no access token to generate or renew. It runs only while you have the popup open. A <strong>script</strong> gives total control if you can
         write code and use a terminal. A <strong>desktop app</strong> is
         installed, so it can keep a record between runs, work on a schedule, and
         use software already on your machine.</p>
@@ -769,9 +767,7 @@
         while you are in a lecture.</li>
       </ul>
 
-      <p>What all three have in common is the verb. They fetch. Point them at a
-      course, get a copy, and the differences are how much they can reach and
-      how much setup they cost you first. Canvas's own <strong>Download as
+      <p>What all three have in common is the verb. They download. Point them at a course and get a copy. The differences are how much they can reach, and how much setup they cost you first. Canvas's own <strong>Download as
       Zip</strong> button does the same job with less reach and no setup at
       all.</p>
 
@@ -789,11 +785,9 @@
       semester. Slides go up on Mondays and Thursdays, sometimes a corrected
       version of one you already have. You have annotated four of them. You want
       the folder on your laptop to be right in March without you having to think
-      about it. That is a different question, and the answer turns on what the
-      tool remembers and when it runs.</p>
+      about it. That is a different question. The answer turns on what the tool remembers and when it runs.</p>
 
-      <p>Most comparisons only test the first job. It is the easier one, and it
-      is the one where these tools are hardest to tell apart.</p>
+      <p>Most comparisons only test the first job. It is the easier one, and also where these tools are hardest to tell apart.</p>
 
       <h2 id="extensions">Browser extensions</h2>
 
@@ -813,8 +807,7 @@
       <p>It also does more than extensions used to. It downloads files, pages,
       assignments, announcements, discussions, modules, syllabus and grades. You
       can select several courses at once. It has an incremental mode that
-      "skips files you've already downloaded on previous runs", so it does
-      remember the useful half.</p>
+      "skips files you've already downloaded on previous runs", so it remembers the useful half.</p>
 
       <p>Its stated limits are worth quoting, because they are the honest
       boundary of the whole category:</p>
@@ -837,10 +830,7 @@
       code. It is what a popup is.</p>
 
       <p>One thing to check yourself: permissions. This one is scoped narrowly
-      to Canvas domains, which is the right way to do it, and it is open source
-      so you can verify that. Not all of them are either. An extension asking to
-      read every page you visit is asking for a lot, and the Chrome Web Store
-      listing tells you what it wants before you install.</p>
+      to Canvas domains, which is the right way to do it. It is open source, so you can check. Not all of them are either. An extension asking to read every page you visit is asking for a lot. The Chrome Web Store listing tells you what it wants before you install.</p>
 
       <h2 id="scripts">Scripts and command-line tools</h2>
 
@@ -858,22 +848,18 @@
       before you run it, nothing else comes close. For a computing student this
       is plainly the right answer.</p>
 
-      <p>They are also written by developers for developers, and it shows in
-      what they ask of you.</p>
+      <p>They are also written by developers for developers. It shows in what they ask of you.</p>
 
       <ul>
         <li><strong>Setup.</strong> Python 3.8 or newer, a dependency install, a
-        credentials file, and an access token. davekats' HTML snapshot feature
-        additionally wants Node 16 and a browser cookies file.</li>
+        credentials file, and an access token. davekats' HTML snapshot feature also wants Node 16 and a browser cookies file.</li>
         <li><strong>Maintenance is yours.</strong> When Canvas changes something
         or a dependency breaks, you are the one reading the traceback.</li>
         <li><strong>Coverage varies.</strong> davekats' own notes say it cannot
         capture quiz data. Others are narrower still.</li>
       </ul>
 
-      <p>If a terminal is not somewhere you are comfortable, the honest answer
-      is that this category was not built with you in mind, and there is no
-      shame on either side of that.</p>
+      <p>If a terminal is not somewhere you are comfortable, the honest answer is that this category was not built with you in mind. There is no shame on either side of that.</p>
 
       <div class="note warn">
         <p><strong>Check the last commit date before you trust a script.</strong>
@@ -886,9 +872,7 @@
       <h2 id="apps">What a resident app does that neither can</h2>
 
       <p>This is the category my own project is in, so check the claims rather
-      than taking the framing. Every one of these is a screen you can look at
-      after installing it, and the next section is the other side of the
-      ledger.</p>
+      than taking the framing. Every one of these is a screen you can look at after installing it. The next section is the other side of the ledger.</p>
 
       <p>An app is installed, so it can keep state, run on a schedule, and talk
       to software already on your machine. Those three capabilities are where
@@ -908,28 +892,25 @@
       once, so "all the PDFs, none of the 400 MB recordings" is two clicks.</p>
 
       <p>If you only look at one thing on this page, look at that screen. The
-      other tools fetch first and tell you afterwards.</p>
+      other tools download first and tell you afterwards.</p>
 
       <h3>Quick Sync, for the other ninety percent of the time</h3>
 
       <p>Most weeks you do not want a review screen. <strong>Quick Sync</strong>
       takes the new files and the safe updates and leaves everything else where
       it is. It skips anything you have edited, anything you deleted on purpose,
-      and anything you told it to ignore. It takes about as long as making
-      coffee.</p>
+      and anything you told it to ignore. The whole thing takes about as long as making coffee.</p>
 
       <h3>Today's files</h3>
 
       <p>Add the courses you are actually taking to a daily list and the app
-      fetches their new material on its own. The <strong>Today</strong> page
+      downloads their new material on its own. The <strong>Today</strong> page
       then shows what arrived today across all of them, in one list, with the
       course each file came from.</p>
 
       <p>On a normal Tuesday you open it, see three new slide decks from two
       courses, and close it again. No course pages, no clicking through modules,
-      no wondering whether you missed something. This is the feature I would
-      have wanted as a student, and a popup or a terminal command cannot be
-      it.</p>
+      no wondering whether you missed something. This is the feature I would have wanted as a student. A popup or a terminal command cannot be it.</p>
 
       <h3>The files arrive usable</h3>
 
@@ -948,16 +929,14 @@
       <a href="canvas-files-into-notebooklm.html">getting Canvas files into
       NotebookLM</a>.</p>
 
-      <p>No other tool on this page does this, and I doubt that is an oversight.
-      Converting a PowerPoint needs software installed on your machine, and a
-      browser extension cannot reach any of it.</p>
+      <p>No other tool on this page does this. I doubt that is an oversight.
+      Converting a PowerPoint needs software installed on your machine. A browser extension cannot reach any of it.</p>
 
       <h3>It keeps the copy you wrote on</h3>
 
       <p>You annotate a lecture PDF on Tuesday. On Friday the lecturer
       re-uploads it with a corrected slide. To any of these tools that is the
-      same file with a newer timestamp, so it gets overwritten and your notes
-      are gone.</p>
+      same file with a newer timestamp, so it gets overwritten. Your notes are gone.</p>
 
       <p>This one checks whether you changed the file, keeps yours, and puts the
       new version beside it with <code>_NewVersion</code> in the name. It sounds
@@ -972,7 +951,7 @@
 
       <h2 id="losses">Where my own app loses</h2>
 
-      <p>This part is longer than the marketing would like, and it should be.</p>
+      <p>This part is longer than the marketing would like. It should be.</p>
 
       <p><strong>It is the newest and least proven thing here.</strong> davekats'
       script has 265 GitHub stars. Mine has 2. That gap is real, and part of
@@ -993,9 +972,7 @@
       And it <strong>ships unsigned</strong>, so Windows and macOS both warn you
       the first time you open it, and clicking through that is on you.</p>
 
-      <p>If any of that is a problem for you, one of the tools above is
-      genuinely the better answer, and I would rather say so here than have you
-      find out after installing.</p>
+      <p>If any of that is a problem for you, one of the tools above is genuinely the better answer. I would rather say so here than have you find out after installing.</p>
 
       <h2 id="table">Side by side</h2>
 
@@ -1045,7 +1022,7 @@
 
       <p><strong>You want one course, today, with no fuss.</strong> Canvas's own
       <strong>Download as Zip</strong>. It needs no software at all and it is in
-      front of you already. It is also better than its reputation:
+      front of you already. Better than its reputation, too:
       <a href="what-canvas-download-as-zip-misses.html">measured across 33 real
       courses</a> it missed 0.8% of files wherever the Files tab worked. See
       <a href="how-to-download-all-canvas-files.html">the five built-in
@@ -1057,17 +1034,14 @@
       first.</p>
 
       <p><strong>You want a tidy archive of several courses and you would rather
-      not install a desktop app.</strong> A browser extension. It will cover most
-      of what you want, it costs you nothing, and there is no token to renew
-      every few months.</p>
+      not install a desktop app.</strong> A browser extension. It will cover most of what you want and it costs you nothing. There is no token to renew every few months.</p>
 
       <p><strong>You can write code and you want it your way.</strong> A script,
       built on canvasapi. You will spend an evening on it and get exactly what
       you asked for.</p>
 
       <p><strong>You are going to be doing this all semester, or all
-      degree.</strong> That is the case my app was built for, and it is the one
-      the other two shapes were not built for. A folder that updates itself, a
+      degree.</strong> That is the case my app was built for. The other two shapes were not built for it. A folder that updates itself, a
       review screen for the weeks you want to look before it acts, files that
       are usable the moment they land, and your annotated copies left alone.
       Lecture recordings and transcripts on top if you need them.</p>
@@ -1101,7 +1075,7 @@
         <h3>One folder, current, all semester</h3>
         <p>Canvas Downloader is built to sit on your machine for a degree rather
         than for one download. It shows you what changed before it touches
-        anything, fetches the new material on its own each day, converts
+        anything, brings down the new material on its own each day, converts
         PowerPoint and Canvas Pages into files you can drag straight into
         NotebookLM or Claude, and leaves the copies you have annotated alone.
         Panopto lecture recordings come down in the same run, as video, as
@@ -1122,11 +1096,11 @@
       </details>
       <details class="faq">
         <summary>What is the difference between downloading a Canvas course and syncing it?</summary>
-        <div><p>A download is a snapshot. You run it, you get a folder, and the folder is wrong again the next time your lecturer uploads something. A sync compares what is on your disk against what is on Canvas and fetches only the difference, which means it can also tell you what changed, skip files you have edited, and run on a schedule. Most tools in this category download. Syncing needs somewhere to keep a record between runs, which is why it tends to be a desktop app that does it.</p></div>
+        <div><p>A download is a snapshot. You run it and you get a folder. The folder is wrong again the next time your lecturer uploads something. A sync compares what is on your disk against what is on Canvas and downloads only the difference, which means it can also tell you what changed, skip files you have edited, and run on a schedule. Most tools in this category download. Syncing needs somewhere to keep a record between runs, which is why it tends to be a desktop app that does it.</p></div>
       </details>
       <details class="faq">
         <summary>Do Canvas downloader extensions need an API token?</summary>
-        <div><p>No, and it is their main advantage. They use the Canvas session your browser already has, so there is nothing to generate and nothing to renew. Since Canvas now forces access tokens to expire, that advantage has grown rather than shrunk.</p></div>
+        <div><p>No. It is their main advantage. They use the Canvas session your browser already has, so nothing has to be generated or renewed. Since Canvas now forces access tokens to expire, that advantage has grown rather than shrunk.</p></div>
       </details>
       <details class="faq">
         <summary>Can a browser extension download Panopto lecture recordings?</summary>
@@ -1142,7 +1116,7 @@
       </details>
       <details class="faq">
         <summary>Will these tools overwrite files I have annotated?</summary>
-        <div><p>Most of them will, and it is worth knowing before it costs you a semester of notes. From the outside your annotated PDF is the same file with an older timestamp than the one now on Canvas, so a tool that fetches updates will replace it. Canvas Downloader checks whether you changed the file and saves the new version beside yours instead. If you use anything else, keep your annotated copies in a separate folder the tool never writes to.</p></div>
+        <div><p>Most of them will. Worth knowing before it costs you a semester of notes. From the outside your annotated PDF is the same file with an older timestamp than the one now on Canvas, so a tool that downloads updates will replace it. Canvas Downloader checks whether you changed the file and saves the new version beside yours instead. If you use anything else, keep your annotated copies in a separate folder the tool never writes to.</p></div>
       </details>
       <details class="faq">
         <summary>How do I know if a Canvas download tool is abandoned?</summary>
@@ -1154,7 +1128,7 @@
       </details>
       <details class="faq">
         <summary>Can I use more than one of these?</summary>
-        <div><p>Yes, and it is often sensible. An extension for a quick grab of one messy module, something API-based for the material you keep all semester. They read the same Canvas and write ordinary files, so nothing conflicts as long as you point them at different folders.</p></div>
+        <div><p>Yes. It is often sensible. An extension for a quick grab of one messy module, something API-based for the material you keep all semester. They read the same Canvas and write ordinary files, so nothing conflicts, as long as you point them at different folders.</p></div>
       </details>
 
       <div class="author-box" id="about-the-author">

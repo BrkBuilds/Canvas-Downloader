@@ -44,6 +44,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import page_fingerprint  # noqa: E402  (needs the path line above)
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DOCS = REPO_ROOT / "docs"
 HOST = "canvasdownloader.app"
@@ -143,15 +146,38 @@ def _resolve_base(base_ref: str) -> str:
 
 
 def changed_urls(base_ref: str) -> list[str]:
+    """Pages whose CONTENT changed between base_ref and HEAD.
+
+    `git diff` alone is the wrong filter here and this module's own header says
+    why: *"re-announcing an unchanged set on every push is what receiving engines
+    treat as noise."* Every page under `docs/` carries its own copy of the shared
+    stylesheet, so a cosmetic sweep rewrites all 27 files and `git diff` reports
+    every one of them as changed. Measured 2026-09-01 across the five most recent
+    website commits: **83 page writes, 76 of them (92%) with nothing a search
+    engine reads changed.** Those 76 were all being announced to Bing, Yandex,
+    Seznam and Naver as fresh.
+
+    `page_fingerprint` is the single implementation of that test, shared with
+    `sync_sitemap_lastmod.py`, so the two engines cannot be told different things.
+    """
+    base = _resolve_base(base_ref)
     out = subprocess.run(
-        ["git", "diff", "--name-only", _resolve_base(base_ref), "HEAD", "--", "docs/"],
+        ["git", "diff", "--name-only", base, "HEAD", "--", "docs/"],
         cwd=REPO_ROOT, capture_output=True, text=True, check=True,
     ).stdout
     seen: list[str] = []
+    skipped = 0
     for line in out.splitlines():
-        url = _page_to_url(line.strip())
-        if url and url not in seen:
-            seen.append(url)
+        path = line.strip()
+        url = _page_to_url(path)
+        if not url or url in seen:
+            continue
+        if not page_fingerprint.content_changed(path, base):
+            skipped += 1
+            continue
+        seen.append(url)
+    if skipped:
+        print("Skipped %d page(s) rewritten with no content change." % skipped)
     return seen
 
 

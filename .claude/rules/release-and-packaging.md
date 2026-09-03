@@ -80,6 +80,28 @@ Relicensed from MIT on 2026-08-24. The Store/publishing consequences live in `ma
 - **BOTH specs must bundle `LICENSE` and `THIRD_PARTY_NOTICES.md`** - `Canvas_Downloader.spec:31-32` and `Canvas_Downloader_macOS.spec:29-30`. A fix landing on one spec and not its twin is this repo's single most documented failure mode.
 - **A build made before a licence change SHIPS THE OLD LICENCE TEXT, silently.** The spec copies `LICENSE` into the bundle, so the artifact carries whatever the file said at build time and nothing reports the mismatch. Measured on 2026-08-24: a finished, verified installer had `dist/Canvas Downloader/_internal/LICENSE` reading `MIT License` while the repo was mid-relicense. **After any licence change, rebuild and read that file out of `dist/` rather than trusting the repo's copy.** The same applies to any other text file the specs bundle.
 
+## The public MSIX files stay public. Do not propose hiding them (2026-09-02)
+Asked by the product owner, who is the only person with Partner Center access:
+does it make sense to publish the Store how-to at all. Answered and settled, so
+that a future session does not re-open it.
+- **`scripts/build_msix.py` and `msix/AppxManifest.template.xml` must stay.**
+  GPLv3 defines Corresponding Source as including *"the scripts used to control
+  compilation and installation of the executable"*, and the MSIX is distributed.
+  Removing them is a licence problem, not a tidy-up. They also carry the trust
+  story: the Store build is the one with no SmartScreen warning, and its recipe
+  being public is what lets anyone check it came from this code.
+- **`msix/identity.json` holds nothing secret.** `CN=BE7EDB0D-...` and
+  `BrkBuilds.CanvasDownloader` are in the AppxManifest of every installed copy and
+  readable with `Get-AppxPackage`. They are not credentials, and Partner Center
+  will not let a second account claim a reserved identity.
+- **What IS operator-only is the runbook half of `msix/README.md`** - reserve the
+  name, copy three values, upload, submit for certification - and it is duplicated
+  in `marketing/STORE_LISTING.md` section 7. Two copies of a procedure where only
+  one gets updated is the failure this repo documents most. **Reviewed 2026-09-02
+  and deliberately NOT split**, because nothing depends on it (the only reference
+  in the whole repo is `scripts/build_msix.py:31`) and the duplicate is inert.
+  If it is ever edited, update the marketing copy in the same pass or delete one.
+
 ## Platform Notes
 - **Windows**: `win32com.client` COM automation for Office → PDF conversions. `ctypes` to hide `.canvas_sync.db`.
 - **macOS**: `osascript` (AppleScript) via `engine/applescript_bridge.py` for Office conversions. Requires `com.apple.security.automation.apple-events` entitlement in `.spec`.

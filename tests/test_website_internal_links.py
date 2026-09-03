@@ -44,10 +44,18 @@ _LINK = re.compile(r'(?:href|src)="(?!https?:|mailto:|tel:|data:|#)([^"]+)"')
 # trip the check that polices it.
 _COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 
+# Same rule, one layer down: SCRIPT BODY is not markup either. The click-to-load
+# video facade builds its poster with `'<img src="' + poster + '"'`, so scanned
+# raw the page reads as linking to a file literally named `' + poster + '`.
+# Blanking the body and NOT the tags is deliberate - `<script src="mac-wizard.js">`
+# is a real link and must stay checked. Found 2026-09-02, when the facade grew a
+# `data-poster` attribute and turned this test red on two pages at once.
+_SCRIPT_BODY = re.compile(r"(<script\b[^>]*>).*?(</script>)", re.DOTALL | re.IGNORECASE)
+
 
 def _markup(html: str) -> str:
-    """The page with its comments blanked, so only real markup is scanned."""
-    return _COMMENT.sub("", html)
+    """The page with comments and script bodies blanked, so only real markup is scanned."""
+    return _SCRIPT_BODY.sub(r"\1\2", _COMMENT.sub("", html))
 
 
 def _pages() -> list[Path]:
