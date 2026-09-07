@@ -158,6 +158,9 @@ Other registers, read on demand rather than loaded:
   sweeps that came back clean and must not be repeated, and the mutation-harness hazards.
 - `tests/audit/README.md`, `RUNBOOK.md`, `MAC_RUNBOOK.md` - the live audit (real app, real
   browser, real Canvas, five oracles) and its findings register.
+- `tests/audit/OWNER_REPORTS.md` - defects the product owner hit in real use, hand-written and
+  kept OUT of `AUDIT_FINDINGS.md` because the harness re-fingerprints that file on every run.
+  Each entry separates what was confirmed by reading from what still needs a repro.
 - `marketing/README.md` - index for launch, SEO and positioning; `FINDINGS.md` is the register
   and `STRATEGY.md` holds settled decisions. The whole folder is gitignored as of 2026-08-28,
   so it is NOT in a fresh clone and nothing tracked may depend on a file inside it: a test

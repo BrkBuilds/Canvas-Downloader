@@ -1,5 +1,10 @@
 # Live application audit
 
+> **Owner-reported defects go in `OWNER_REPORTS.md`, not in `AUDIT_FINDINGS.md`.**
+> The harness rewrites and re-fingerprints `AUDIT_FINDINGS.md` on every run, so a
+> hand-written entry there is either clobbered or read back as a harness finding.
+> `OWNER_REPORTS.md` is hand-maintained and nothing generates it.
+
 A real-life, repeatable audit of the **running** Canvas Downloader: it launches
 the app, drives it through a browser the way a user would, performs genuine
 downloads and syncs against real Canvas courses, and then reconciles the result

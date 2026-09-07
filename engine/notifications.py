@@ -165,7 +165,7 @@ def _show_windows_toast(title: str, body: str):
 
     MSIX (Store) build: attributes the toast via the package's own AUMID
     (PackageFamilyName!AppId) so Windows shows the manifest DisplayName
-    "Canvas Downloader", and focuses the PyWebView window on click.
+    "Course Downloader for Canvas", and focuses the PyWebView window on click.
 
     Standalone (Inno Setup) build: registers a custom HKCU AUMID, attributes the
     toast to Canvas Downloader, and focuses the window on click.
@@ -195,9 +195,10 @@ def _show_windows_toast(title: str, body: str):
         pfn = _get_package_family_name()
         if pfn:
             # MSIX (Store) build: use the package's own AUMID so Windows shows
-            # the manifest DisplayName "Canvas Downloader". A custom AUMID here
-            # makes Windows fall back to the raw package family name. HKCU AUMID
-            # registration is skipped - it is virtualized and ignored in-package.
+            # the manifest DisplayName "Course Downloader for Canvas". A
+            # custom AUMID here makes Windows fall back to the raw package
+            # family name. HKCU AUMID registration is skipped - it is
+            # virtualized and ignored in-package.
             kwargs['app_id'] = f'{pfn}!{_MSIX_APP_ID}'
             kwargs['on_click'] = lambda _args: _focus_canvas_window()
         elif _is_packaged():

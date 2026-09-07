@@ -126,3 +126,7 @@ macos_permission_setup.json
 
 #temporary
 marketing/search-data*
+# Personal career material built from this project (CV dossier). Not part of
+# the product, not the product marketing register, and nothing tracked may
+# depend on it - same reasoning as marketing/ above.
+career/

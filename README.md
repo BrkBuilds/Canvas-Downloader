@@ -130,7 +130,7 @@ No Python installation required. Everything is bundled.
 
 | Platform | Get it | Requirements |
 |---|---|---|
-| **Windows 10/11** | **[Microsoft Store](https://apps.microsoft.com/detail/9n1dwwvrq5wc)** (recommended - auto-updates, no security warning)<br>or the `.exe` installer from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** | Nothing, batteries included |
+| **Windows 10/11** | **[Microsoft Store](https://apps.microsoft.com/detail/9n1dwwvrq5wc)** (listed there as *Course Downloader for Canvas*, by BrkBuilds - auto-updates, no security warning)<br>or the `.exe` installer from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** | Nothing, batteries included |
 | **macOS 14+** | `Canvas_Downloader_macOS.dmg` from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** | **Apple Silicon only** (M1 or later). Intel Macs are not supported |
 
 ### Windows
@@ -522,6 +522,25 @@ Full detail, with sources:
 ---
 
 ## FAQ
+
+### Which app is this
+
+<details>
+<summary><b>Is Course Downloader for Canvas the same as Canvas Downloader?</b></summary>
+
+Yes. Same app, same guy who built it, two names. The Microsoft Store lists it as **Course
+Downloader for Canvas**. Here, on GitHub and inside the app itself it is **Canvas Downloader**.
+
+**What to check is the publisher name: BrkBuilds.** If the Microsoft Store page says BrkBuilds, you
+have the right one.
+
+A lot of projects are called some version of "Canvas downloader", and most of them are browser
+extensions or scripts you run from a terminal. This is the only user-friendly and free desktop app
+out there: you pick your courses, it downloads everything, and it keeps the folders up to date for
+the rest of the semester. The blue icon with the white download-cloud is the same on Windows, macOS
+and the Store.
+
+</details>
 
 ### Downloading, syncing and backing up
 

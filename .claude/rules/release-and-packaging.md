@@ -102,6 +102,91 @@ that a future session does not re-open it.
   in the whole repo is `scripts/build_msix.py:31`) and the duplicate is inert.
   If it is ever edited, update the marketing copy in the same pass or delete one.
 
+## Store certification and Partner Center VALIDATION are different gates (2026-09-07)
+The listing Product Name and the package `DisplayName` are two strings in two
+systems, and only the second gate compares them. Measured across three
+certification reports on product `9N1DWWVRQ5WC`.
+- **Partner Center validates a package whose `DisplayName` is any RESERVED name**,
+  not the name the listing currently selects. That was measured on 2026-08-31 and
+  used deliberately: the listing was renamed to `Course Downloader for Canvas`
+  while the published `2.0.2.0` package kept `Canvas Downloader`, and `Packages`
+  read `Validated - Unchanged` through two submissions. The measurement was right.
+- **Content review rejects exactly that state**, under `10.1.1.1`: *"The product
+  name provided with the language listings does not match the product name
+  displayed on device when installed"*, printing both strings. So
+  `Packages: Unchanged` is available for a rename and is still the wrong trade:
+  it buys two cheap rounds against a rule the cheap gate cannot see.
+- **The clause number repeats while the NOTE changes, and the note is the finding.**
+  Three reports all said `10.1.1.1 Inaccurate Representation`. The first two said
+  the name *contains the title of another piece of software*; the third said the
+  names do not match. Reading the third as "same rejection again" inverts the fix:
+  the first is answered by editing the listing, the second only by rebuilding the
+  package. **Diff the note text, never the clause number.**
+- **A rename must land on BOTH manifest sites.** `Properties/DisplayName` is what
+  Partner Center validates against the reserved names; `uap:VisualElements
+  DisplayName` is the "displayed on device" name the report cites. Both live in
+  `msix/AppxManifest.template.xml`.
+- **A Store rename forces a version bump.** `scripts/build_msix.py:read_version`
+  requires `x.y.z.0`, and the published `2.0.2.0` cannot be replaced by
+  `2.0.2.z`; the script takes no `--version` override. So any package change moves
+  `version.py`, which CI and both build specs read.
+- **Never delete a superseded name reservation.** Once the listing selects another
+  name, Partner Center stops calling the old one "in use" and offers Delete.
+  Taking it invalidates the `DisplayName` of the package already published.
+- **The `.exe` track does not follow.** `Canvas_Downloader_Setup.iss` keeps
+  `Canvas Downloader`; it has no Store constraint. The two Windows distributions
+  diverge on the installed name on purpose. `engine/notifications.py` needs no
+  change either: in-package the toast uses the package AUMID and Windows reads the
+  manifest `DisplayName`, so it follows automatically. The pywebview window title
+  stays `Canvas Downloader` because `start.py`'s single-instance guard matches it
+  exactly with `FindWindowW`.
+- Full record, including the ranking cost of dropping `canvas` from the title, in
+  `marketing/store-rename.html` and `marketing/STORE_LISTING.md`. That folder is
+  gitignored, so this entry is the copy that travels.
+
+### DECIDED 2026-09-07 by the product owner: the Store name is a CHANNEL TITLE
+Do not re-open this, and do not "finish" the rename by sweeping the rest of the
+app. Stated after the census below was put to him: *"jeg kan godt lide at appen
+hedder course downloader for canvas i msstore og refererer til sig selv som
+Canvas Downloader indeni - det beholder brandet."*
+- **The Store listing and the MSIX manifest say `Course Downloader for Canvas`.
+  Everything else says `Canvas Downloader`** - the website, the domain, the
+  GitHub repository, the Inno `.exe` track, the macOS bundle, and every string
+  inside the app.
+- **The LOGO is what carries recognition across platforms**, which is the
+  reasoning he gave and the reason the divergence is acceptable rather than
+  merely tolerable. The blue cloud icon is identical on Windows, macOS and the
+  Store, so a user who installed under one name still recognises the app.
+- **The census, so nobody has to redo it**: 109 occurrences of `Canvas Downloader`
+  in the app source. About 9 are Windows-visible chrome (the splash label and
+  document title in `start.py`, the pywebview window title, `page_title` in
+  `app.py`, the sidebar wordmark at `ui/auth.py:831`, the login brand title at
+  `ui/auth.py:2534`, and `version_info.py`). **3 are coupled window-title guards
+  that must move in the same edit or not at all** - `start.py:637`,
+  `shared/helpers.py:1183` and `engine/notifications.py:136` all match the title
+  string exactly, and two of the three are the single-instance lock. About 40 are
+  macOS strings naming the real `.app` bundle and its TCC/Automation/Dock
+  entries, where a rename breaks permission matching. The rest are docstrings and
+  support copy.
+- **The evidence that the app's internal name is NOT being policed**: the nine
+  Store screenshots show the sidebar wordmark `Canvas Downloader` in bold, and
+  they were UNCHANGED through round 2 - whose only edits were three description
+  lines and one search term. The reviewer had them in view and dropped the
+  "contains the title of another piece of software" finding anyway. The check is
+  the mechanical listing-name-versus-manifest one, and nothing more.
+- **If a future report ever cites the name INSIDE the app**, that is when the
+  chrome moves, and the site list above is the whole job. Until a report says it,
+  changing it is guessing.
+- **The homepage and README now answer the question directly.** A FAQ entry,
+  *"Is Course Downloader for Canvas the same as Canvas Downloader?"*, was added to
+  `docs/index.html` (visible list AND the JSON-LD twin, which must always move
+  together) and to `README.md`. Its load-bearing sentence is that **the publisher
+  is BrkBuilds**, because that is the one field a user can check. It also states
+  that most projects sharing the name are browser extensions or scripts, which is
+  consistent with `docs/canvas-download-tools-compared.html` - that article's
+  comparison set is one extension and one script, so the claim was checked
+  against the site's own research before it was written, per `website.md`.
+
 ## Platform Notes
 - **Windows**: `win32com.client` COM automation for Office → PDF conversions. `ctypes` to hide `.canvas_sync.db`.
 - **macOS**: `osascript` (AppleScript) via `engine/applescript_bridge.py` for Office conversions. Requires `com.apple.security.automation.apple-events` entitlement in `.spec`.
