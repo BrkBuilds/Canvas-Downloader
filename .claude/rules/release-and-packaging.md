@@ -130,6 +130,22 @@ certification reports on product `9N1DWWVRQ5WC`.
   requires `x.y.z.0`, and the published `2.0.2.0` cannot be replaced by
   `2.0.2.z`; the script takes no `--version` override. So any package change moves
   `version.py`, which CI and both build specs read.
+- **A version bump makes the `What's new` listing field STALE, and that field
+  NAMES a version.** Caught at submission on 2026-09-07, with the 2.0.3.0
+  package already uploaded: the field still opened *"v2.0.2 is a major leap from
+  past versions"*. Release notes naming a different version than the package is
+  exactly the shape of the clause this product had already failed three times,
+  `10.1.1.1 Inaccurate Representation`, and it costs one token to fix in a field
+  you are already editing. **Whenever `version.py` moves for a Store submission,
+  re-read `What's new` before pressing submit.** The surrounding sentence was
+  written as *"a major leap from past versions"* rather than *"since 2.0.2"*, so
+  only the number had to change - phrase it that way and the field survives the
+  next bump too.
+- **The superseded package is removed on Save, and that is correct.** Partner
+  Center strikes the older `.msix` through with *"This package will be removed
+  after you save this page because you have a higher-versioned package that
+  supports the same customers"*. That is how existing installs get the new
+  version; do not click *Don't remove this package*.
 - **Never delete a superseded name reservation.** Once the listing selects another
   name, Partner Center stops calling the old one "in use" and offers Delete.
   Taking it invalidates the `DisplayName` of the package already published.

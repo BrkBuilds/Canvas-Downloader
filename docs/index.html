@@ -15,10 +15,10 @@
   <link rel="canonical" href="https://canvasdownloader.app/" />
   <meta property="og:url" content="https://canvasdownloader.app/" />
   <meta name="description"
-    content="Batch-download every file from all your Canvas courses. Smart sync, AI-ready conversion, offline access. Free." />
+    content="Download every file from all your Canvas courses at once. Smart sync, AI-ready conversion, offline access. Free." />
   <meta property="og:title" content="Canvas Downloader" />
   <meta property="og:description"
-    content="Batch-download your Canvas courses. Smart sync, AI-ready conversion. Free." />
+    content="Download all your Canvas courses at once. Smart sync, AI-ready conversion. Free." />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Canvas Downloader" />
   <meta property="og:locale" content="en_US" />
@@ -34,7 +34,7 @@
     content="Canvas Downloader - download every file from all your Canvas courses at once" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Canvas Downloader" />
-  <meta name="twitter:description" content="Batch-download your Canvas courses. Smart sync, AI-ready conversion. Free." />
+  <meta name="twitter:description" content="Download all your Canvas courses at once. Smart sync, AI-ready conversion. Free." />
   <meta name="twitter:image"
     content="https://canvasdownloader.app/assets/og-card.png" />
   <meta name="twitter:image:alt"
@@ -1217,6 +1217,26 @@
     .pp-btn.active:hover {
       border-color: var(--orange);
       background: rgba(249, 115, 22, 0.12);
+    }
+
+    /* Five outputs, so this grid does not take the shared four-column rule -
+       four across would leave Shortcut alone on a second row. This rule sits
+       AFTER the shared `.pp-grid` media query and has the same specificity, so
+       it would win on a phone too; the breakpoint below is what stops that. */
+    .panopto-formats {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    @media(max-width:900px) {
+      .panopto-formats {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media(max-width:600px) {
+      .panopto-formats {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .panopto-formats .pp-btn.active {
@@ -3106,7 +3126,7 @@
         "@id": "https://canvasdownloader.app/#website",
         "url": "https://canvasdownloader.app/",
         "name": "Canvas Downloader",
-        "description": "Free desktop app that batch-downloads every file from your Canvas LMS courses, keeps them synced, and converts them for AI study tools.",
+        "description": "Free desktop app that downloads every file from your Canvas LMS courses at once, keeps them synced, and converts them for AI study tools.",
         "inLanguage": "en"
       },
       {
@@ -3120,7 +3140,7 @@
         "softwareVersion": "2.0.2",
         "datePublished": "2026-08-24",
         "softwareHelp": "https://canvasdownloader.app/guide.html",
-        "description": "Download all files from every Canvas course at once. Canvas Downloader connects with your own Canvas access token, batch-downloads assignments, modules, pages, quizzes and lecture recordings, keeps the folders synced with one click, and converts Office files to PDF or text so they are ready for AI study tools. Runs entirely on your own computer with no server and no account.",
+        "description": "Download all files from every Canvas course at once. Canvas Downloader connects with your own Canvas access token, downloads assignments, modules, pages, quizzes and lecture recordings, keeps the folders synced with one click, and converts Office files to PDF or text so they are ready for AI study tools. Runs entirely on your own computer with no server and no account.",
         "downloadUrl": "https://canvasdownloader.app/releases.html",
         "installUrl": "https://apps.microsoft.com/detail/9n1dwwvrq5wc",
         "screenshot": "https://canvasdownloader.app/assets/og-card.png",
@@ -3134,7 +3154,7 @@
         "author": { "@id": "https://canvasdownloader.app/#author" },
         "publisher": { "@id": "https://canvasdownloader.app/#author" },
         "featureList": [
-          "Batch-download every file from all Canvas courses at once",
+          "Download every file from all Canvas courses at once",
           "One-click sync that fetches only new and updated course files",
           "Automatic daily sync of your courses",
           "Download Panopto lecture recordings and transcribe them offline",
@@ -3436,7 +3456,7 @@
             <span style="display: grid; grid-template-columns: 1fr;">
               <!-- Invisible placeholders to lock the max height at any screen width -->
               <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Download all your courses in minutes|</span>
-              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Sync new files to your PC in one click|</span>
+              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Get new course files automatically|</span>
               <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Auto&#8209;convert all your files for AI|</span>
               <!-- Actual visible text -->
               <span style="grid-area: 1 / 1;">
@@ -3447,8 +3467,8 @@
               </span>
             </span>
           </h1>
-          <p>The ultimate tool for university students. Batch-download courses and Canvas content. Sync & download the
-            newest course files in one click.<br> 100% free and AI-ready.</p>
+          <p>Free desktop app for students. Download <b>everything</b> from all your courses, sync with
+            Canvas, and get files that drop straight into NotebookLM.</p>
         </div>
         <div class="hero-actions reveal" id="hero-actions-container">
           <div class="hero-btns" id="hero-download-area" style="margin-bottom: 10px;">
@@ -3548,10 +3568,11 @@
            Lifetime totals, measured 31 August 2026. Rules for changing them,
            and the evidence behind them, are in marketing/FINDINGS.md:
 
-             - 1,100+ = 1,077 successful Microsoft Store installs (reported by
-               the product owner 31 August 2026) plus 74 GitHub release-asset
-               downloads, rounded down. 
-             - 100 countries in the Store's geographical spread. 
+             - 1,200+ = 1,152 successful Microsoft Store installs plus 122
+               GitHub release-asset downloads (reported by the product owner
+               8 September 2026) = 1,274, rounded down. The previous 1,100+
+               was read on 31 August 2026 as 1,077 Store plus 74 GitHub.
+             - 110 countries in the Store's geographical spread.
                Both figures are LIFETIME CUMULATIVE, so they can
                only go up - which is why rounding down is enough on its own and
                no as-of date is needed on the page.
@@ -3561,12 +3582,12 @@
         <li class="proof-tag">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-          <span><b>1,100+</b> installs</span>
+          <span><b>1,200+</b> installs</span>
         </li>
         <li class="proof-tag">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
-          <span>Used by students in <b>100</b> countries</span>
+          <span>Used by students in <b>110</b> countries</span>
         </li>
         <li class="proof-tag">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -3625,7 +3646,7 @@
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          <span>Downloading files one-by-one wastes hours you could've spent living life.</span>
+          <span>Downloading files one-by-one wastes hours and steals your first 10 minutes of focus every lecture.</span>
         </li>
         <li style="display: flex; align-items: flex-start; gap: 16px;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"
@@ -3633,17 +3654,16 @@
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          <span>By exam season, you end up with massive, unorganized course folders, unsure if you're missing critical
+          <span>After manually downloading, you waste more hours manually converting course files into AI-ready formats.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 16px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>By exam season you end up with massive unorganized course folders, unsure if you're missing critical
             materials.</span>
-        </li>
-        <li style="display: flex; align-items: flex-start; gap: 16px;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-          <span>After manually downloading, you spend more hours manually converting course files into AI-ready
-            formats.</span>
         </li>
       </ul>
 
@@ -3677,9 +3697,9 @@
             <h3>Download years of courses in minutes.</h3>
             <p>Downloading files one-by-one is a thing of the past. <br>Select your courses, choose a download
               configuration, and let the app pull <b>all your course files</b> from Canvas, into course folders
-              organized exactly like your Canvas courses. <br><br>But that's not all: The app also downloads <b>Canvas
-                Content</b> - all your assignments, announcements, quizzes, etc. and any <b> file attachments</b>, so
-              your PC has a 1:1 copy of each course.</p>
+              organized exactly like your Canvas courses. <br><br>But that's not all: Canvas Downloader gives you
+              <b>everything</b>. The app also downloads <b>Canvas Content</b> - all your assignments, announcements,
+              quizzes, etc. and any <b> file attachments</b>, so your PC has a 1:1 copy of each course.</p>
             <label for="p1-open" class="pillar-expander-label desktop-only">See exactly what you can download, and how
               <span class="pex-arrow"></span></label>
           </div>
@@ -3701,10 +3721,11 @@
           <span class="pex-arrow"></span></label>
         <div class="pillar-expand-content">
           <div class="expand-section-label">Download Settings</div>
-          <p class="expand-intro">Configure exactly what to download and how to organise it on disk - choose between all
-            files or study files only, and mirror Canvas's module structure or keep everything flat. Download Canvas
-            Content and file attachments (e.g. assignment pdf's). See the <a href="guide.html#download-settings"
-              style="color:var(--cyan);text-decoration:none;">Custom Download guide</a> for a full walkthrough.</p>
+          <p class="expand-intro">Configure exactly what to download and how to organize it - choose between all files or study files only.
+            Mirror Canvas's module structure or keep everything flat in one folder. Download Canvas Content and file
+            attachments (e.g. assignment briefs and their pdf's). See the
+            <a href="guide.html#download-settings" style="color:var(--cyan);text-decoration:none;">Custom Download
+            guide</a> for a full walkthrough.</p>
           <div class="dl-grid">
             <!-- Card 1: File Filter + Structure -->
             <div class="app-card filter-card">
@@ -3724,7 +3745,7 @@
                       </svg></div>
                     <img decoding="async" loading="lazy" src="assets/icon_all_files.png" alt="All Files" />
                     <div class="fb-title">All Files</div>
-                    <div class="fb-desc">PDFs, slides, videos, ZIP, code - everything uploaded</div>
+                    <div class="fb-desc">PDFs, slides, videos, ZIP, code files - everything uploaded by your teacher</div>
                   </div>
                   <div class="filter-btn">
                     <div class="check"><svg viewBox="0 0 10 8">
@@ -3743,7 +3764,7 @@
                       </svg></div>
                     <img decoding="async" loading="lazy" src="assets/icon_subfolders.png" alt="With Subfolders" />
                     <div class="sb-title">With Subfolders</div>
-                    <div class="sb-desc">Mirrors Canvas module structure</div>
+                    <div class="sb-desc">Mirrors Canvas module structure (module -> folder)</div>
                   </div>
                   <div class="struct-btn">
                     <div class="check"><svg viewBox="0 0 10 8">
@@ -3820,11 +3841,13 @@
             <div class="expand-section-label">Related reading</div>
             <div class="pr-item">
               <a href="how-to-download-all-canvas-files.html">Every way to download your Canvas files, compared</a>
-              <span class="pr-note">New to this? Five methods side by side, including the built-in Canvas routes that need no software at all.</span>
+              <span class="pr-note">New to this? Learn about the five ways to download files from Canvas, compared, including the built-in
+                Canvas routes that needs no software at all.</span>
             </div>
             <div class="pr-item">
-              <a href="save-canvas-pages-quizzes-discussions.html">How to save the half of a course that is not a file</a>
-              <span class="pr-note">Pages, quizzes, discussions and announcements are not files, so no file download reaches them.</span>
+              <a href="save-canvas-pages-quizzes-discussions.html">How to save the files that Canvas doesn't give you</a>
+              <span class="pr-note">Pages, quizzes, discussions and announcements are not files, so no file download available in the
+                student Canvas UI reaches them.</span>
             </div>
           </div>
         </div>
@@ -3838,10 +3861,10 @@
             <div class="section-kicker">2. Quick Sync</div>
             <h3>Get new files from Canvas with one click</h3>
             <p>Imagine this - It’s Monday morning. Instead of digging through Canvas to find the files for your first
-              class, just open Canvas Downloader, and hit <b>Quick Sync</b>. The app instantly finds and downloads only
-              the newest files your professors added to Canvas.<br><br><b>Pro-tip:</b> Save your courses as a group, and
-              add them to the Sync List. Then one press of <b>Quick Sync All</b> fetches everything new, straight to
-              your PC. Want it fully automatic? That's the next section.</p>
+              class, just open Canvas Downloader, and hit <b>Quick Sync</b>. The app instantly finds and downloads
+              only the newest files your professors added to Canvas.<br><br><b>Easy setup:</b> Save your courses as a
+              group, and add them to the Sync List. Then one press of <b>Quick Sync All</b> downloads everything new,
+              straight to your PC. Want it fully automatic? Use Today's Files mode...</p>
             <label for="p2-open" class="pillar-expander-label desktop-only">What is downloaded and how does it work?
               <span class="pex-arrow"></span></label>
           </div>
@@ -3907,14 +3930,14 @@
         <input type="checkbox" id="p6-open" class="pillar-toggle">
         <div class="pillar-row reveal">
           <div class="pillar-text">
-            <div class="section-kicker">3. Daily Auto-Sync</div>
-            <h3>Your courses sync themselves - every morning.</h3>
-            <p>Meet the <b>Today</b> page - your daily home in the app. Pick your courses once and switch on
-              <b>daily sync</b>. From then on, the first time you open the app each day, it quietly fetches every new
-              file from Canvas all by itself.<br><br>Below the toggle, <b>Today's files</b> shows exactly what arrived
-              today, grouped per course - open any file or its folder with one click. No digging through Canvas, no
-              guessing what's new.</p>
-            <label for="p6-open" class="pillar-expander-label desktop-only">How daily sync works
+            <div class="section-kicker">3. Today's Files</div>
+            <h3>Auto-download new course files, every morning</h3>
+            <p>Meet the <b>Today</b> page - your daily home in the app. Pick your courses once and switch on <b>daily
+              sync</b>. From then on, the first time you open the app each day, it automatically pulls every new file
+              from Canvas, all by itself.<br><br>The <b>Today's files</b> page shows exactly what arrived today,
+              grouped per course - open any file or its folder with one click, or open all new files at once. You
+              don't need to open Canvas or worry about what's new anymore.</p>
+            <label for="p6-open" class="pillar-expander-label desktop-only">How Today's Files mode works
               <span class="pex-arrow"></span></label>
           </div>
           <!-- A recording, not a screenshot: the Today page is only static until
@@ -3929,10 +3952,10 @@
           </div>
         </div>
         <label for="p6-open" class="pillar-expander-label mobile-only"
-          style="display: flex; width: fit-content; margin: 24px auto 0;">How daily sync works <span
+          style="display: flex; width: fit-content; margin: 24px auto 0;">How Today's Files mode works <span
             class="pex-arrow"></span></label>
         <div class="pillar-expand-content">
-          <div class="expand-section-label">Daily Sync in 3 Steps</div>
+          <div class="expand-section-label">Today's Files in 3 Steps</div>
           <p class="expand-intro">The Today page reuses the exact same Quick Sync engine - so the same safety rules
             apply: it never overwrites files you've edited and never re-downloads files you've deleted. Read more in
             the <a href="guide.html#today" style="color:var(--cyan);text-decoration:none;">Today guide</a>.</p>
@@ -3952,10 +3975,10 @@
               </div>
             </div>
             <div class="app-card">
-              <div class="app-card-header" style="color: var(--cyan);">3. Glance at Today's files</div>
+              <div class="app-card-header" style="color: var(--cyan);">3. Get the full overview of Today's files</div>
               <div class="app-card-body" style="font-size: 13px; color: var(--txt2); line-height: 1.6;">
                 Every file that arrived today is listed per course - including Panopto lecture recordings. Prefer
-                manual? Hit <b>Quick Sync now</b> on the same page instead.
+                doing it manually? Hit <b>Quick Sync now</b> on the same page instead.
               </div>
             </div>
           </div>
@@ -3968,7 +3991,7 @@
         <div class="pillar-row rev reveal">
           <div class="pillar-text">
             <div class="section-kicker">4. AI Optimization</div>
-            <h3>Supercharge your exam prep</h3>
+            <h3>Supercharge your studies</h3>
             <p>Canvas Downloader is built for the modern studying workflow, where <b>AI-assisted learning</b> is at the
               core. <br><br> When enabled, the app <b>automatically converts</b> all your course materials to
               <b>AI-Ready file formats</b>, whenever you Sync or Download. No more timely manual conversions on sketchy
@@ -3987,7 +4010,7 @@
           style="display: flex; width: fit-content; margin: 24px auto 0;">See the conversions available <span
             class="pex-arrow"></span></label>
         <div class="pillar-expand-content">
-          <div class="expand-section-label">Available Conversions</div>
+          <div class="expand-section-label">8 built-in conversions</div>
           <p class="expand-intro">Toggle these on and the engine automatically converts complex files into AI-readable
             formats on every download or sync. Office conversions require Microsoft Office installed. When fully
             enabled, your entire course is 100% ready for tools like NotebookLM. See the <a
@@ -4083,12 +4106,13 @@
         <div class="pillar-row reveal">
           <div class="pillar-text">
             <div class="section-kicker">5. Sync Review</div>
-            <h3>Full control over your files.</h3>
-            <p>Get the full status overview of your local course folders. <b>Sync Review mode</b> compares your local
-              files directly against your Canvas courses and runs advanced algorithms to show you exactly what's
-              different.<br><br>The app categorizes the results so you can select and download exactly what you need:
-              New files, deleted files, updates or changes, giving you <b>full control</b> and confidence that your
-              materials are always 100% up-to-date.</p>
+            <h3>Full overview of your course folders.</h3>
+            <p>No more stressing over chaotic folders or missing files because you skipped a day of school. <b>Sync
+              Review mode</b> compares your local files directly against your Canvas courses and runs advanced
+              algorithms to show you exactly what's different, so you can download exactly what you need.<br><br>The
+              app categorizes the results so you can select and download exactly what you need: New files, deleted
+              files, updates or changes, giving you <b>full control</b> and confidence that your materials are always
+              100% up-to-date.</p>
             <label for="p3-open" class="pillar-expander-label desktop-only">The file categories, and how Sync Review works
               <span class="pex-arrow"></span></label>
           </div>
@@ -4185,8 +4209,8 @@
         <input type="checkbox" id="p5-open" class="pillar-toggle">
         <div class="pillar-row rev reveal">
           <div class="pillar-text">
-            <div class="section-kicker">6. Lecture Recordings</div>
-            <h3>Your lecture recordings, downloaded and transcribed.</h3>
+            <div class="section-kicker">6. Panopto Lecture Recordings</div>
+            <h3>Your Panopto lecture recordings, downloaded & transcribed.</h3>
             <p>Some courses post their lectures as <b>Panopto</b> recordings - slow to rewatch, and impossible to hand
               to an AI. Canvas Downloader saves them straight to your course folder as <b>video</b> or <b>audio</b> to
               watch anytime, and turns them into <b>transcripts</b> and <b>subtitles</b> that are instantly
@@ -4212,13 +4236,22 @@
           style="display: flex; width: fit-content; margin: 24px auto 0;">See the download options <span
             class="pex-arrow"></span></label>
         <div class="pillar-expand-content">
-          <div class="expand-section-label">Lecture Recording: Download Options</div>
+          <div class="expand-section-label">Panopto Lecture Recording: Download Options</div>
           <p class="expand-intro">Choose any combination for each lecture. <b>Video and audio download with no
             setup.</b> Transcripts and subtitles are optional - they're generated locally with on-device speech
             recognition (faster-whisper), so nothing is uploaded, and just need a one-time transcription model. The
             <a href="guide.html#transcription-setup" style="color:var(--cyan);text-decoration:none;">transcription
             setup guide</a> walks you through it step by step.</p>
           <div class="pp-grid panopto-formats">
+            <div class="pp-btn active">
+              <div class="check"><svg viewBox="0 0 10 8">
+                  <polyline points="1,4 3.5,6.5 9,1" />
+                </svg></div>
+              <img decoding="async" loading="lazy" src="assets/pan_url.png" alt="Shortcut" />
+              <div class="pp-btn-text">
+                <div class="pp-title">Shortcut</div>
+              </div>
+            </div>
             <div class="pp-btn active">
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
@@ -4238,6 +4271,9 @@
               </div>
             </div>
             <div class="pp-btn active">
+              <div class="check"><svg viewBox="0 0 10 8">
+                  <polyline points="1,4 3.5,6.5 9,1" />
+                </svg></div>
               <img decoding="async" loading="lazy" src="assets/pan_txt.png" alt="Transcript" />
               <div class="pp-btn-text">
                 <div class="pp-title">Transcript (.txt)</div>
@@ -4292,7 +4328,7 @@
         Ready to take control of your courses?</h2>
       <div style="min-height: 56px; display: flex; align-items: center; justify-content: center; margin-bottom: 36px;">
         <p id="cta-dynamic-tagline" style="font-size: 18px; color: var(--txt2); margin: 0; line-height: 1.5; transition: opacity 0.45s ease; opacity: 1;" aria-live="polite">
-          Join 1000+ students saving hours every semester.
+          Join 1200+ students saving hours every semester.
         </p>
       </div>
 
@@ -4318,10 +4354,9 @@
                   style="display: block; width: 100%; max-width: 260px;" />
               </a>
             </div>
-            <p class="dl-subtitle" style="margin-top: 14px; margin-bottom: 0;">Automatic updates &middot; No SmartScreen warnings.</p>
-            <p class="dl-subtitle" style="margin-top: 12px; margin-bottom: 0;"><a
-                href="releases.html"
-                style="color: var(--txt3); text-decoration: underline; text-underline-offset: 2px;">Download directly with the .exe installer here</a></p>
+            <p class="dl-subtitle" style="margin-top: 14px; margin-bottom: 0;">Automatic updates &middot; Easy install.</p>
+            <p class="dl-subtitle" style="margin-top: 12px; margin-bottom: 0;"><a href="releases.html" style="color: var(--txt3); text-decoration: underline; text-underline-offset: 2px;">or
+              get the .exe installer here</a></p>
           </div>
         </div>
 
@@ -4347,7 +4382,7 @@
               </svg>
               Download for macOS (.dmg)
             </a>
-            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 14 (Sonoma) or newer.</p>
+            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported.</p>
           </div>
         </div>
 
@@ -4546,8 +4581,7 @@
       <div class="sh reveal" style="text-align:center; max-width:540px; margin:0 auto 40px;">
         <div class="section-kicker" style="justify-content:center;">macOS</div>
         <h2>On a Mac? Read this first</h2>
-        <p style="font-size:15px;">Canvas Downloader works on macOS, but there are a few things worth knowing before you
-          dive in - especially if you're on a university-managed Mac.</p>
+        <p style="font-size:15px;">Canvas Downloader works on macOS, but there are a few things worth knowing before you dive in.</p>
       </div>
 
       <!-- Expanders, reusing the page's own `details.faq-item` pattern so this
@@ -4600,10 +4634,11 @@
               <span class="mac-title">You may need to re-enter your Canvas Access Token after an update</span>
             </span>
           </summary>
-          <p>macOS stores your Canvas Access Token in your Keychain. Because the app isn't signed with a paid Developer
-            ID certificate, macOS may treat a new version as a different app and ask for your Keychain password again -
-            or prompt you to re-enter your token.<br><br>This is a one-time step per update, not per launch. Your token
-            hasn't changed - you can copy it from your Canvas account settings and paste it in again.</p>
+          <p>macOS stores your Canvas Access Token in your Keychain - a secure password vault in your operating system.
+            Because the app isn't signed with a paid Developer ID certificate, macOS may treat a new version as a
+            different app and ask for your Keychain password again - or prompt you to re-enter your token.<br><br>This
+            is a one-time step per update, not per launch. Your token hasn't changed - you can copy it from your
+            Canvas account settings and paste it in again.</p>
         </details>
 
         <details class="faq-item mac-note reveal">
@@ -4613,11 +4648,11 @@
               <span class="mac-title">Office &rarr; PDF needs the Microsoft desktop app</span>
             </span>
           </summary>
-          <p>The PowerPoint &rarr; PDF, Word &rarr; PDF, and Excel &rarr; PDF conversions use AppleScript to drive the Microsoft Office
-            desktop app. If you use Office via the web browser or don't have it installed, those conversions are
-            silently skipped and your original files are kept unchanged.<br><br>Everything else - downloading, syncing,
-            video-to-audio, archive unpacking, Canvas pages to text, code files, and web links - works without any extra
-            software.</p>
+          <p>The PowerPoint &rarr; PDF, Word &rarr; PDF, and Excel &rarr; PDF conversions use AppleScript to drive the
+            Microsoft Office desktop app to convert your files. If you use Office via the web browser or don't have it
+            installed, those conversions are silently skipped and your original files are kept
+            unchanged.<br><br>Everything else - downloading, syncing, video-to-audio, archive unpacking, Canvas pages
+            to text, code files, and web links - works without any extra software.</p>
         </details>
 
         <details class="faq-item mac-note reveal">
@@ -4627,10 +4662,10 @@
               <span class="mac-title">Apple Silicon only (M1, M2, M3, M4, M5)</span>
             </span>
           </summary>
-          <p>The macOS build is compiled for Apple Silicon only. It will not run on older Intel Macs (2020 and
-            earlier).<br><br>Not sure which chip you have? Click the Apple menu &rarr; <strong>About This Mac</strong>. If it
-            says "Apple M&hellip;" next to Chip, you're good. If it says "Intel Core", the Mac version won't work - use a Mac
-            with Apple Silicon or a Windows PC instead.</p>
+          <p>The macOS version of Canvas Downloader is built for Apple Silicon only. It will not run on older Intel
+            Macs (2020 and earlier).<br><br>Not sure which chip you have? Click the Apple menu &rarr; <strong>About
+            This Mac</strong>. If it says "Apple M&hellip;" next to Chip, you're good. If it says "Intel Core", the
+            Mac version won't work - use a Mac with Apple Silicon or a Windows PC instead.</p>
         </details>
 
         <details class="faq-item mac-note reveal">
@@ -4687,9 +4722,9 @@
             the app completely free, it remains unsigned. I hope to sign it in the future, but for now, the warning
             simply means the app is from an independent developer, not that it's dangerous. I've done the absolute best
             job I can to build it securely and transparently.</p>
-          <p class="qa-note">The certificate program isn't a safety check - it's a publisher registry. Any developer,
-            including a malicious one, can buy one and appear clean to your OS. Skipping it doesn't say anything about
-            the code.</p>
+          <p class="qa-note">The certificate program isn't a safety check - it's a publisher registry. Any developer, including a
+            malicious one, can buy one and appear clean and safe to your operating system. Skipping it doesn't say
+            anything about the code.</p>
           <p class="qa-note" style="margin-top: 10px;">If the warning bothers you and you'd like it gone for everyone,
             <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"
               style="color: var(--orange); font-weight: 600; text-decoration: none;">chipping in towards the
@@ -4711,17 +4746,16 @@
             into in your browser. There's no backend, no analytics server, no developer receiving anything from your
             machine. Your Canvas Access Token is stored in your OS's password vault (Windows Credential Manager or
             macOS Keychain), never in a plain-text file, and is only ever sent to your university's Canvas.</p>
-          <p class="qa-body">Three other connections exist, and none of them carry your data:
-            <b>your university's Panopto server</b>, only if you download lecture recordings;
-            <b>Hugging Face and PyPI</b>, only if you set up on-device transcription or GPU acceleration - a one-time
-            file download; and a <b>version check against GitHub</b> when the app starts, so it can tell you an update
-            is out. That last one sends nothing but the request itself: no token, no course data, no identifier. The
-            full list is in the <a href="privacy.html" style="color:var(--cyan);text-decoration:none;">privacy
-              policy</a>.
+          <p class="qa-body">Three other connections exist, which are worth noting: <b>your university's Panopto server</b>, only if
+            you download lecture recordings; <b>Hugging Face and PyPI</b>, only if you set up on-device transcription
+            or GPU acceleration - a one-time file download; and a <b>version check against GitHub</b> when the app
+            starts, so it can tell you an update is out. That last one sends nothing but the request itself: no token,
+            no course data, no identifier. The full list is in the
+            <a href="privacy.html" style="color:var(--cyan);text-decoration:none;">privacy policy</a>.
           </p>
-          <p class="qa-note">The app's local interface runs on 127.0.0.1 - your own computer only. It cannot be reached
-            from the internet or your local network. None of this requires trusting our word: the source code is
-            publicly readable on GitHub.</p>
+          <p class="qa-note">The app's local interface runs on 127.0.0.1 - your own computer only. It cannot be reached from the
+            internet or your local network. None of this requires trusting my word: the source code is publicly
+            readable on GitHub.</p>
         </details>
 
         <!-- Card 3: The breach -->
@@ -4918,9 +4952,9 @@
       <h2 style="font-size: clamp(24px, 3.5vw, 34px); font-weight: 900; letter-spacing: -0.03em; margin: 0 0 14px;">
         Enjoying Canvas Downloader?</h2>
       <p style="font-size: 15px; color: var(--txt2); line-height: 1.7; margin: 0 0 28px;">
-        It's built by one student, between lectures, and will always be 100% free. If it saves you hours every
-        semester, you can buy me a coffee - it keeps the project alive and gets us closer to the paid app
-        certificates that would remove the install warnings for everyone.
+        It's built by one student, between lectures, and will always be 100% free. If it saves you time or helps your
+        studies, you can buy me a coffee - it keeps the project alive and gets us closer to the paid app certificates
+        that would remove the install warnings for everyone.
       </p>
       <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener" class="kofi-cta">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="#f97316">
@@ -5161,7 +5195,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const phrases = [
         "Download all your courses in minutes",
-        "Sync new files to your PC in one click",
+        "Get new course files automatically",
         "Auto\u2011convert all your files for AI"
       ];
       const dynamicText = document.getElementById('hero-dynamic-text');
@@ -5214,7 +5248,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const ctaTaglines = [
-        "Join 1000+ students saving hours every semester.",
+        "Join 1200+ students saving hours every semester.",
         "Supercharge your studies with 1-click AI-ready course materials.",
         "Get all your course files, on your pc, organized exactly like canvas.",
         "Backup all your course materials and keep them after graduation.",
