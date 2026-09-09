@@ -12,7 +12,7 @@ each day. It saves **Panopto** lecture recordings with transcription that runs o
 and converts everything into AI-ready study material for **NotebookLM**, ChatGPT and Claude.
 Windows and macOS. No cloud, no account, no telemetry.
 
-Built to be opened every day of a degree, not once at the end of it.
+Built to support students through a whole degree.
 
 [![Latest release](https://img.shields.io/github/v/release/BrkBuilds/Canvas-Downloader?style=flat-square&color=2563eb&label=release)](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)
 [![GitHub downloads](https://img.shields.io/github/downloads/BrkBuilds/Canvas-Downloader/total?style=flat-square&color=16a34a&label=GitHub%20downloads)](https://github.com/BrkBuilds/Canvas-Downloader/releases)
