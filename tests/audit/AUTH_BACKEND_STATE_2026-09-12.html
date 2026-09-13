@@ -1,0 +1,795 @@
+<title>Auth Backend State</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  /* Tokens are the house values from SIGNIN_AUDIT_2026-09-11.html: this is the
+     third document in the audit register and they should read as one set. */
+  :root {
+    --ink:        #f7f8fa;
+    --surface:    #ffffff;
+    --surface-2:  #f0f2f6;
+    --line:       #d7dce5;
+    --line-soft:  #e5e9f0;
+    --text:       #1b2230;
+    --text-dim:   #4d596b;
+    --text-faint: #7d8899;
+    --accent:     #1f6f9e;
+    --accent-dim: rgba(31,111,158,0.10);
+    --crit:       #c0392b;
+    --major:      #a8690d;
+    --good:       #1f7a5c;
+    --bg:         var(--ink);
+    --card:       var(--surface);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:        #0e1117;
+      --surface:    #171b24;
+      --surface-2:  #1e2430;
+      --line:       #2b3341;
+      --line-soft:  #222936;
+      --text:       #dfe5ee;
+      --text-dim:   #98a4b6;
+      --text-faint: #6d788a;
+      --accent:     #4da8da;
+      --accent-dim: rgba(77,168,218,0.12);
+      --crit:       #f0655a;
+      --major:      #f0a23c;
+      --good:       #57b894;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink:        #0e1117;
+    --surface:    #171b24;
+    --surface-2:  #1e2430;
+    --line:       #2b3341;
+    --line-soft:  #222936;
+    --text:       #dfe5ee;
+    --text-dim:   #98a4b6;
+    --text-faint: #6d788a;
+    --accent:     #4da8da;
+    --accent-dim: rgba(77,168,218,0.12);
+    --crit:       #f0655a;
+    --major:      #f0a23c;
+    --good:       #57b894;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 20px 96px;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  header.top {
+    display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end;
+    justify-content: space-between;
+    padding: 44px 0 20px; border-bottom: 2px solid var(--line);
+  }
+  .eyebrow {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-weight: 600; font-size: 12px; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--text-faint); margin: 0 0 6px;
+  }
+  h1 {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 40px; font-weight: 700; line-height: 1.1;
+    margin: 0; text-wrap: balance; letter-spacing: -.01em;
+  }
+  .stamp {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+    color: var(--text-dim); text-align: right; line-height: 1.8;
+    font-variant-numeric: tabular-nums;
+  }
+  .stamp b { color: var(--text); font-weight: 500; }
+
+  h2 {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 25px; font-weight: 700; letter-spacing: -.005em;
+    margin: 56px 0 6px; text-wrap: balance;
+  }
+  h2 .n {
+    color: var(--text-faint); font-weight: 500; margin-right: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  h3 {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 17.5px; font-weight: 600; margin: 30px 0 4px;
+    text-wrap: balance;
+  }
+  .lede { color: var(--text-dim); margin: 0 0 4px; max-width: 68ch; }
+  p { max-width: 72ch; }
+  code, .mono {
+    font-family: "IBM Plex Mono", monospace; font-size: .88em;
+  }
+  code {
+    background: var(--surface-2); border: 1px solid var(--line-soft);
+    border-radius: 3px; padding: .06em .34em;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px;
+      text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  /* ── the three routes ─────────────────────────────────────────── */
+  .routes { display: grid; gap: 14px; margin: 26px 0 0;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+  .route {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 7px; padding: 16px 17px 15px;
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .route .rname {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-weight: 700; font-size: 16.5px;
+  }
+  .route .rfile {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+    color: var(--text-faint); word-break: break-all;
+  }
+  .route .rwhat { color: var(--text-dim); font-size: 13.8px; margin: 0; }
+  .route .rtag {
+    font-family: "IBM Plex Sans Condensed", sans-serif; font-size: 11.5px;
+    font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+    align-self: flex-start; padding: 2px 8px; border-radius: 3px;
+    border: 1px solid currentColor;
+  }
+  .t-straight { color: var(--accent); }
+  .t-bonus    { color: var(--good); }
+  .t-extra    { color: var(--major); }
+
+  /* ── tables ───────────────────────────────────────────────────── */
+  .tbl-scroll { overflow-x: auto; margin: 18px 0 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px;
+          font-size: 14.2px; }
+  th, td { text-align: left; padding: 9px 12px;
+           border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text-faint); border-bottom: 1px solid var(--line);
+    font-weight: 600; white-space: nowrap;
+  }
+  td.num, td .fig {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  /* ── verdict chips ────────────────────────────────────────────── */
+  .chip {
+    font-family: "IBM Plex Sans Condensed", sans-serif; font-size: 11.5px;
+    font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+  }
+  .c-yes  { color: var(--good); background: rgba(87,184,148,.13); }
+  .c-no   { color: var(--crit); background: rgba(240,101,90,.13); }
+  .c-part { color: var(--major); background: rgba(240,162,60,.13); }
+
+  /* ── findings ─────────────────────────────────────────────────── */
+  .finding {
+    border: 1px solid var(--line); border-left: 3px solid var(--major);
+    background: var(--card); border-radius: 0 7px 7px 0;
+    padding: 17px 19px 15px; margin: 20px 0 0;
+  }
+  .finding.resolved { border-left-color: var(--good); }
+  .finding.info { border-left-color: var(--accent); }
+  .finding > h3 { margin-top: 0; }
+  .finding p:last-child { margin-bottom: 0; }
+  .fmeta {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.8px;
+    color: var(--text-faint); margin: 0 0 10px;
+  }
+
+  /* ── measured block: the evidence, verbatim ───────────────────── */
+  pre {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.6px;
+    line-height: 1.55; background: var(--surface-2);
+    border: 1px solid var(--line-soft); border-radius: 5px;
+    padding: 13px 15px; overflow-x: auto; margin: 14px 0;
+  }
+  pre .bad { color: var(--crit); }
+  pre .ok  { color: var(--good); }
+  pre .dim { color: var(--text-faint); }
+
+  /* ── outstanding list: real checkboxes, all unticked ──────────── */
+  ul.todo { list-style: none; padding: 0; margin: 18px 0 0; }
+  ul.todo li {
+    display: grid; grid-template-columns: 20px 1fr; gap: 11px;
+    padding: 11px 0; border-bottom: 1px solid var(--line-soft);
+    align-items: start;
+  }
+  ul.todo li:last-child { border-bottom: 0; }
+  ul.todo .box {
+    width: 15px; height: 15px; margin-top: 4px;
+    border: 1.5px solid var(--text-faint); border-radius: 3px;
+  }
+  ul.todo .what { font-weight: 500; }
+  ul.todo .why { color: var(--text-dim); font-size: 13.8px; display: block; }
+
+  ul.plain { padding-left: 20px; }
+  ul.plain li { margin: 6px 0; max-width: 70ch; }
+
+  .note {
+    border-top: 1px solid var(--line); margin-top: 60px; padding-top: 18px;
+    color: var(--text-faint); font-size: 13px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <p class="eyebrow">Canvas Downloader &middot; engineering register</p>
+    <h1>Authentication backend: state and findings</h1>
+  </div>
+  <div class="stamp">
+    <b>2026-09-12</b><br>
+    suite <b>4,759</b> passed, 0 failed<br>
+    architecture <b>0</b> violations, 72 files<br>
+    handoff mutants <b>24/24</b> caught<br>
+    platform <b>Windows 11</b> only
+  </div>
+</header>
+
+<h2><span class="n">01</span>What the backend is now</h2>
+<p class="lede">Three ways in, one credential. Nothing below the auth layer can tell
+them apart, because <code>core/canvas_auth.py</code> is the only place a bearer
+header is formatted and the credential VALUE carries the answer. All thirteen
+<code>CanvasManager</code> construction sites are unchanged.</p>
+
+<div class="routes">
+  <div class="route">
+    <span class="rtag t-straight">The straight path</span>
+    <span class="rname">Sign in with Canvas</span>
+    <span class="rfile">core/browser_login.py</span>
+    <p class="rwhat">A second app window opens on the school's own login page.
+    The student signs in the way they always do. The app harvests the session
+    cookies and uses them exactly as it would a token.</p>
+  </div>
+  <div class="route">
+    <span class="rtag t-bonus">Where tokens still work</span>
+    <span class="rname">Minted access token</span>
+    <span class="rfile">core/token_mint.py</span>
+    <p class="rwhat">Straight after a sign-in, the session is spent on a
+    long-lived token. The student never sees Canvas settings, never copies a
+    string. Silently skipped where the school has switched token creation off.</p>
+  </div>
+  <div class="route">
+    <span class="rtag t-extra">Supplementary</span>
+    <span class="rname">Browser extension handoff</span>
+    <span class="rfile">core/handoff.py + extension/</span>
+    <p class="rwhat">One click in Chrome on a Canvas tab that is already signed
+    in. Nothing typed, no school picked, no password entered, because the
+    browser already did all three.</p>
+  </div>
+</div>
+
+<h2><span class="n">02</span>How it keeps the student signed in</h2>
+<p class="lede">This was the number one ask: a login screen on every launch is
+what kills retention. Four mechanisms, in the order they take effect.</p>
+
+<div class="tbl-scroll">
+<table>
+  <thead><tr>
+    <th>Mechanism</th><th>What it does</th><th>Lives in</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td><b>A profile that survives the session</b></td>
+      <td>pywebview defaults to <code>private_mode=True</code>, which runs the
+      web view InPrivate against a temp folder thrown away on exit. Turned off,
+      with an explicit <code>storage_path</code>, so the web view keeps cookies
+      and site data between launches.</td>
+      <td class="num">start.py</td>
+    </tr>
+    <tr>
+      <td><b>Session cookies re-dated to 30 days</b></td>
+      <td>The profile keeps a cookie with an expiry date and loses one without.
+      Every relevant cookie, the school's identity-provider one included, is
+      re-dated in place through <code>AddOrUpdateCookie</code> after a
+      successful sign-in.</td>
+      <td class="num">browser_login.<wbr>persist_session_cookies</td>
+    </tr>
+    <tr>
+      <td><b>The password manager, switched on</b></td>
+      <td>The sign-in window offers to save the institution password and to
+      autofill it next time, so a re-login is a click rather than typing a
+      university password. Read back after writing, so a build where the
+      setting does not take is reported rather than assumed.</td>
+      <td class="num">browser_login.<wbr>enable_password_manager</td>
+    </tr>
+    <tr>
+      <td><b>A minted token, renewed early</b></td>
+      <td>119 days requested against Canvas' 120-day ceiling. The grant is
+      whatever the school allows, so renewal fires at
+      <code>min(21 days, granted / 3)</code> rather than a fixed window.</td>
+      <td class="num">core/token_mint.py</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p style="margin-top:18px"><b>The per-institution expiry was a real bug, caught by
+your own correction.</b> A fixed 21-day renewal window made a token from a school
+granting 7 days due for renewal the instant it was minted. It now scales with
+the grant.</p>
+
+<h2><span class="n">03</span>Measured, with controls</h2>
+<p class="lede">Each line below was established by driving the real thing and
+reading a number, with a control proving the check could still say no. Anything
+not on this list is not measured, however reasonable it sounds.</p>
+
+<div class="tbl-scroll">
+<table>
+  <thead><tr>
+    <th>Claim</th><th>What was measured</th><th style="width:1%">Verdict</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td>The web view profile keeps a dated cookie and loses a session cookie</td>
+      <td>Written, process restarted, read back. Both controls failed correctly.</td>
+      <td><span class="chip c-yes">held</span></td>
+    </tr>
+    <tr>
+      <td>A session cookie can be re-dated in place and survive a restart</td>
+      <td><code>AddOrUpdateCookie</code> with a <code>System.DateTime</code>
+      expiry, then a restart. The no-re-date control lost it.</td>
+      <td><span class="chip c-yes">held</span></td>
+    </tr>
+    <tr>
+      <td>Web view settings writes take effect</td>
+      <td>Written then read back off the live <code>CoreWebView2</code>
+      settings object.</td>
+      <td><span class="chip c-yes">held</span></td>
+    </tr>
+    <tr>
+      <td>A logout really clears the profile</td>
+      <td><code>ClearBrowsingDataAsync</code> then a cookie enumeration:
+      1 cookie to 0.</td>
+      <td><span class="chip c-yes">held</span></td>
+    </tr>
+    <tr>
+      <td>Ctrl+V works in the sign-in window</td>
+      <td>Driven in the real window. It already worked; an invented revert
+      hazard was disproved by sampling and the guard removed.</td>
+      <td><span class="chip c-yes">held</span></td>
+    </tr>
+    <tr>
+      <td>The handoff listener refuses a web page</td>
+      <td>Real HTTP from a page origin: <code>403</code>, and nothing adopted.</td>
+      <td><span class="chip c-yes">held</span></td>
+    </tr>
+    <tr>
+      <td>The whole extension transport works end to end</td>
+      <td>New: <code>scripts/check_handoff.py</code>, ten checks against the
+      live listener, plus a no-listener control that fails.</td>
+      <td><span class="chip c-yes">held</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2><span class="n">04</span>Found today: two framing bugs in the handoff listener</h2>
+<p class="lede">Both were on the extension's live path. Both were invisible to
+thirty existing tests, for one reason: <code>urllib</code> opens a connection
+per request, so an unread body is followed by end-of-file and the server never
+trips over it. A browser does the opposite. It keeps the connection and sends
+the next request down it, which is exactly the pair the extension makes.</p>
+
+<div class="finding">
+  <h3>A refused request poisoned the next one on the same connection</h3>
+  <p class="fmeta">core/handoff.py &middot; found by building the dev harness &middot; fixed</p>
+  <p>Every refusal answered without reading the request body. The connection is
+  keep-alive, so those bytes were still in the socket when the server went
+  looking for the next request line, and it read the tail of a JSON body as a
+  request.</p>
+  <pre>with the drain removed          <span class="dim">(positive control)</span>
+  1st: HTTP/1.1 403 Forbidden
+  2nd: <span class="bad">HTTP/1.1 501 Unsupported method ('{"host":"x","cookies":{}}GET')</span>
+
+fixed
+  1st: HTTP/1.1 403 Forbidden
+  2nd: <span class="ok">HTTP/1.1 200 OK</span></pre>
+  <p>The second request is the extension's own <code>POST /canvas-session</code>,
+  arriving after the <code>GET /ping</code> it uses to find the port. A handoff
+  that cannot land, on a connection the browser is entitled to reuse.</p>
+</div>
+
+<div class="finding">
+  <h3>The CORS preflight returned a body with a 204</h3>
+  <p class="fmeta">core/handoff.py &middot; RFC 9110 violation &middot; fixed</p>
+  <p>A 204 response is terminated by the end of the header section. It cannot
+  carry a <code>Content-Length</code>, so a client that knows the rule does not
+  read the two bytes of <code>{}</code> we were sending, and they sat in the
+  socket. Chrome sends this preflight before <b>every</b> handoff POST, because
+  <code>Content-Type: application/json</code> is not CORS-safelisted.</p>
+  <pre>with the body restored          <span class="dim">(positive control)</span>
+  status         204
+  Content-Length 2
+  body bytes     0
+  traceback      <span class="bad">YES  (ConnectionResetError)</span>
+
+fixed
+  status         204
+  Content-Length (absent)
+  body bytes     0
+  traceback      <span class="ok">no</span></pre>
+</div>
+
+<div class="finding info">
+  <h3>Two smaller things fixed alongside them</h3>
+  <p class="fmeta">core/handoff.py &middot; hardening</p>
+  <ul class="plain">
+    <li><b>Handler failures went to stderr as tracebacks.</b> This listener
+    silences its own logging precisely so it never writes there, and a windowed
+    Windows build has no stderr at all. A dropped connection is now logged at
+    debug and anything else at warning, rather than printed or swallowed.</li>
+    <li><b>Idle keep-alive connections held a thread each.</b> A ten-second
+    handler timeout closes them, so nothing can pile threads up by connecting
+    and saying nothing.</li>
+  </ul>
+</div>
+
+<p style="margin-top:26px"><b>How they were found matters more than what they
+were.</b> Neither came from reading the code. Both came from building the
+harness you asked for and looking at what the listener actually put on the
+wire. The first sign of them was a stray traceback in terminal output that a
+less suspicious reading would have dismissed as noise.</p>
+
+<h2><span class="n">05</span>The md5 finding: it does not reproduce</h2>
+
+<div class="finding resolved">
+  <h3><code>add_file_to_manifest</code> is correct as written</h3>
+  <p class="fmeta">core/sync_manager.py:2701 &middot; flagged 2026-09-11 &middot; investigated and closed</p>
+  <p>I flagged this as needing a look because it hashes the file on disk
+  unconditionally and writes the result as <code>original_md5</code>, which is
+  the same shape as the data-loss defect fixed in its sibling
+  <code>record_downloaded_file</code> on 2026-08-20. <code>original_md5</code>
+  is the sole basis of edit protection, so a baseline taken from the student's
+  edited file is what turns a protected file into an overwritable one.</p>
+  <p>Reachability is what settles it, and reachability is what I had not
+  established. The function has exactly two call sites, both in
+  <code>sync/execution.py</code>:</p>
+  <ul class="plain">
+    <li><b>Line 1128</b>, the real file download, passes
+    <code>local_md5=_dl_hasher.hexdigest()</code>: the bytes just pulled off
+    the network. The on-disk hash never runs.</li>
+    <li><b>Line 1735</b>, the synthetic shortcut and Canvas Page path, passes
+    nothing. Every route to it writes the file immediately beforehand: the real
+    page HTML, or the redirect stub, or the <code>.url</code> shortcut. A path
+    with nothing to write hits <code>continue</code> and never reaches the
+    call.</li>
+  </ul>
+  <p>So the unconditional hash is always hashing bytes the app itself has just
+  written, which is the correct baseline. This is the same distinction that made
+  the sibling's fix correct: hashing is right when the file is ours, and wrong
+  when we are re-recording a file that was merely found on disk.</p>
+</div>
+
+<div class="finding">
+  <h3>What is actually worth doing about it</h3>
+  <p class="fmeta">residual risk &middot; the invariant is stated but not enforced</p>
+  <p>The docstring claims the caller contract ("this is always a fresh-byte
+  download") and nothing checks it. That is exactly how the sibling acquired its
+  bug: a third caller was added later that recorded skipped-but-existing files,
+  and the docstring was still true of the two original ones.</p>
+  <p>A census test that fails on a new, unclassified call site is the cheap
+  guard, and it is this repo's own stated pattern for a fix of this class. It is
+  worth adding; it is not urgent, because nothing is currently wrong.</p>
+</div>
+
+<h2><span class="n">06</span>Dev testing, which now works</h2>
+<p class="lede"><code>streamlit run app.py</code> cannot open the sign-in
+window and never could. The window is a second pywebview window, and pywebview
+only creates one once <code>webview.start()</code> has run on the process's main
+thread. Under <code>streamlit run</code>, Streamlit owns that thread, no GUI
+loop ever starts, and the button correctly refuses.</p>
+
+<div class="finding info">
+  <h3>Is it the real thing? Yes, and here is what that rests on</h3>
+  <p class="fmeta">asked directly &middot; enforced by tests/test_dev_tooling.py</p>
+  <p>You asked whether I built something that imitates the auth screen. I did
+  not, and the answer should not depend on my word for it, so it is now a test.</p>
+  <p><code>dev.py</code> contains exactly one page of its own: a three-row
+  status panel. The app is the real <code>app.py</code>, served by the real
+  Streamlit server, started through <code>start.py</code>'s own
+  <code>_launch_streamlit</code> - production's function, not a copy. Every
+  module under test is the shipped one, in a single process.</p>
+  <div class="tbl-scroll">
+  <table>
+    <thead><tr><th>What the test forbids</th><th>Why it would matter</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>A second page of its own, or any <code>&lt;input&gt;</code>,
+        <code>&lt;form&gt;</code>, <code>&lt;button&gt;</code>, "sign in",
+        "log in", "access token" or "canvas url" in the status panel</td>
+        <td>That is the moment somebody starts rebuilding the login page inside
+        the harness, which makes every result from it worthless</td>
+      </tr>
+      <tr>
+        <td>Importing Streamlit and building its own invocation</td>
+        <td>Production's launcher carries the theme flags, the headless setting
+        and a signal monkeypatch a non-main thread needs. A second copy can
+        disagree with production about how the app is configured</td>
+      </tr>
+      <tr>
+        <td>Running the web view in private mode, or resolving the profile
+        anywhere but through the app's own helper</td>
+        <td>pywebview's default throws the profile away on exit, so "stay
+        signed in" would appear broken on an app where it works</td>
+      </tr>
+      <tr>
+        <td><code>debug</code> on by default</td>
+        <td>pywebview sets the context-menu policy from its own debug flag, so
+        right-click paste in the sign-in window would appear to work whether or
+        not the app's code enables it</td>
+      </tr>
+      <tr>
+        <td>A hard-coded "available" on the sign-in line</td>
+        <td>That line is the one thing you rely on. It calls
+        <code>is_available()</code>, so it is a reading rather than a claim</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<div class="finding">
+  <h3>One thing genuinely differs, and it is the rendering surface</h3>
+  <p class="fmeta">use --window for anything about layout</p>
+  <p>By default the app is drawn by <b>your browser</b>; the shipped app draws
+  it in WebView2 (WKWebView on macOS). Functionally that is nothing: both are
+  Chromium on Windows, and there is <b>no <code>window.pywebview</code> or
+  <code>js_api</code> call anywhere in the app</b> - I checked, and
+  <code>inject_app_shell_bridge</code> is pure DOM JavaScript. But layout is not
+  a functional question, so <code>--window</code> loads the app into the
+  pywebview window instead, in the same engine the shipped build uses. Use that
+  for the auth-screen work. <code>python start.py</code> is production-faithful
+  too, and always was; what it cannot give you is DevTools and a live DOM.</p>
+  <p>And one pre-existing difference from the <b>installed</b> build, which is
+  not this file's doing: run from source the config dir is the repo root, so the
+  profile is <code>&lt;repo&gt;/webview</code> rather than
+  <code>%APPDATA%</code>. <code>python start.py</code> has always behaved the
+  same way. So signing in here does not sign you in inside the installed
+  <code>.exe</code>, and the two cannot fight over the same WebView2 profile
+  lock.</p>
+</div>
+
+<h3>Measured, not described</h3>
+<pre>python dev.py --isolated --no-browser --port 8735
+
+  App              http://127.0.0.1:8735
+  Rendered in      your browser (Chrome/Edge)
+  Web view profile ...\Canvas Downloader WORKSPACE\webview-dev
+  Sign-in window   <span class="ok">available</span>
+  Extension ports  53127, 53128, 53129
+
+then, driving a real browser at it:
+  page             <span class="ok">/?mode=auth   title "Canvas Downloader"</span>
+  console          <span class="ok">0 errors, 11 warnings</span></pre>
+<p><code>Sign-in window available</code> is the whole point: that is
+<code>is_available()</code> answering True in the dev host, where it answers
+False under <code>streamlit run</code>. An earlier attempt showed 25
+<code>ERR_CONNECTION_REFUSED</code> errors, every one of them timestamped
+<b>after</b> my own 75-second timeout killed the host - the frontend
+reconnecting to a server the harness had stopped, not a defect. Worth stating
+because a console error list is exactly the kind of evidence that gets read as
+a finding without checking when the lines landed.</p>
+
+<h3>The two commands</h3>
+<pre>python dev.py                    the app, with a working sign-in window
+python scripts/check_handoff.py  the extension transport, without Chrome</pre>
+
+<div class="tbl-scroll">
+<table>
+  <thead><tr><th>Flag</th><th>What it is for</th></tr></thead>
+  <tbody>
+    <tr><td class="num">--window</td><td>Render the app in the pywebview
+    window, in the same engine the shipped build uses. <b>Use this for
+    layout.</b></td></tr>
+    <tr><td class="num">--isolated</td><td>A throwaway web view profile, for
+    testing a first-ever sign-in without signing yourself out of your own
+    school.</td></tr>
+    <tr><td class="num">--debug</td><td>DevTools in the web views. <b>Not
+    production-faithful</b> for right-click paste, and it says so when you use
+    it.</td></tr>
+    <tr><td class="num">--port 8600</td><td>Somewhere other than 8501.</td></tr>
+    <tr><td class="num">--no-browser</td><td>Print the URL instead of opening
+    one.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Does the dev run talk to the extension?</h3>
+<p><b>Yes, and it always did.</b> The listener is a thread in whichever process
+runs the app, with no dependency on pywebview, so it works under
+<code>streamlit run app.py</code> too. What was missing was any way to see that
+without Chrome in the loop. <code>check_handoff.py</code> runs ten checks
+against the live listener using the app's own port and cookie constants, so it
+cannot drift by probing somewhere the app is not listening. Nothing consumes
+the arming by default, so the real extension can be tested on the same arming
+straight afterwards.</p>
+
+<h3>The end-to-end script</h3>
+<ul class="plain">
+  <li><code>python dev.py</code>, and read the banner. If the sign-in line says
+  NOT available, the GUI loop did not come up and every sign-in test after it
+  is void.</li>
+  <li>Press <b>Sign in with Canvas</b> and finish a real CBS sign-in. The
+  terminal prints the mint's verdict, the harvest and the sign-in state as they
+  happen.</li>
+  <li>Close the dev host, run it again, and see whether you land signed in.
+  That is the retention claim, and nothing else substitutes for it.</li>
+  <li>Press the extension card, then run <code>check_handoff.py</code> in a
+  second terminal. Green means everything but Chrome is right.</li>
+  <li>Then for real: load <code>extension/</code> unpacked at
+  <code>chrome://extensions</code> with Developer mode on, open a Canvas tab,
+  click the toolbar button.</li>
+</ul>
+
+<h2><span class="n">07</span>Not verified, and needing you</h2>
+<p class="lede">Every item here needs a human at a real institution login.
+None of it can be faked, and none of it is asserted anywhere as working.</p>
+
+<ul class="todo">
+  <li><span class="box"></span><span>
+    <span class="what">The mint against real CBS Canvas</span>
+    <span class="why">Expected to be refused, because CBS has token creation
+    switched off. What matters is the exact refusal, so the code classifies it
+    as permanent rather than retrying for ever.</span>
+  </span></li>
+  <li><span class="box"></span><span>
+    <span class="what">Whether Entra's "Stay signed in?" prompt renders in the web view</span>
+    <span class="why">This is the single most load-bearing interaction in the
+    feature. Ticked, the app can renew itself for weeks. If the prompt does not
+    appear at all inside the web view, the 30-day story rests only on our own
+    re-dating.</span>
+  </span></li>
+  <li><span class="box"></span><span>
+    <span class="what">The password save and autofill round trip</span>
+    <span class="why">Nothing in a test can click a browser's own save prompt.
+    The setting is verified as written and read back; that it results in a
+    filled password is not.</span>
+  </span></li>
+  <li><span class="box"></span><span>
+    <span class="what">Sign in, close, reopen a day later, land signed in</span>
+    <span class="why">The actual retention claim. Canvas' own session is about
+    a day, so the test only means something across one.</span>
+  </span></li>
+  <li><span class="box"></span><span>
+    <span class="what">The handoff through real Chrome to a real Canvas tab</span>
+    <span class="why">The extension loads now, and the app side is proven by
+    the checker. What is untested is Chrome's half: the permission prompt, the
+    httpOnly cookie read, and the preflight that the 204 bug was sitting on.</span>
+  </span></li>
+  <li><span class="box"></span><span>
+    <span class="what">macOS, entirely</span>
+    <span class="why">Every measurement in this document is Windows. The web
+    view there is WKWebView, not WebView2, and the cookie re-dating and
+    password-manager code are both WebView2-specific by construction.</span>
+  </span></li>
+</ul>
+
+<h2><span class="n">08</span>The auth screen, diagnosed rather than described</h2>
+<p class="lede">You said the layout looks horrendous and that I followed the
+rules about emitting a Streamlit button without considering the design. That is
+accurate. Here is the specific reading, taken off the real screen in the dev
+host, so the redesign starts from a diagnosis instead of an adjective.</p>
+
+<div class="tbl-scroll">
+<table>
+  <thead><tr>
+    <th style="width:1%">#</th><th>What is on screen</th><th>Why it is wrong</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td class="num">1</td>
+      <td>The two sign-in routes are <b>outline</b> buttons. The token route's
+      <b>Log In</b> is <b>solid primary blue</b>.</td>
+      <td>The weight is exactly inverted. The route you want a student to take
+      reads as the secondary option, and the dead end for a
+      token-disabled school is the most prominent control on the card.</td>
+    </tr>
+    <tr>
+      <td class="num">2</td>
+      <td><b>Get a token</b> is also solid blue.</td>
+      <td>Two competing solid buttons in the lower half, none in the upper
+      half. Nothing on the card reads as "start here".</td>
+    </tr>
+    <tr>
+      <td class="num">3</td>
+      <td>Two full-width outline buttons, stacked, identical weight.</td>
+      <td>They read as a pair of equals, so nothing distinguishes the straight
+      path from the supplementary one. The extension is meant to be an add-on
+      and looks like a co-headline.</td>
+    </tr>
+    <tr>
+      <td class="num">4</td>
+      <td>Three lines of small grey hint text interleaved between the
+      buttons.</td>
+      <td>The stack reads as prose with controls buried in it rather than as a
+      choice between routes.</td>
+    </tr>
+    <tr>
+      <td class="num">5</td>
+      <td>The card is about <b>930px</b> wide.</td>
+      <td>Too wide for a form this simple, which stretches every full-width
+      button into a slab and makes the vertical stack feel longer than it
+      is.</td>
+    </tr>
+    <tr>
+      <td class="num">6</td>
+      <td>Spacing runs field, tight gap, button, hint, button, hint,
+      divider.</td>
+      <td>No consistent vertical rhythm, so nothing groups. Each control looks
+      equally related to everything around it.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p style="margin-top:18px">I have not touched any of it. You said you would
+give a reference and tell me exactly how it should look, and guessing twice
+costs more than waiting once. The one thing I would flag as a decision rather
+than a taste question is <b>#1</b>: whichever direction the reference goes, the
+solid-primary weight should sit on the route most students can actually
+complete.</p>
+
+<h2><span class="n">09</span>Queued, and deliberately not started</h2>
+<ul class="plain">
+  <li><b>The extension's copy and its store presence.</b> It reads as though
+  the student already knows what to do, and it names a button that does not
+  exist: the popup says press <b>"Use my browser"</b> while the app's button
+  says <b>"Use the Canvas tab in my browser"</b>. That is a factual error in
+  user-facing copy, not a style preference. Being rewritten for a
+  non-technical student, with the listing text a store page needs.</li>
+  <li><b>A visible control for "stay signed in".</b> The setting is read and
+  honoured, and nothing in the interface flips it. Placing it needs a
+  browser-verified pass, because Streamlit reconciles by index and a control
+  that comes and goes hands the next element its DOM node.</li>
+  <li><b>The single-sign-on pop-up gap.</b> Fixable with pywebview's
+  <code>OPEN_EXTERNAL_LINKS_IN_BROWSER</code>, which is process-global, so it
+  can only be flipped while a sign-in window is open. Not implemented.</li>
+  <li><b>Store listings for the extension.</b> Not set up. Install is
+  Developer-mode only, which is why the app never assumes the extension is
+  present and never implies it is required.</li>
+</ul>
+
+<h2><span class="n">10</span>One thing you should know about the tree</h2>
+<div class="finding info">
+  <h3>There is uncommitted work here that is not mine</h3>
+  <p class="fmeta">shared/helpers.py, core/sync_manager.py, core/library.py, core/preset_manager.py</p>
+  <p>While checking my own changes I found four files modified that I never
+  touched, carrying a coherent and well-commented <b>UTF-8 BOM</b> fix: reads
+  switched from <code>utf-8</code> to <code>utf-8-sig</code>, because a BOM
+  makes <code>json.load</code> raise and the settings file was then
+  <b>quarantined and replaced</b> - taking the saved Canvas address,
+  <code>auth_method</code>, the acknowledged Panopto notice and the download
+  defaults with it.</p>
+  <p>It is good work and I left it alone. Timestamps put it at about 18:24
+  today, roughly three hours before I looked, and nothing but my own
+  <code>ui/auth.py</code> has been written since, so it is not a live session
+  editing underneath me. Flagging it because it is in the tree, it is not
+  committed, and it is not in my scope: if it was a session you stopped, it is
+  worth finishing or committing rather than leaving to drift.</p>
+</div>
+
+
+<p class="note">Durable detail, mechanism by mechanism, is in
+<span class="mono">.claude/rules/browser-login.md</span> (now 1,785 lines,
+three new sections from today). This document is the state of the work;
+that file is what the next session has to read before touching any of it.</p>
+
+</div>

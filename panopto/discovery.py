@@ -111,11 +111,23 @@ class PanoptoVideo:
 
 
 class _CanvasREST:
-    """Minimal Canvas REST client (token + base), mirroring the proven flow."""
+    """Minimal Canvas REST client (credential + base), mirroring the proven flow."""
 
-    def __init__(self, base_url: str, token: str, timeout: int = 20):
+    def __init__(self, base_url: str, credential, timeout: int = 20):
+        """*credential* is a CanvasCredential, or the historical token string.
+
+        Coerced here rather than at the two call sites, for the same reason
+        ``CanvasManager`` coerces rather than branching: one place decides how
+        the user signed in, so Panopto cannot end up supporting a login that
+        the Canvas engine does and vice versa.
+        """
+        from core.canvas_auth import coerce as _coerce_credential
         self.base = base_url.rstrip("/")
-        self.headers = {"Authorization": f"Bearer {token}"}
+        self.credential = _coerce_credential(credential, base_url)
+        self.headers = self.credential.auth_headers()
+        # Domain-scoped, so a Canvas redirect off-host cannot carry the
+        # session cookie with it. None in token mode, which requests ignores.
+        self.cookies = self.credential.requests_cookie_jar()
         self.timeout = timeout
 
     def get_all(self, path: str, params: dict | None = None) -> list:
@@ -126,7 +138,8 @@ class _CanvasREST:
         p.setdefault("per_page", 100)
         while url:
             try:
-                r = requests.get(url, headers=self.headers, params=p, timeout=self.timeout)
+                r = requests.get(url, headers=self.headers, params=p,
+                                 cookies=self.cookies, timeout=self.timeout)
                 r.raise_for_status()
             except requests.HTTPError as e:
                 if getattr(r, "status_code", 0) != 404:
@@ -154,7 +167,8 @@ class _CanvasREST:
 
     def get_one(self, path: str) -> dict:
         try:
-            r = requests.get(f"{self.base}{path}", headers=self.headers, timeout=self.timeout)
+            r = requests.get(f"{self.base}{path}", headers=self.headers,
+                             cookies=self.cookies, timeout=self.timeout)
             r.raise_for_status()
             return r.json()
         except Exception:
@@ -512,7 +526,7 @@ def course_level_launch_url(rest, course_id) -> str:
 
 def discover_course_videos(
     canvas_base: str,
-    token: str,
+    credential,
     course_id,
     *,
     include_folder_sessions: bool = False,
@@ -531,7 +545,7 @@ def discover_course_videos(
           on_event('video', title=str, source=str)  when a new recording is found
         Best-effort: any exception from the callback is swallowed.
     """
-    rest = _CanvasREST(canvas_base, token)
+    rest = _CanvasREST(canvas_base, credential)
     videos: dict[str, PanoptoVideo] = {}
 
     # Which LTI tools this institution has, so pass 2 can skip the ones that
@@ -680,7 +694,7 @@ def discover_course_videos(
                 mi_launch += f"&id={item['content_id']}"
             try:
                 # (session, final_url, real_id, pbase, folder_id)
-                attempt = lti_launch(mi_launch, token)
+                attempt = lti_launch(mi_launch, credential)
             except Exception:
                 attempt = None
             if attempt and attempt[0] is not None and attempt[3] is not None:
@@ -706,7 +720,7 @@ def discover_course_videos(
             if (lti is None and not direct and d_launch
                     and "sessionless_launch" in d_launch and d_launch != mi_launch):
                 try:
-                    attempt = lti_launch(d_launch, token)
+                    attempt = lti_launch(d_launch, credential)
                 except Exception:
                     attempt = None
                 if attempt and attempt[0] is not None:
@@ -871,7 +885,7 @@ def discover_course_videos(
             if _cancelled():
                 break
             try:
-                cl = lti_launch(_cl_launch, token)
+                cl = lti_launch(_cl_launch, credential)
             except Exception as e:
                 logger.debug("Course-level Panopto launch failed: %s", e)
                 continue

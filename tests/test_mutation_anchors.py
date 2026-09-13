@@ -96,16 +96,34 @@ def test_every_anchor_in_this_set_resolves(stem, set_name):
     mutants = _mutants_of(stem, set_name)
     assert mutants, f"{set_name} is empty"
     stale = []
+    ambiguous = []
     for label, rel, old, _new in mutants:
         src = (REPO / rel).read_text(encoding="utf-8")
-        if old not in src:
+        hits = src.count(old)
+        if hits == 0:
             stale.append(f"{label!r} -> {rel}")
+        elif hits > 1:
+            ambiguous.append(f"{label!r} -> {rel} ({hits} hits)")
     assert not stale, (
         f"{len(stale)} anchor(s) in {set_name} no longer match their source, so "
         f"those mutants CANNOT RUN and any recorded score for this set is "
         f"stale. Re-anchor them on the current code (and re-run the pass - an "
         f"anchor that resolves is not the same as a mutant that is caught):\n  "
         + "\n  ".join(stale))
+    # UNIQUENESS, not merely presence. Every harness applies its mutant with
+    # `replace(old, new, 1)`, so an anchor that resolves twice mutates
+    # WHICHEVER SITE COMES FIRST - which may not be the one the label names,
+    # and the pass then reports a result under a label that is a lie. This
+    # repo already records the trap twice (the course-selector twin lists, the
+    # Office lock coverage: "Anchor uniquely, on a preceding line") and the
+    # guard meant to enforce it could not see it: `old not in src` is true for
+    # a doubly-matching anchor. Walked into on 2026-09-12, when a four-space
+    # `st.markdown(...)` anchor also matched the same call nested deeper.
+    assert not ambiguous, (
+        f"{len(ambiguous)} anchor(s) in {set_name} match MORE THAN ONE place, "
+        f"so the mutant lands on whichever comes first rather than on the site "
+        f"its label names. Extend each anchor with a neighbouring line until it "
+        f"is unique:\n  " + "\n  ".join(ambiguous))
 
 
 @pytest.mark.parametrize("stem,set_name", _every_set())

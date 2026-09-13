@@ -22,6 +22,8 @@ from html import escape as _he
 import streamlit as st
 
 from core.canvas_logic import CanvasManager
+from core.canvas_auth import (BROWSER, TOKEN, CanvasCredential,
+                              from_cookies, from_token)
 from version import __version__
 
 logger = logging.getLogger(__name__)
@@ -195,14 +197,38 @@ def _safe_keyring_set(service: str, username: str, password: str) -> bool:
         return False
 
 def _safe_keyring_delete(service: str, username: str) -> bool:
-    """Delete password from keyring with a daemon-thread watchdog (see _KEYRING_TIMEOUT)."""
+    """Delete password from keyring with a daemon-thread watchdog (see _KEYRING_TIMEOUT).
+
+    **Nothing to delete is SUCCESS, not a failure.** The Windows backend raises
+    `PasswordDeleteError` when no entry exists, and its message is only the
+    service name - so a perfectly normal logout logged
+    `Keyring delete_password failed: CanvasDownloader`, which reads as though
+    the service itself were the error. Reported twice in one evening
+    (2026-09-12) by the product owner.
+
+    There is often nothing to delete BY DESIGN: a browser-login credential
+    serialises to about 3,260 bytes and Credential Manager refuses anything
+    over 2,560 (measured), so on Windows the credential usually lives in the
+    DPAPI fallback file and no keyring entry was ever written.
+
+    The distinction is worth keeping because logout is the one action whose job
+    is to leave nothing behind: a real failure and an empty store must not look
+    the same, or nobody can tell whether a logout on a shared machine cleared
+    anything. So "absent" is debug and everything else stays a warning.
+    """
     import keyring
+    from keyring.errors import PasswordDeleteError
     try:
         _run_keyring_op(keyring.delete_password, service, username)
         return True
     except TimeoutError:
         logger.warning(f"Keyring delete_password timed out ({_KEYRING_TIMEOUT:.0f}s).")
         return False
+    except PasswordDeleteError as e:
+        # Already gone. The caller's contract is "there is no stored password
+        # after this", and that is satisfied.
+        logger.debug(f"Keyring had nothing to delete for {service}/{username}: {e}")
+        return True
     except Exception as e:
         logger.warning(f"Keyring delete_password failed: {e}")
         return False
@@ -565,6 +591,136 @@ def store_token(username: str, token: str) -> bool:
     return False
 
 
+# ── Browser-session credentials ──────────────────────────────────────────────
+#
+# A browser login is stored in the SAME OS credential store as a token, under
+# its own account name, and written through `store_token` - which is not a
+# token-specific function despite the name: it is this app's one hardened
+# string writer, carrying the skip-a-pointless-write rule, the Windows DPAPI
+# fallback and the read-back verification that macOS's delete-then-add
+# `set_password` makes mandatory. Serialising the credential to JSON and
+# handing it to that writer inherits every one of those properties, where a
+# second store would have had to re-earn them.
+#
+# The account name is NAMESPACED so the two logins cannot overwrite each other.
+# A user who signs in with the browser and later pastes a token (or the
+# reverse) keeps both, and logging out of one does not destroy the other.
+BROWSER_KEYRING_PREFIX = "browser::"
+
+
+def _browser_keyring_user(api_url: str) -> str:
+    return f"{BROWSER_KEYRING_PREFIX}{api_url or 'default'}"
+
+
+def store_browser_credential(api_url: str, credential: CanvasCredential) -> bool:
+    """Persist a browser-session credential. Answers whether it is retrievable.
+
+    Never raises: like `store_token`, a persistence failure must not be able to
+    abort a login. The session is already usable in memory, so the only cost of
+    a failed write is that the next launch has to sign in again.
+    """
+    try:
+        payload = json.dumps(credential.to_storable(), ensure_ascii=False)
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning("Could not serialise the Canvas browser session: %s", e,
+                       exc_info=True)
+        return False
+    return store_token(_browser_keyring_user(api_url), payload)
+
+
+def load_browser_credential(api_url: str) -> tuple[CanvasCredential | None, bool]:
+    """Read a stored browser credential. Returns ``(credential, needs_prompt)``.
+
+    Non-prompting, by the same rule as the token read it sits beside: this runs
+    on the Streamlit SCRIPT THREAD during init, and on macOS an untrusted
+    keychain ACL turns an ordinary read into a modal that leaves the window
+    empty for as long as it is up. ``needs_prompt`` means exactly that, and the
+    login screen raises the prompt later, explained, off this thread.
+
+    A stored value that will not parse answers ``(None, False)`` rather than
+    raising - a damaged credential is a reason to sign in again, never a reason
+    for the app to fail to start.
+    """
+    user = _browser_keyring_user(api_url)
+    try:
+        raw, needs_prompt = keyring_get_without_prompting(KEYRING_SERVICE, user)
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning("Browser session unavailable from the credential store: "
+                       "%s", e, exc_info=True)
+        return None, False
+    if needs_prompt:
+        return None, True
+    if not raw:
+        try:
+            raw = _load_fallback_token(user) or ''
+        except Exception as e:                                     # noqa: BLE001
+            logger.warning("Browser session fallback read failed: %s", e,
+                           exc_info=True)
+            raw = ''
+    if not raw:
+        return None, False
+    try:
+        # ValueError, not JSONDecodeError: a store written in another codepage
+        # raises UnicodeDecodeError, which is a SIBLING of JSONDecodeError and
+        # not a subclass - the trap this repo has hit in four other stores.
+        credential = CanvasCredential.from_storable(json.loads(raw))
+    except (ValueError, TypeError) as e:
+        logger.warning("Stored Canvas browser session could not be read (%s); "
+                       "treating it as signed out.", e)
+        return None, False
+    return (credential if credential.usable else None), False
+
+
+def delete_browser_credential(api_url: str) -> None:
+    """Forget a stored browser session. Best effort, never raises."""
+    user = _browser_keyring_user(api_url)
+    try:
+        _safe_keyring_delete(KEYRING_SERVICE, user)
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning("Could not clear the stored browser session: %s", e,
+                       exc_info=True)
+    try:
+        _delete_fallback_token(user)
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning("Could not clear the browser session fallback: %s", e,
+                       exc_info=True)
+
+
+def _reset_browser_login_state() -> None:
+    """Forget any in-flight or finished sign-in. Used by logout and force_reauth.
+
+    Both halves are needed and they live in different places: the job state is
+    process-global (a background thread has no ``ScriptRunContext``) while the
+    "am I waiting?" flags are per Streamlit session. Clearing only one leaves
+    either a stale verdict that makes the next attempt a no-op, or a notice
+    advertising a window that is not open - the same pair of failures
+    ``reset_keychain_unlock`` exists to prevent.
+    """
+    try:
+        from core import browser_login
+        browser_login.reset()
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning("Could not reset the Canvas sign-in state: %s", e,
+                       exc_info=True)
+    st.session_state.pop('browser_login_pending', None)
+    st.session_state.pop('browser_login_failed', None)
+    st.session_state.pop('browser_restore_pending', None)
+    # The extension listener is the THIRD way a sign-in can be in flight, and
+    # it is stopped HERE rather than at the two callers for the reason this
+    # function exists at all: a logout that leaves a loopback socket open and
+    # accepting Canvas sessions is a logout in name only.
+    cancel_browser_handoff()
+
+
+def _clear_webview_session() -> None:
+    """Sign the embedded web view out. Best effort, never raises."""
+    try:
+        from core import browser_login
+        browser_login.clear_session()
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning("Could not sign the web view out: %s", e, exc_info=True)
+
+
 def _get_fallback_path() -> Path:
     from shared.helpers import get_config_dir
     from pathlib import Path
@@ -594,7 +750,7 @@ def _save_fallback_token(username: str, token: str) -> None:
         data: dict = {"_version": 2}
         if fallback_path.exists():
             try:
-                with open(fallback_path, "r", encoding="utf-8") as f:
+                with open(fallback_path, "r", encoding="utf-8-sig") as f:
                     existing = json.load(f)
                 if existing.get("_version") == 2:
                     data = existing
@@ -641,7 +797,7 @@ def _load_fallback_token(username: str) -> str:
         fallback_path = _get_fallback_path()
         if not fallback_path.exists():
             return ""
-        with open(fallback_path, "r", encoding="utf-8") as f:
+        with open(fallback_path, "r", encoding="utf-8-sig") as f:
             data = json.load(f)
         stored = data.get(username, "")
         if not stored or data.get("_version") != 2:
@@ -663,7 +819,7 @@ def _delete_fallback_token(username: str) -> None:
             return
         data: dict = {}
         try:
-            with open(fallback_path, "r", encoding="utf-8") as f:
+            with open(fallback_path, "r", encoding="utf-8-sig") as f:
                 data = json.load(f)
         except Exception:
             pass
@@ -747,24 +903,80 @@ def _looks_like_url(s: str) -> bool:
 # place: a function with no callers reads as an applied decision.
 
 
+def browser_session_active() -> bool:
+    """Whether the credential this session is holding is a browser sign-in.
+
+    One reader, because three surfaces need the answer and each would otherwise
+    reach into ``api_token`` and form its own opinion about a value whose type
+    depends on how the user signed in.
+    """
+    cred = st.session_state.get('api_token')
+    return isinstance(cred, CanvasCredential) and cred.is_browser
+
+
 def force_reauth(reason: str = "") -> None:
-    """Clear the stored credential and route back to the login page.
+    """Route back to the login page after the credential stopped working.
 
     Bulletproof reconnect: every keyring/fallback clear is watchdog-guarded
     (``_safe_keyring_delete``) and wrapped, so a hung credential backend can
     never block the route back to login. Pre-fills the known Canvas URL so the
     user only needs to paste a fresh token. Idempotent within a rerun.
+
+    **A browser session is RENEWED here, not destroyed.** A token that Canvas
+    refuses is dead and only the user can replace it; a browser session that
+    Canvas refuses is the ordinary end of a day-long Canvas session, and the
+    institution's SSO session - weeks, for a typical Entra tenant - can mint a
+    new one with no interaction at all. Deleting the stored credential threw
+    away the input to that renewal and dropped the user on a login screen; worse,
+    the screen told them to paste an access token, which at a school that has
+    turned token creation off is not something they can do. So in browser mode
+    this arms the same hidden renewal the startup path uses and lets
+    ``adopt_pending_browser_login`` sign them back in.
+
+    The renewal is ARMED, never awaited. A renewal blocks for as long as an
+    SSO chain takes and this runs on the Streamlit script thread, where a block
+    that long is the frozen-window failure ``.claude/rules/macos.md``
+    documents, so this only sets ``browser_restore_pending`` and the login page
+    starts the job. That flag is the ONE way a renewal is started, which is why
+    ``core.browser_login.refresh_silently`` was deleted rather than wired up:
+    it was a second implementation of this decision with no callers, and two
+    of them is how they come to disagree.
     """
+    _browser = browser_session_active()
+    # A minted token is a BROWSER sign-in wearing a different credential. The
+    # token itself is dead and only Canvas can replace it, so it is cleared
+    # like any other token - but the recovery is a sign-in, not a paste, and
+    # the profile usually still holds the identity provider session that
+    # minted it in the first place. So this arms the same hidden renewal a
+    # browser session gets, and for most users it completes with no
+    # interaction at all.
+    _minted = (not _browser) and _token_was_minted()
     keyring_user = st.session_state.get('api_url') or 'default'
-    try:
-        _safe_keyring_delete(KEYRING_SERVICE, keyring_user)
-    except Exception:
-        pass
-    try:
-        _delete_fallback_token(keyring_user)
-    except Exception:
-        pass
-    st.session_state['api_token'] = ''
+    if not _browser:
+        try:
+            _safe_keyring_delete(KEYRING_SERVICE, keyring_user)
+        except Exception:
+            pass
+        try:
+            _delete_fallback_token(keyring_user)
+        except Exception:
+            pass
+        # The browser session is the OTHER thing that can be the dead credential
+        # this reconnect is about, and it lives under its own account name - so
+        # clearing only the token would leave a stale session behind that the
+        # next launch would restore straight back into the same failure.
+        delete_browser_credential(st.session_state.get('api_url') or '')
+        _reset_browser_login_state()
+        st.session_state['api_token'] = ''
+        if _minted:
+            st.session_state['browser_restore_pending'] = True
+    else:
+        # Keep the stored credential: it is what the renewal below verifies and
+        # replaces, and it is also what tells the next launch to try a renewal
+        # rather than showing a bare login screen. Only the in-flight sign-in
+        # state is cleared, so the notice cannot advertise a window that closed.
+        _reset_browser_login_state()
+        st.session_state['browser_restore_pending'] = True
     st.session_state['is_authenticated'] = False
     # The credential this refers to has just been deleted, so any cached
     # Keychain-unlock verdict is now about nothing. Left standing, a previous
@@ -785,7 +997,14 @@ def force_reauth(reason: str = "") -> None:
         # so the token-settings link can point at it directly (no re-check).
         st.session_state['url_verified'] = True
     if reason:
-        st.session_state['reauth_reason'] = reason
+        # Named for the credential the user actually has. All four call sites
+        # pass token wording ("Please reconnect with a new token"), and rewriting
+        # it HERE rather than at each of them is what stops the fifth call site
+        # telling a browser-session user to paste something they may not be
+        # allowed to create.
+        st.session_state['reauth_reason'] = (
+            "Your Canvas sign-in has expired. Signing in again takes a couple "
+            "of seconds." if _browser else reason)
     st.rerun(scope="app")
 
 
@@ -915,7 +1134,7 @@ def restore_saved_session() -> None:
     st.session_state['token_loaded'] = True
     if os.path.exists(CONFIG_FILE):
             try:
-                with open(CONFIG_FILE, "r", encoding='utf-8') as f:
+                with open(CONFIG_FILE, "r", encoding='utf-8-sig') as f:
                     config = _migrate_config(json.load(f))
                     st.session_state['api_url'] = config.get('api_url', '')
                     # A URL only gets persisted to config after a successful
@@ -991,6 +1210,15 @@ def restore_saved_session() -> None:
                         if saved_default and _os.path.isdir(saved_default) and current_path == _downloads_default:
                             st.session_state['download_path'] = saved_default
 
+                    # How this machine last signed in. A browser session is
+                    # restored by the same once-per-session init that restores
+                    # a token, because from the moment either is adopted the
+                    # app does not distinguish them.
+                    _browser_restore_tried = False
+                    if (config.get('auth_method') or TOKEN) == BROWSER:
+                        _browser_restore_tried = True
+                        _restore_browser_session(st.session_state['api_url'])
+
                     loaded_token = ''
                     # Unified keyring load for all platforms with watchdog and fallback.
                     #
@@ -1051,26 +1279,142 @@ def restore_saved_session() -> None:
                         except Exception:
                             pass
 
-                    st.session_state['api_token'] = loaded_token
+                    # A stored browser session is also the credential of LAST
+                    # RESORT, tried even when nothing marked this machine as
+                    # signing in that way. The settings file is a hint; the
+                    # credential store is the fact. `_persist_browser_login`
+                    # writes the session first and the marker second, and the
+                    # marker write is allowed to be skipped - an intact config
+                    # file that cannot be read is never overwritten - so a
+                    # sign-in can legitimately end up stored with nothing
+                    # naming it, and the marker test above would then never
+                    # look for it again. For that user this feature is a login
+                    # screen every single day with a perfectly good session
+                    # sitting in Credential Manager.
+                    #
+                    # Additive by construction, and that is what makes it safe
+                    # to widen: it runs only when no token was found AND
+                    # nothing has signed in yet, so it can never preempt a
+                    # working token or a session already adopted above.
+                    #
+                    # `_browser_restore_tried` is NOT belt-and-braces. Without
+                    # it both sites fire whenever the marker says BROWSER and
+                    # the stored session does not verify - which is the
+                    # ordinary expired-session launch - so the same credential
+                    # is read twice and `_adopt_restored_credential` runs
+                    # twice, paying a SECOND `validate_token()` round trip to
+                    # be told the same thing. On the bad-network launch that
+                    # path exists for, that is the whole optimistic-restore
+                    # timeout paid twice before the user sees anything. The
+                    # full suite found the double read; the double adopt was
+                    # sitting behind it.
+                    if (not _browser_restore_tried
+                            and not loaded_token
+                            and not st.session_state.get('is_authenticated')):
+                        _restore_browser_session(st.session_state['api_url'])
 
-                    if st.session_state['api_token']:
-                        _adopt_restored_token(st.session_state['api_token'])
+                    # Guarded: a browser session that has ALREADY signed in
+                    # above must not be overwritten by an empty token read.
+                    # Without this the credential is replaced by '' and the
+                    # user lands on the login page holding a working session.
+                    if not st.session_state.get('is_authenticated'):
+                        st.session_state['api_token'] = loaded_token
+
+                        if st.session_state['api_token']:
+                            _adopt_restored_token(st.session_state['api_token'])
             except Exception:
                 logger.warning("Saved session could not be restored", exc_info=True)
+
+
+def _restore_browser_session(api_url: str) -> bool:
+    """Adopt a stored browser session, arming a renewal if Canvas refused it.
+
+    ONE implementation with two call sites, and that is the whole point of it
+    being a function: the marker-driven restore and the no-token-found fallback
+    must not come to disagree about what a stale session means. Answers whether
+    a stored session was FOUND, not whether it worked.
+
+    Runs on the Streamlit script thread during init, so it never opens a
+    window: it only sets the flag that the login page acts on. A native window
+    raised from this thread is the blocking-init failure
+    ``.claude/rules/macos.md`` documents.
+    """
+    credential, _needs_prompt = load_browser_credential(api_url)
+    if credential is None:
+        # NOTHING stored is deliberately NOT a renewal. That is what the state
+        # after LOGGING OUT looks like, and trying to sign the user back in
+        # there is both wrong and alarming: they asked to be signed out, and
+        # the attempt they never made then fails and reports "Canvas sign-in
+        # did not finish" on a screen they reached on purpose. Reported from
+        # the real app.
+        return False
+    _adopt_restored_credential(credential)
+    if not st.session_state.get('is_authenticated'):
+        # There IS a stored session and Canvas would not take it, which is the
+        # one case a hidden renewal can fix: the institution's SSO session
+        # usually outlives Canvas' own day by weeks.
+        st.session_state['browser_restore_pending'] = True
+    return True
 
 
 def _adopt_restored_token(token: str) -> None:
     """Validate a token recovered from the credential store and sign in.
 
-    Extracted so the two ways a saved token can arrive - the ordinary
-    non-prompting read during init, and a macOS Keychain unlock that resolved
-    later - reach EXACTLY the same verdict. Writing this decision twice is how
-    the two would come to disagree about what a network blip means.
+    Thin alias kept so the Keychain-unlock path and its mutation harness keep
+    their call site. The decision itself lives in
+    :func:`_adopt_restored_credential`, because the verdict must not depend on
+    which kind of credential arrived.
     """
-    st.session_state['api_token'] = token
-    cm = CanvasManager(token, st.session_state.get('api_url', ''))
+    _adopt_restored_credential(from_token(token))
+
+
+def _adopt_restored_credential(credential: CanvasCredential) -> None:
+    """Validate a credential recovered from the store and sign in.
+
+    Extracted so every way a saved credential can arrive - the ordinary
+    non-prompting read during init, a macOS Keychain unlock that resolved
+    later, and a browser session renewed in the background - reaches EXACTLY
+    the same verdict. Writing this decision more than once is how they would
+    come to disagree about what a network blip means, and the optimistic
+    restore below is the single most important robustness property of the
+    login path for users on unreliable networks.
+
+    A token and a browser session are treated identically here on purpose:
+    from this point down, nothing in the app behaves differently for one or
+    the other.
+    """
+    # A token stays a plain `str` in session state, exactly as it always has.
+    # Only a browser login puts the credential OBJECT there. That keeps the
+    # existing path byte-for-byte unchanged - every consumer that reads
+    # `api_token` as a string still gets one - and confines the new type to the
+    # new mode, where `CanvasManager` coerces it. The alternative, wrapping
+    # tokens too, would have quietly changed the type under thirteen call sites
+    # and a keyring write, to no benefit.
+    st.session_state['api_token'] = (
+        credential if credential.is_browser else credential.token)
+    cm = CanvasManager(credential, st.session_state.get('api_url', ''))
     valid, msg = cm.validate_token()
     if valid:
+        # Canvas rolls a session cookie forward on every response (expire_after
+        # is one DAY, and Rack re-issues while that option is set - see
+        # CanvasManager.refreshed_credential). The live jar has the fresh value;
+        # the copy in the OS credential store does not, and without this it
+        # stays frozen at whatever the user signed in with and dies a day later
+        # however much they use the app. Written here because this is the one
+        # function every restored credential passes through, so the token path
+        # and all three browser paths get it from one place.
+        try:
+            _renewed = cm.refreshed_credential()
+            if _renewed is not None:
+                st.session_state['api_token'] = _renewed
+                store_browser_credential(st.session_state.get('api_url', ''), _renewed)
+                logger.info("Adopted a refreshed Canvas session cookie.")
+        except Exception:
+            # A sign-in that works must never be undone by failing to write it
+            # down: the session is live in memory either way, and the only cost
+            # is that the next launch renews.
+            logger.warning("Could not persist the refreshed Canvas session",
+                           exc_info=True)
         st.session_state['is_authenticated'] = True
         st.session_state['user_name'] = msg.split(": ", 1)[1] if ": " in msg else msg
         # No st.rerun() here: this runs during session init,
@@ -1146,6 +1490,978 @@ def adopt_pending_keychain_unlock() -> bool:
         logger.warning("Could not adopt the unlocked Keychain token", exc_info=True)
         return False
     return bool(st.session_state.get('is_authenticated'))
+
+
+# ── Signing in with Canvas (browser session) ─────────────────────────────────
+#
+# Same shape as the Keychain unlock above, and for the same reason: the work
+# happens on a daemon thread and the page polls it. A native window raised from
+# the Streamlit script thread stops the script finishing, and the frontend then
+# has nothing to render - `.claude/rules/macos.md` records exactly what that
+# looked like when `keyring` did it (a completely empty window for 60 seconds).
+
+def begin_browser_signin(api_url: str, *, interactive: bool = True) -> None:
+    """Start a Canvas sign-in in the app's own browser window.
+
+    Returns immediately. Nothing waits on it: the token field below the notice
+    keeps working, so a user who abandons the window is never stuck.
+    """
+    from core import browser_login
+    st.session_state.pop('browser_login_failed', None)
+    # A window the user is already looking at is brought forward, never thrown
+    # away. It is not modal and has no owner, so it can sit behind the main
+    # window - and pressing the button again is the natural response to that.
+    # Resetting first made that click cost the whole silent phase over again and
+    # wiped whatever had been typed into the institution's login form.
+    if interactive and browser_login.bring_to_front(api_url):
+        st.session_state['browser_login_pending'] = True
+        return
+    browser_login.reset()
+    browser_login.begin_login(api_url, interactive=interactive,
+                              keep_signed_in=_keep_signed_in_enabled())
+    st.session_state['browser_login_pending'] = True
+
+
+def _persist_browser_login(credential: CanvasCredential) -> None:
+    """Record a successful browser sign-in so the next launch is silent.
+
+    Mirrors the token path's persistence exactly, including its most important
+    property: a settings write must never be able to block or undo a login. An
+    unreadable-but-intact config file SKIPS the write rather than being replaced
+    by the handful of keys set here.
+    """
+    api_url = st.session_state.get('api_url', '')
+    if not store_browser_credential(api_url, credential):
+        # Say so rather than logging a save that did not happen - the macOS
+        # lesson from `store_token`, whose warning once claimed a DPAPI write
+        # that does not exist off Windows while the user was quietly logged out.
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice(
+            "Your Canvas sign-in could not be saved on this device",
+            detail=("You are signed in now, but this device's credential store "
+                    "refused to keep your Canvas session, so the app will ask "
+                    "you to sign in again next time you open it."),
+        )
+
+    config_data, may_write = read_config_for_update()
+    if not may_write:
+        return
+    config_data['api_url'] = api_url
+    config_data['auth_method'] = BROWSER
+    config_data.pop('mac_api_token', None)
+    config_data.pop('api_token', None)
+    write_config_atomically(config_data)
+
+
+#: One extension attempt per PROCESS, whatever happens to it. Guarded by a
+#: lock because `app.py` calls the starter on every rerun and Streamlit runs
+#: sessions on separate threads, so two reruns can arrive together.
+_token_extend_started = False
+_token_extend_lock = threading.Lock()
+
+
+def maybe_extend_minted_token() -> None:
+    """Push a minted token's expiry out before it can run out. Non-blocking.
+
+    Called once per rerun beside :func:`adopt_pending_browser_login`; does its
+    work on a daemon thread and at most once per process.
+
+    **Why a thread and not the script thread**: the whole point is that the
+    user never notices, and this is one or two Canvas round trips. On the script
+    thread during init that is the blocking-init failure
+    ``.claude/rules/macos.md`` documents.
+
+    **Why the thread may touch nothing in session state**: it has no
+    ``ScriptRunContext``. It reads the settings file and the credential store,
+    and writes the settings file. That is also why it EXTENDS rather than
+    regenerates: a regenerated token would invalidate the value this session,
+    every download thread, the sync executor and the Panopto runner are already
+    holding, so a renewal meant to save a login in three months would log the
+    user out of their own running app. See ``core.token_mint.extend``.
+    """
+    global _token_extend_started
+    with _token_extend_lock:
+        if _token_extend_started:
+            return
+        _token_extend_started = True
+
+    def _work() -> None:
+        try:
+            config, _may_write = read_config_for_update()
+            token_id = str(config.get('minted_token_id') or '')
+            expires_at = str(config.get('minted_token_expires_at') or '')
+            api_url = str(config.get('api_url') or '')
+            granted = config.get('minted_token_days')
+            if not token_id or not api_url:
+                # Not a token this app minted. Nothing here has any business
+                # touching a token the user pasted in themselves.
+                return
+            if config.get('minted_token_capped'):
+                # This institution already told us it will not grant more.
+                # That answer cannot change between launches, and asking again
+                # spends a request and writes a log line every single time.
+                return
+
+            from core import token_mint
+            if not token_mint.due_for_renewal(expires_at, granted):
+                return
+
+            # Non-prompting, for the same reason the startup read is: on macOS
+            # an untrusted keychain ACL turns an ordinary read into a modal,
+            # and a modal raised from a background thread is one the user
+            # cannot connect to anything they did.
+            token, _needs_prompt = keyring_get_without_prompting(
+                KEYRING_SERVICE, api_url or 'default')
+            if not token:
+                token = _load_fallback_token(api_url or 'default') or ''
+            if not token:
+                return
+
+            result = token_mint.extend(token, api_url, token_id,
+                                       granted_days=granted)
+            if result.reason == token_mint.CAPPED:
+                # Not a failure: the token still works, this school simply
+                # will not extend it. Remember, so the next launch is silent.
+                fresh, may_write = read_config_for_update()
+                if may_write:
+                    fresh['minted_token_capped'] = True
+                    write_config_atomically(fresh)
+                return
+            if result.reason != token_mint.OK:
+                return
+            if result.expires_at == expires_at:
+                return
+
+            # Read the config AGAIN rather than reusing the copy from the top:
+            # this is a read-modify-write of a file four other modules also
+            # own, and the network call in between is long enough for the
+            # Settings dialog to have saved in the meantime.
+            fresh, may_write = read_config_for_update()
+            if not may_write:
+                logger.warning("The Canvas access token was extended but the "
+                               "new expiry could not be recorded.")
+                return
+            fresh['minted_token_expires_at'] = result.expires_at
+            write_config_atomically(fresh)
+        except Exception:                                          # noqa: BLE001
+            # A renewal is an optimisation. The token still works today, and
+            # the worst case of failing here is that it is tried again on the
+            # next launch.
+            logger.warning("Could not extend the Canvas access token",
+                           exc_info=True)
+
+    try:
+        threading.Thread(target=_work, name='canvas-token-extend',
+                         daemon=True).start()
+    except RuntimeError:
+        # A thread that cannot START must release the once-per-process claim,
+        # or the renewal is dead for the life of the process. The same trap
+        # `.claude/rules/data-safety.md` records for the Panopto model
+        # download and the CUDA provisioner: a "running" flag set before the
+        # only thing that would ever clear it.
+        with _token_extend_lock:
+            _token_extend_started = False
+        logger.warning("Could not start the access-token renewal thread.")
+
+
+def open_canvas_tab(api_url: str) -> bool:
+    """Open the student's own Canvas in their default browser. Never raises.
+
+    **Friction this removes, named by the product owner (2026-09-12):** *"we
+    literally create friction by having the user manually find their URL when
+    their URL is already typed in - we could do a simple check and say if the
+    user already has their canvas URL typed in, and it has a proper URL format,
+    then we open that tab for them, whereafter they just need to click the
+    canvas downloader extension and then the button."*
+
+    **`normalize_canvas_url` is NOT a gate, and assuming it was is a mistake a
+    test caught here.** It is deliberately forgiving because it feeds a field
+    the user is about to submit and the app then validates against Canvas
+    itself. Measured: `not a url` becomes `https://not a url`,
+    `file:///C:/Windows` becomes `https://file:` and `javascript:alert(1)`
+    becomes `https://javascript:alert(1).instructure.com`. None of those can
+    execute anything - they are all `https` - but every one of them would open
+    a junk tab in the student's browser and blame the app for it.
+
+    So this asks two further questions before handing anything to the operating
+    system's URL handler: the scheme has to be one we chose, and the host has
+    to look like a host. `canvas_host` is the app's own host rule, used rather
+    than a second copy of it.
+
+    Answers whether a tab was opened, because the card's copy differs: having
+    opened the tab, the next instruction is "click the icon", and having not,
+    it is "open Canvas yourself first".
+    """
+    url = normalize_canvas_url(api_url or '')
+    if not url:
+        return False
+    if not url.startswith(('https://', 'http://')):
+        return False
+    from core.canvas_auth import canvas_host
+    host = canvas_host(url)
+    # A real hostname has a dot and no whitespace. This is not a URL validator
+    # and does not pretend to be one; it is the smallest check that keeps the
+    # measured junk above out of the browser.
+    if not host or '.' not in host or any(c.isspace() for c in host):
+        logger.debug("Not opening a Canvas tab for an implausible address: %r",
+                     api_url)
+        return False
+    try:
+        import webbrowser
+        # `new=2` asks for a tab rather than a window. Returns False on some
+        # platforms even when it worked, so the return value is not trusted -
+        # what is reported is that we tried with a valid address.
+        webbrowser.open(url, new=2)
+        return True
+    except Exception as e:                                       # noqa: BLE001
+        # A browser that will not open is not a reason to fail the sign-in:
+        # the listener is already armed and the student can reach Canvas
+        # themselves. Worth a line, never worth an exception.
+        logger.warning("Could not open the Canvas tab for the extension "
+                       "handoff: %s", e, exc_info=True)
+        return False
+
+
+def begin_browser_handoff(api_url: str = '') -> int:
+    """Start listening for the extension. Answers the port, or 0.
+
+    The button that calls this is the user's consent: the listener is not a
+    standing fixture, it opens only when they ask and closes on the first
+    accepted handoff or after `core.handoff.WINDOW_SECONDS`.
+
+    With a usable *api_url* the student's Canvas is opened for them, so the
+    whole remaining job is two clicks in a tab that is already in front of
+    them. The tab is opened ONLY after the listener is armed - the extension
+    checks whether the app is waiting the moment it is clicked, and opening the
+    tab first leaves a window in which the honest answer is "not waiting".
+    """
+    from core import handoff
+    # A NEW ATTEMPT OWNS THE NOTICE. Both flags are cleared, not just this
+    # route's, because the two share one slot: leaving either behind showed the
+    # PREVIOUS attempt's failure card over a sign-in that was in flight and
+    # working. Reported 2026-09-13 - the extension was green and the app said
+    # "Canvas sign-in did not finish".
+    st.session_state.pop('handoff_failed', None)
+    st.session_state.pop('browser_login_failed', None)
+    port = handoff.start()
+    st.session_state['handoff_waiting'] = bool(port)
+    if not port:
+        st.session_state['handoff_failed'] = 'no_port'
+        return port
+    st.session_state['handoff_opened_tab'] = open_canvas_tab(api_url)
+    return port
+
+
+def cancel_browser_handoff() -> None:
+    """Stop listening. Called by logout and whenever a sign-in succeeds."""
+    try:
+        from core import handoff
+        handoff.stop()
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not stop the handoff listener", exc_info=True)
+    st.session_state.pop('handoff_waiting', None)
+    st.session_state.pop('handoff_failed', None)
+    # Cleared with the rest of the attempt's state. Left behind, the NEXT
+    # handoff - which may not open a tab at all, because the address may be
+    # gone - would tell the student their Canvas had been opened for them when
+    # nothing had. Same rule as every other key here: the attempt owns it.
+    st.session_state.pop('handoff_opened_tab', None)
+
+
+def adopt_pending_handoff() -> bool:
+    """Sign in with a Canvas session the browser extension handed over.
+
+    Called once per rerun from ``app.py``, beside its Keychain and
+    browser-login siblings, and for the same reason all three are separate
+    passes: the handoff arrives on the listener's own thread, which has no
+    ``ScriptRunContext``, so a Streamlit run has to come and collect it.
+
+    **The address comes from the BROWSER, which is the whole point.** The
+    extension reports the host of the tab the student was looking at, so they
+    pick no institution, type no URL and enter no password - all three already
+    happened, in Chrome, for Canvas itself.
+
+    Returns True when it signed the user in.
+    """
+    if st.session_state.get('is_authenticated'):
+        return False
+    from core import handoff
+    payload = handoff.result()
+    if not payload:
+        if st.session_state.get('handoff_waiting') and not handoff.waiting():
+            # The window closed with nothing in it. Reporting nothing would
+            # make the notice disappear with no explanation - the silent
+            # failure this repo's own rule calls un-diagnosable.
+            st.session_state.pop('handoff_waiting', None)
+            st.session_state['handoff_failed'] = 'no_arrival'
+        return False
+
+    host = str(payload.get('host') or '').strip()
+    cookies = payload.get('cookies') or {}
+    if not host or not cookies:
+        st.session_state.pop('handoff_waiting', None)
+        st.session_state['handoff_failed'] = 'empty_tab'
+        return False
+
+    api_url = f'https://{host}'
+    # ADOPT THROUGH THE SAME DOOR as a token and an in-app sign-in. The
+    # verdict about what a network blip means, the optimistic restore, and the
+    # rolled-cookie write-back all live in `_adopt_restored_credential`; a
+    # second opinion here is how the three would come to disagree.
+    st.session_state['api_url'] = api_url
+    credential = from_cookies(cookies, api_url)
+    try:
+        _adopt_restored_credential(credential)
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not adopt the handed-over Canvas session",
+                       exc_info=True)
+        st.session_state.pop('handoff_waiting', None)
+        st.session_state['handoff_failed'] = 'adopt_error'
+        return False
+
+    if not st.session_state.get('is_authenticated'):
+        # Canvas refused it. Almost always because the tab was signed out, or
+        # signed in to a different Canvas than the one it looked like.
+        st.session_state.pop('handoff_waiting', None)
+        st.session_state['handoff_failed'] = 'canvas_refused'
+        return False
+
+    st.session_state['url_verified'] = True
+    st.session_state.pop('reauth_reason', None)
+    st.session_state.pop('browser_restore_pending', None)
+    cancel_browser_handoff()
+
+    # Same upgrade the in-app sign-in gets, for the same reason: a session is
+    # a day, and a token the institution allows is months. It also removes the
+    # extension from the loop entirely once it has worked once.
+    if _upgrade_to_access_token(credential):
+        return True
+    _persist_browser_login(credential)
+    return True
+
+
+def adopt_pending_browser_login() -> bool:
+    """Turn a finished background sign-in into a signed-in session.
+
+    Called once per rerun from ``app.py``, right beside its Keychain sibling.
+    A separate pass rather than re-entering ``restore_saved_session``, which
+    adopts the config's settings and must stay once-per-session.
+
+    Returns True when it signed the user in.
+    """
+    if st.session_state.get('is_authenticated'):
+        st.session_state['browser_login_pending'] = False
+        return False
+
+    from core import browser_login
+    status = browser_login.status()
+
+    # A FINISHED sign-in is adopted by whichever session sees it, not only by
+    # the one that started it. The sign-in state is process-global (a worker
+    # thread has no ScriptRunContext) while "am I waiting?" is per Streamlit
+    # SESSION, so the two can come apart: reload the window mid-sign-in, or
+    # have a second session open, and the login completes into a flag nobody
+    # is holding. Measured in the real app against real Canvas - the user
+    # finished signing in at CBS, came back, and the app was still sitting on
+    # the login screen with a perfectly good session in hand.
+    #
+    # Same lesson, and the same shape, as `unlocked_token()` not consuming its
+    # result: process-global state must not be readable only by the session
+    # that happened to ask for it first.
+    if not st.session_state.get('browser_login_pending'):
+        if status != 'ok':
+            return False
+        st.session_state['browser_login_pending'] = True
+    if status in ('running', 'needs_user'):
+        return False
+    if status == 'idle':
+        # There is no job at all, and this session thinks it is waiting for
+        # one. That pair is a LOOP, not a wait: `_browser_login_poll` treats
+        # `idle` as terminal and calls st.rerun, this function used to return
+        # here with the pending flag still set, and the next run polls again -
+        # a rerun a second, for as long as the page is open. Reachable whenever
+        # the job is reset by someone other than this session, which is what a
+        # second window or a logout in another tab does, since the job is
+        # process-global and the flag is per session.
+        #
+        # Silent, because `idle` is not a failure that happened to this user -
+        # it is the absence of an attempt. was_interactive() cannot speak for a
+        # job that no longer exists, so there is nothing honest to announce.
+        st.session_state['browser_login_pending'] = False
+        return False
+
+    st.session_state['browser_login_pending'] = False
+    if status != 'ok':
+        # Cancelled, timed out, or it could not start. The login screen owns
+        # the explanation from here, and the token field still works.
+        #
+        # ONLY for an attempt the user actually started. A hidden renewal that
+        # fails is the ordinary way of arriving at the login screen - an
+        # expired session, or simply being offline - and announcing it as a
+        # failure puts an error in front of someone who has done nothing but
+        # open the app. Reported from the real app after a deliberate logout.
+        if browser_login.was_interactive():
+            st.session_state['browser_login_failed'] = (
+                browser_login.message() or "Sign-in did not complete.")
+        return False
+
+    credential = browser_login.result()
+    if credential is None:
+        st.session_state['browser_login_failed'] = "Sign-in did not complete."
+        return False
+
+    # Adopt the address the sign-in actually landed on, before anything builds
+    # a client from it. A vanity address (canvas.cbs.dk) redirects to the
+    # canonical Instructure host, and that is where the session cookies live.
+    _resolved = browser_login.resolved_url()
+    if _resolved:
+        st.session_state['api_url'] = _resolved
+
+    # The worker already proved this credential against the real API before
+    # reporting 'ok', so this is a formality - but it goes through the SAME
+    # adoption as a restored token, which is what stops the two paths drifting
+    # apart about what a network blip means.
+    try:
+        _adopt_restored_credential(credential)
+    except Exception:
+        logger.warning("Could not adopt the Canvas browser session",
+                       exc_info=True)
+        st.session_state['browser_login_failed'] = "Sign-in did not complete."
+        return False
+
+    if not st.session_state.get('is_authenticated'):
+        st.session_state['browser_login_failed'] = (
+            "Canvas did not accept the session. Please try again.")
+        return False
+
+    st.session_state['url_verified'] = True
+    st.session_state.pop('reauth_reason', None)
+    st.session_state.pop('browser_restore_pending', None)
+
+    # Trade this one sign-in for a credential that outlives it. A session is a
+    # DAY; a token the user is allowed to mint is up to 120, renews itself off
+    # its own value, and unlike a harvested cookie the user can see and revoke
+    # it. Where the institution allows it this is the whole answer to "why am I
+    # signing in again" - and where it does not, which is most of the schools
+    # this feature exists for, it costs one request and changes nothing.
+    #
+    # Ordered BEFORE the session is written, because a successful upgrade
+    # persists a token INSTEAD and leaving the session behind would be keeping
+    # an unrevocable credential on disk after obtaining a revocable one.
+    if _upgrade_to_access_token(credential):
+        return True
+
+    _persist_browser_login(credential)
+    return True
+
+
+def _token_was_minted() -> bool:
+    """Whether the stored token is one the app created from a Canvas sign-in.
+
+    The distinction the reconnect screen turns on. A token the USER pasted can
+    only be replaced by them; a token the APP minted came from a Canvas
+    sign-in, and the web view profile very likely still holds the identity
+    provider session that produced it - so the fix is one silent sign-in, not
+    a trip to Canvas' settings page for a token their school may not even let
+    them create.
+    """
+    try:
+        config, _may_write = read_config_for_update()
+        return bool(config.get('token_source') == 'minted')
+    except Exception:                                              # noqa: BLE001
+        return False
+
+
+def _keep_signed_in_enabled() -> bool:
+    """Whether a finished sign-in should survive closing the app.
+
+    This is the app's OWN "stay signed in", and it exists because an
+    institution's identity provider may not offer one - and because the tick
+    box it does offer is the single thing that decides whether the next launch
+    renews silently or shows a login screen (measured: the web view profile
+    keeps cookies carrying an expiry and loses ones that do not).
+
+    On, it dates the sign-in window's session cookies so the profile keeps
+    them. Nothing is extracted: the cookies are re-dated INSIDE WebView2's own
+    encrypted store, never read out, never written to a file of ours, and
+    never sent anywhere. Signing out clears them, along with any saved
+    password - see `core.browser_login.clear_session`.
+
+    Defaults ON, because the user asked the app to sign them in and the whole
+    purpose of the feature is not to ask again. An unreadable settings file
+    also answers ON: the cost of being wrong is a sign-in that outlives the
+    app, which is what they chose, while the cost of defaulting OFF is the
+    daily login this feature exists to remove.
+    """
+    try:
+        config, _may_write = read_config_for_update()
+        return bool(config.get('keep_signed_in', True))
+    except Exception:                                              # noqa: BLE001
+        return True
+
+
+def _token_upgrade_enabled() -> bool:
+    """Whether to try trading a session for a long-lived token.
+
+    Two ways to be off: the user turned it off, or this institution has
+    already answered no. The second is remembered because the answer is a
+    setting on the Canvas account and cannot change between two sign-ins on
+    the same afternoon - and asking again every time would put a pointless
+    request, and a scary-looking 401 in the log, in front of exactly the users
+    this app was built for.
+    """
+    try:
+        # `may_write` is deliberately ignored: an unreadable settings file
+        # answers `({}, False)`, and defaulting to ON there is right. The cost
+        # of asking once more is a request; the cost of defaulting to OFF is a
+        # user who never gets the long-lived credential because of a file
+        # permission problem somewhere else entirely.
+        config, _may_write = read_config_for_update()
+    except Exception:                                              # noqa: BLE001
+        return True
+    if not config.get('token_upgrade_enabled', True):
+        return False
+    return not config.get('token_upgrade_blocked', False)
+
+
+def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
+    """Mint a long-lived access token for a session that just signed in.
+
+    Answers whether the app is now running on a token. False is the ordinary
+    outcome and never an error: the caller then persists the browser session
+    exactly as it always did.
+
+    Never raises, and never leaves the user worse off than the session they
+    already have. In particular a token that Canvas minted but this machine
+    cannot STORE is not adopted, because adopting it would swap a credential
+    that survives a restart for one that does not.
+    """
+    api_url = st.session_state.get('api_url', '') or ''
+    if not _token_upgrade_enabled():
+        return False
+
+    from core import token_mint
+    try:
+        result = token_mint.mint(credential, api_url)
+    except Exception:                                              # noqa: BLE001
+        # `mint` is written not to raise; this is the belt on the braces,
+        # because a sign-in that works must never be undone by an upgrade that
+        # is optional by design.
+        logger.warning("The access-token upgrade raised; keeping the browser "
+                       "session.", exc_info=True)
+        return False
+
+    if not result:
+        if result.permanent:
+            # Remember the no, so the next sign-in does not ask again.
+            try:
+                config_data, may_write = read_config_for_update()
+                if may_write:
+                    config_data['token_upgrade_blocked'] = True
+                    write_config_atomically(config_data)
+            except Exception:                                      # noqa: BLE001
+                logger.warning("Could not record that this school does not "
+                               "allow access tokens", exc_info=True)
+        return False
+
+    if not store_token(api_url or 'default', result.token):
+        logger.warning("Canvas minted an access token but it could not be "
+                       "stored; keeping the browser session instead.")
+        return False
+
+    st.session_state['api_token'] = result.token
+    try:
+        config_data, may_write = read_config_for_update()
+        if may_write:
+            config_data['api_url'] = api_url
+            config_data['auth_method'] = TOKEN
+            # Kept so the token can renew itself later: `regenerate` needs the
+            # id, and knowing the expiry is what makes renewing possible at all
+            # (Canvas never tells you again, and the value is write-once).
+            config_data['minted_token_id'] = result.token_id
+            config_data['minted_token_expires_at'] = result.expires_at
+            # WHAT THIS INSTITUTION ACTUALLY GRANTED, which is not what was
+            # asked for: `set_permanent_expiration` takes the lifetime from
+            # the developer key, so 120 days is only the ceiling a student may
+            # request. Stored because the renewal window is scaled to it - a
+            # fixed window is wrong for every institution granting less, where
+            # the token is "due" from the moment it is minted.
+            config_data['minted_token_days'] = token_mint.days_left(
+                result.expires_at)
+            # Lets the reconnect screen offer "Sign in with Canvas" rather
+            # than telling a user who never pasted a token to paste a new one.
+            config_data['token_source'] = 'minted'
+            config_data.pop('mac_api_token', None)
+            config_data.pop('api_token', None)
+            write_config_atomically(config_data)
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not record the minted access token", exc_info=True)
+
+    # The session is superseded. Deleting it is the point of having done this:
+    # a stored session cookie is a credential the user cannot see or withdraw,
+    # and the token that replaced it is one they can.
+    #
+    # The two resets below are NOT tidiness, and the credential-drop census in
+    # `tests/test_keychain_unlock.py` is what pointed them out - correctly,
+    # which is the whole reason that census counts SITES rather than checking
+    # that one fix exists:
+    #
+    # * `_reset_browser_login_state()` - `browser_login.result()` still holds
+    #   the very credential this function has just deleted from disk, in
+    #   PROCESS-GLOBAL state. Left standing, a later `adopt_pending_browser_login`
+    #   in this or another Streamlit session re-adopts a session that is no
+    #   longer stored anywhere, and writes it back.
+    # * `reset_keychain_unlock()` - a cached macOS unlock verdict is about the
+    #   credential it was taken for, and that credential is gone. A stale
+    #   'denied' makes `begin_keychain_unlock` a no-op for the rest of the
+    #   process, so the notice would advertise a prompt that never appears.
+    #
+    # Safe to call here even though this runs INSIDE
+    # `adopt_pending_browser_login`: nothing after the upgrade's `return True`
+    # reads either piece of state.
+    try:
+        delete_browser_credential(api_url)
+        _reset_browser_login_state()
+        reset_keychain_unlock()
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not clear the superseded browser session",
+                       exc_info=True)
+
+    # DISCLOSED, not silent: this wrote something to the user's Canvas account
+    # and the user is entitled to know its name and where to delete it. Only
+    # ARMED here - see `render_pending_token_notice`, which is called from the
+    # BOTTOM of app.py and explains why it cannot be emitted from this point.
+    st.session_state['token_upgrade_notice'] = True
+    logger.info("Upgraded the Canvas browser session to an access token.")
+    return True
+
+
+def render_pending_token_notice() -> None:
+    """Tell the user about the access token the app created. One shot.
+
+    **Emitted from the BOTTOM of app.py, and the position is the whole point.**
+    `st.toast` writes to the EVENT root container, which Streamlit reconciles
+    by INDEX, and so does every style-only `st.html()` on the page (there are
+    ~150 of them). A CONDITIONAL write to that list therefore shifts every
+    later stylesheet onto its neighbour's host - the exact mechanism
+    `.claude/rules/streamlit-ui.md` records for a toast landing on a dialog's
+    index, and for the course-selector stylesheet emitted inside an `if`.
+
+    `_upgrade_to_access_token` runs from `adopt_pending_browser_login`, which
+    `app.py` calls near the TOP, before the page renders. A toast emitted there
+    fires on exactly one run - the one that signs the user in - and on that run
+    every stylesheet after it would be off by one. The symptom would be a
+    signed-in page that renders mis-styled once, immediately after sign-in,
+    and looks correct on the next interaction: invisible in review, and
+    attributable to anything.
+
+    So the flag is set there and spent here, after every stylesheet has been
+    written. Appending to the end of that list cannot displace anything.
+    """
+    if not st.session_state.pop('token_upgrade_notice', False):
+        return
+    try:
+        from core import token_mint
+        st.toast("Canvas Downloader created an access token called "
+                 f"'{token_mint.PURPOSE}' in your Canvas account so "
+                 "you stay signed in. Remove it any time in Canvas under "
+                 "Account, Settings, Approved Integrations.", icon="\U0001f511")
+    except Exception:                                              # noqa: BLE001
+        # The token is already minted, stored and working. Failing to announce
+        # it must not look like a failure to create it.
+        logger.warning("Could not show the access-token notice", exc_info=True)
+
+
+_BROWSER_SVG = (
+    "<svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='currentColor' "
+    "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+    "<circle cx='12' cy='12' r='9'/><path d='M3 12h18'/>"
+    "<path d='M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z'/></svg>"
+)
+
+
+def _handoff_card_html() -> str:
+    """The extension card. ONE element, every state, literals only.
+
+    Nothing here is interpolated - no Canvas data, no user data, not even the
+    port - which is what makes the raw-HTML render safe by construction rather
+    than by an escaping call somebody could later drop. Same rule, and the
+    same reason, as `_browser_notice_html`.
+    """
+    # Function-scoped, like every other use of it in this file: `ui/auth.py`
+    # reaches `shared.helpers` and back, so a module-level import here is a
+    # cycle. `tests/test_unbound_names.py` caught this as a NameError.
+    from shared.helpers import help_text_enabled
+    from core import handoff
+    if st.session_state.get('handoff_waiting') and handoff.waiting():
+        return (
+            "<div class='login-handoff login-handoff-live'>"
+            "<b>Waiting for your browser.</b> Click the Canvas Downloader "
+            "button in Chrome while your Canvas tab is open."
+            "</div>")
+    if not help_text_enabled():
+        # Gated like every other explainer on this page: a returning user who
+        # has the extension does not need the instructions again. The BUTTON
+        # is unconditional; only this line is gated.
+        return "<div class='login-handoff'></div>"
+    return (
+        "<div class='login-handoff'>"
+        "Already signed in to Canvas in Chrome? Install the free "
+        "<b>Canvas Downloader Connector</b> extension and this signs you in "
+        "with no password and no address to type."
+        "</div>")
+
+
+#: PATH B's failures, by cause. Every one is a LITERAL pair, looked up by a key
+#: the app chose - never a string that came back from a server - which is what
+#: keeps the raw-HTML render safe by construction.
+#:
+#: They exist because five distinct causes were being computed and then thrown
+#: away: `render_browser_login_notice` used the failure only as a truthiness
+#: test, so a student met the same generic card whatever had actually happened.
+#: Reported 2026-09-13, holding a perfectly good credential and being told the
+#: sign-in did not finish.
+#:
+#: This is PATH B only - the Chrome extension route - so every message may
+#: safely talk about the Chrome button. Path A ("Sign in with Canvas", the
+#: app's own Canvas window) needs no extension and has its own card below.
+_HANDOFF_FAILURES: dict[str, tuple[str, str]] = {
+    'no_arrival': (
+        "Nothing came back from Chrome",
+        "Two things cause this almost every time: the <b>Canvas Downloader</b> "
+        "button is not in Chrome yet, or the Canvas tab you used is not signed "
+        "in. You can try again, or use <b>Sign in with Canvas</b> above, which "
+        "works without any extension."),
+    'canvas_refused': (
+        "Canvas did not accept that sign-in",
+        "Open Canvas in Chrome, check that you are really signed in there, "
+        "then try again."),
+    'empty_tab': (
+        "That tab was not signed in to Canvas",
+        "Sign in to Canvas in that tab first, then click the <b>Canvas "
+        "Downloader</b> button again."),
+    'no_port': (
+        "Could not start the browser sign-in",
+        "Close Canvas Downloader completely and open it again. If it keeps "
+        "happening, use <b>Sign in with Canvas</b> above instead."),
+    'adopt_error': (
+        "That sign-in did not work",
+        "Nothing has changed. You can try again, or use <b>Sign in with "
+        "Canvas</b> above instead."),
+}
+
+
+def _browser_notice_html(state: str) -> str:
+    """Markup for the sign-in notice. ONE element, every state.
+
+    Every character here is a literal - no Canvas data, no user data, nothing
+    interpolated - which is what makes the raw-HTML render safe by construction
+    rather than by an escaping call someone could later drop. The failure text
+    is chosen from a fixed set for the same reason: a message that came back
+    from a server must never reach an unescaped render.
+
+    Reuses the Keychain notice's own `.kc-*` classes rather than adding a
+    parallel set. They are a signed-off notice skin already, and a second set
+    of near-identical colours is precisely the palette drift Rule 8 exists to
+    stop.
+    """
+    if state == 'waiting':
+        return (
+            "<div class='kc-notice'>"
+            f"<div class='kc-head'>{_BROWSER_SVG}"
+            "<span>Finish signing in to Canvas</span></div>"
+            "<div class='kc-body'>A Canvas window has opened. Sign in there the "
+            "way you normally do, and this page will continue on its own.</div>"
+            # The single most load-bearing sentence in this feature. A web view
+            # profile keeps a cookie that has an expiry date and LOSES one that
+            # does not (measured both ways, with controls, 2026-09-12) - and
+            # "Stay signed in" is exactly the tick that turns the identity
+            # provider's session cookie into a dated one. Ticked, the app can
+            # renew itself for as long as that lasts and the user never sees
+            # this screen again; not ticked, every launch after Canvas' own
+            # day is a fresh login. Nothing the app can do from its side
+            # substitutes for it, and answering a security prompt on the
+            # user's behalf is not ours to do - so ASK.
+            "<div class='kc-body'>If your school offers a <b>Stay signed in</b> "
+            "or <b>Remember me</b> tick box, use it. That is what lets this app "
+            "sign you in on its own next time.</div>"
+            "<div class='kc-foot'><span class='kc-spin'></span>"
+            "<span>Waiting for Canvas</span></div>"
+            "</div>"
+        )
+    if state == 'handoff':
+        # TWO wordings, because the instruction is genuinely different: having
+        # opened their Canvas for them, telling them to go and open it is both
+        # wrong and confusing. Still ONE element with one child count - the
+        # difference is the sentence, never the shape.
+        opened = bool(st.session_state.get('handoff_opened_tab'))
+        where = ("Your Canvas is now open in another tab."
+                 if opened else "Open your Canvas in Chrome.")
+        return (
+            "<div class='kc-notice'>"
+            f"<div class='kc-head'>{_BROWSER_SVG}"
+            "<span>One more click, over in Chrome</span></div>"
+            f"<div class='kc-body'>{where} Up by the address bar, click the "
+            "<b>Canvas Downloader</b> button, then <b>Sign me in</b>. You do "
+            "not have to come back here - this page carries on by itself.</div>"
+            # THE SENTENCE THAT SAVES THE MOST PEOPLE. Chrome hides new
+            # extensions behind the puzzle-piece by default, so a student who
+            # has just installed it is looking for a button that is not on
+            # screen, with nothing telling them where it went. Everything else
+            # in this card assumes they can see it.
+            "<div class='kc-body'>Can't see that button? Click the "
+            "<b>puzzle-piece</b> icon in Chrome's toolbar first - that is "
+            "where Chrome keeps new buttons. If it is not there either, you "
+            "have not added the free Canvas Downloader extension to Chrome "
+            "yet: use <b>Sign in with Canvas</b> above instead, which needs "
+            "no extension at all.</div>"
+            "<div class='kc-foot'><span class='kc-spin'></span>"
+            "<span>Waiting for your browser</span></div>"
+            "</div>")
+    if state == 'handoff_arrived':
+        # THE STATE THAT WAS MISSING, and its absence is what let the two
+        # halves of one flow contradict each other: the extension showed a
+        # green success screen while this page still said "waiting", or worse,
+        # showed a failure. Reported 2026-09-13.
+        return (
+            "<div class='kc-notice'>"
+            f"<div class='kc-head'>{_BROWSER_SVG}"
+            "<span>Got it</span></div>"
+            "<div class='kc-body'>Chrome sent your Canvas sign-in over. "
+            "Signing you in now.</div>"
+            "<div class='kc-foot'><span class='kc-spin'></span>"
+            "<span>Almost done</span></div>"
+            "</div>")
+    if state == 'checking':
+        return (
+            "<div class='kc-notice kc-notice-quiet'>"
+            f"<div class='kc-head'>{_BROWSER_SVG}"
+            "<span>Checking your Canvas sign-in</span></div>"
+            "<div class='kc-foot'><span class='kc-spin'></span>"
+            "<span>One moment</span></div>"
+            "</div>"
+        )
+    if state == 'cancelled':
+        return (
+            "<div class='kc-notice kc-notice-quiet'>"
+            f"<div class='kc-head'>{_BROWSER_SVG}"
+            "<span>Sign-in was cancelled</span></div>"
+            "<div class='kc-body'>Nothing has changed. You can try again, or "
+            "paste a Canvas Access Token below instead.</div>"
+            "</div>"
+        )
+    if state.startswith('fail:'):
+        head, body = _HANDOFF_FAILURES.get(
+            state[5:], _HANDOFF_FAILURES['adopt_error'])
+        return (
+            "<div class='kc-notice'>"
+            f"<div class='kc-head'>{_BROWSER_SVG}<span>{head}</span></div>"
+            f"<div class='kc-body'>{body}</div>"
+            "</div>")
+
+    # PATH A's failure, and it says nothing about the extension on purpose.
+    # "Sign in with Canvas" opens the app's own Canvas window and needs no
+    # extension, so extension advice here would send somebody to install
+    # something that has no bearing on what just went wrong.
+    return (
+        "<div class='kc-notice'>"
+        f"<div class='kc-head'>{_BROWSER_SVG}"
+        "<span>Canvas sign-in did not finish</span></div>"
+        "<div class='kc-body'>Nothing has changed, and you can try again. "
+        "There is also a Canvas Access Token field below if you would rather "
+        "use that.</div>"
+        "</div>"
+    )
+
+
+@st.fragment(run_every=1.0)
+def _browser_login_poll() -> None:
+    """Poll the background sign-in while the Canvas window is open.
+
+    A fragment, so waiting costs one small rerun a second instead of holding
+    the script thread for as long as it takes somebody to answer an MFA prompt.
+    It emits EXACTLY ONE element in every state, and deliberately writes
+    nothing to the event container - no style-only st.html, no st.toast -
+    because a fragment rerun rewinds that container's write index and an extra
+    write there would land on a neighbouring stylesheet's host.
+    """
+    from core import browser_login, handoff
+    # A waiting handoff comes FIRST, because `browser_login.status()` is
+    # `idle` while one is in flight - and the poll treats idle as terminal, so
+    # asking it first would rerun the app once a second for as long as the
+    # extension took to be clicked.
+    if st.session_state.get('handoff_waiting'):
+        if handoff.waiting():
+            _state = 'handoff'
+        else:
+            # Arrived, or the window closed. Either way a full run decides:
+            # `adopt_pending_handoff` signs the user in or records why not,
+            # and it is the ONLY thing that can collect the credential - which
+            # is why this fragment has to still be on screen to ask for it.
+            st.rerun(scope="app")
+    else:
+        status = browser_login.status()
+        if status in ('ok', 'error', 'cancelled', 'idle'):
+            # Terminal: hand back to a full run, where
+            # adopt_pending_browser_login either signs the user in or records
+            # why it could not.
+            st.rerun(scope="app")
+        _state = 'waiting' if status == 'needs_user' else 'checking'
+    # ONE write, on ONE line, whatever the state. The branches above choose the
+    # STATE and never emit - which is what makes "exactly one element" true by
+    # construction rather than by reasoning about which branch returns.
+    # `test_the_signin_notice_emits_exactly_one_element_in_every_state` counts
+    # the calls in the source, and it was right to: a second `st.markdown` in
+    # an exclusive branch is one refactor away from being reachable, and the
+    # failure it would cause - a fragment rerun handing the next block a
+    # stranger's children - is invisible in review.
+    st.markdown(_browser_notice_html(_state), unsafe_allow_html=True)
+
+
+def render_browser_login_notice() -> None:
+    """Explain an in-flight or failed Canvas sign-in, above the login form.
+
+    Renders nothing unless a sign-in is actually in flight or has just failed,
+    so the ordinary login screen is untouched.
+    """
+    from core import browser_login
+    from core import handoff
+    pending = bool(st.session_state.get('browser_login_pending'))
+    # The extension listener is the third way a sign-in can be in flight, and
+    # it shares this slot rather than adding a second conditional element.
+    #
+    # `has_payload()` IS LOAD-BEARING, and leaving it out was the defect.
+    # `waiting()` means "still ACCEPTING", which stops the instant the handoff
+    # lands - so an arrival switched this to False, the polling fragment below
+    # stopped being rendered, and that fragment is the only thing that asks for
+    # the full run which COLLECTS the credential. The sign-in then sat
+    # uncollected while the extension showed success. Reported 2026-09-13.
+    handoff_live = (bool(st.session_state.get('handoff_waiting'))
+                    and (handoff.waiting() or handoff.has_payload()))
+    handoff_fail = st.session_state.get('handoff_failed')
+    browser_fail = st.session_state.get('browser_login_failed')
+    if not pending and not handoff_live and not handoff_fail and not browser_fail:
+        return
+    # One keyed slot holding exactly one child in either branch, so the
+    # elements BELOW it never shift when the notice changes state - Streamlit
+    # reconciles by position and hands a block the children of whatever sat at
+    # its index.
+    with st.container(key="browser_login_slot"):
+        if pending or handoff_live:
+            # In flight ALWAYS outranks a failure. The two routes share this
+            # slot, so without that precedence a previous attempt's error card
+            # sat over a sign-in that was working.
+            _browser_login_poll()
+        elif handoff_fail:
+            # PATH B: the Chrome extension route, and it says which of the
+            # five things went wrong instead of one generic sentence.
+            st.markdown(_browser_notice_html('fail:' + str(handoff_fail)),
+                        unsafe_allow_html=True)
+        else:
+            # PATH A: the app's own Canvas window, which needs no extension.
+            _state = ('cancelled' if browser_login.status() == 'cancelled'
+                      else 'error')
+            st.markdown(_browser_notice_html(_state), unsafe_allow_html=True)
 
 
 _KC_LOCK_SVG = (
@@ -2481,6 +3797,90 @@ def render_login_page(fetch_courses_fn):
        rgba() of the token's own channels rather than a near-neighbour hex -
        inventing a neighbour is what Rule 8 exists to stop. */
     div[class*="st-key-kc_unlock_slot"] { gap: 0 !important; }
+
+    /* The Canvas sign-in notice reuses the .kc-* skin below rather than adding
+       a near-identical second set of colours; only its slot needs naming. It
+       lives in this UNCONDITIONAL stylesheet for the same reason the Keychain
+       one does - the notice renders in one branch, and a conditionally emitted
+       style block shifts every later style host by one. */
+    div[class*="st-key-browser_login_slot"] { gap: 0 !important; }
+
+    /* "Sign in with Canvas" - a form submit button, because a plain st.button
+       inside st.form cannot rerun. Painted as the quiet sibling of "Log In":
+       it starts a route, while "Log In" finishes one. Colours are ACCENT_BLUE
+       (#4da8da) written as rgba() of the token's own channels, never a
+       near-neighbour hex - Rule 8 fails the build on anything within 1.0
+       CIEDE2000 of a token, and a hand-picked neighbour is drift, not design.
+       No `help=` on this button: a tooltip there wraps the button element in
+       a stTooltipHoverTarget and silently drops Streamlit's own sizing, so it
+       would render short beside its sibling. The explanation is the caption
+       underneath instead - the `.cd-action-hint` rule this app already
+       follows for its four primary actions. */
+    div[class*="st-key-login_browser_btn"] button {
+        background: rgba(77, 168, 218, 0.10) !important;
+        border: 1px solid rgba(77, 168, 218, 0.45) !important;
+        color: #e2e8f0 !important;
+        font-weight: 600 !important;
+    }
+    div[class*="st-key-login_browser_btn"] button:hover {
+        background: rgba(77, 168, 218, 0.18) !important;
+        border-color: rgba(77, 168, 218, 0.70) !important;
+        color: #f8fafc !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .login-browser-hint {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        text-align: center;
+        margin: 6px 0 0 0;
+    }
+    /* The extension card, under the button that uses it. Same voice and the
+       same measurements as the browser hint above it, because it is the same
+       KIND of line - what this route needs - and two explainers on one screen
+       that look different read as two levels of importance. The live state
+       gets the accent, not amber: nothing is wrong, something is happening.
+       An empty div is rendered when help text is off, so the element count
+       never changes; it must therefore collapse to nothing. */
+    div[class*="st-key-login_card_wrapper"] .login-handoff {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        text-align: center;
+        margin: 6px 0 0 0;
+    }
+    div[class*="st-key-login_card_wrapper"] .login-handoff:empty {
+        display: none;
+    }
+    div[class*="st-key-login_card_wrapper"] .login-handoff b {
+        color: #cbd5e1;
+        font-weight: 600;
+    }
+    div[class*="st-key-login_card_wrapper"] .login-handoff-live {
+        color: #4da8da;
+    }
+    div[class*="st-key-login_card_wrapper"] .login-handoff-live b {
+        color: #4da8da;
+    }
+    /* The divider between the two ways in. A rule either side of the words,
+       so neither route reads as a footnote to the other. */
+    div[class*="st-key-login_card_wrapper"] .login-authsep {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 18px 0 4px 0;
+        color: #8a99ad;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    div[class*="st-key-login_card_wrapper"] .login-authsep::before,
+    div[class*="st-key-login_card_wrapper"] .login-authsep::after {
+        content: "";
+        flex: 1 1 auto;
+        height: 1px;
+        background: rgba(148, 163, 184, 0.22);
+    }
+
     .kc-notice {
         background: rgba(77, 168, 218, 0.12);
         border: 1px solid rgba(77, 168, 218, 0.35);
@@ -2568,12 +3968,48 @@ def render_login_page(fetch_courses_fn):
         _reauth_reason = st.session_state.get('reauth_reason')
         _saved_url = (st.session_state.get('api_url') or '').strip()
         _reauth_mode = bool(_reauth_reason) and bool(_saved_url)
+        # How this user signs in, for the copy below. `force_reauth` KEEPS a
+        # browser credential (it is the input to the renewal), so the answer is
+        # still readable on the screen that reports the expiry.
+        # A minted token counts as a browser sign-in here: telling that user
+        # to "generate a fresh access token" points them at a Canvas page
+        # their institution may have switched off, to replace something they
+        # never created by hand.
+        _browser_mode = browser_session_active() or _token_was_minted()
 
         with st.container(key="login_card_wrapper"):
             # macOS only: says why the Keychain dialog is on screen and which
             # button to press. Above everything else in the card, because it is
             # the answer to "why am I looking at a login screen at all".
             render_keychain_unlock_notice()
+
+            # A saved browser session that could not be confirmed during init.
+            # Try to renew it HIDDEN before showing anything: when the
+            # institution's SSO session is still alive - which for a typical
+            # Entra tenant outlives Canvas' own session by weeks - the redirect
+            # chain completes with no interaction and the user never sees a
+            # login screen at all. Started here rather than in
+            # restore_saved_session because that runs on the script thread
+            # during init, where a browser window is the blocking-init failure
+            # `.claude/rules/macos.md` documents.
+            if st.session_state.pop('browser_restore_pending', False):
+                if _saved_url and not st.session_state.get('browser_login_pending'):
+                    # INTERACTIVE, even though the point is to be silent. Both
+                    # modes start the window HIDDEN and give it the same short
+                    # clock, so the silent attempt is identical either way -
+                    # the only difference is what happens when it does not
+                    # work. A non-interactive job gives up and reports "Your
+                    # Canvas session could not be renewed", which lands the
+                    # user on a login form holding a live SSO session that one
+                    # click would have spent. Interactive shows the window it
+                    # already has open instead, which is what a browser does
+                    # when you visit Canvas signed out.
+                    begin_browser_signin(_saved_url, interactive=True)
+
+            # Why a Canvas window is open, or why the last one did not finish.
+            # Directly under the Keychain notice, for the same reason: it is
+            # the answer to "what is this page waiting for".
+            render_browser_login_notice()
 
             if _reauth_mode:
                 # Prominent, self-contained reconnect header (replaces the title
@@ -2588,8 +4024,16 @@ def render_login_page(fetch_courses_fn):
                     f"<span>{_he(str(_reauth_reason))}</span></div>"  # audit-ignore: escaped via _he
                     "<div class='lra-url'>Your Canvas address is saved:"
                     f"<span class='lra-url-chip'>{_he(_saved_url)}</span></div>"  # audit-ignore: escaped via _he
-                    "<div class='lra-hint'>Generate a fresh access token (guide below) and paste it here "
-                    "- that's the only thing that changed.</div>",
+                    # The instruction has to match how this user signs in. A
+                    # browser-session user may be at a school that has turned
+                    # access-token creation off entirely, so "generate a fresh
+                    # token" is not merely the wrong route - it is one they
+                    # cannot take. Both strings are literals from this file.
+                    + ("<div class='lra-hint'>Press <b>Sign in with Canvas</b> below - "
+                       "your school will usually sign you straight back in.</div>"
+                       if _browser_mode else
+                       "<div class='lra-hint'>Generate a fresh access token (guide below) and paste it here "
+                       "- that's the only thing that changed.</div>"),
                     unsafe_allow_html=True,
                 )
             elif _reauth_reason:
@@ -2676,6 +4120,73 @@ def render_login_page(fetch_courses_fn):
                     st.markdown(institution_picker.url_status_html(),
                                 unsafe_allow_html=True)
 
+                # ── Sign in with Canvas ─────────────────────────────────────
+                # Deliberately ABOVE the token field. For a growing number of
+                # institutions a token cannot be created at all - Instructure
+                # shipped the admin switches for that in September 2025, and
+                # they were widely turned on after the April 2026 breach - so
+                # for those users the field below is not an alternative, it is
+                # a dead end. It is also the lower-friction route even where
+                # tokens still work: signing in is something the student
+                # already knows how to do, where "Account, Settings, Approved
+                # Integrations, New Access Token" is four steps in another app.
+                #
+                # A form_submit_button, not an st.button: inside st.form a
+                # plain button cannot rerun, which this file already records at
+                # three other call sites. A second submit button is the
+                # supported way to get a click out of a form, and it arrives
+                # with the URL field's value already readable.
+                #
+                # Emitted UNCONDITIONALLY, in reauth mode too - which is the
+                # single best moment for it, since a reauth means the previous
+                # credential died. Streamlit reconciles by position, so a row
+                # that comes and goes hands the next element its DOM node.
+                _browser_clicked = st.form_submit_button(
+                    'Sign in with Canvas',
+                    use_container_width=True, key="login_browser_btn")
+
+                # Help text by this repo's own test - a power user who knows
+                # the app does not need it - so it is gated on the setting,
+                # with the ELEMENT unconditional and only the CONTENT gated.
+                st.markdown(
+                    "<div class='login-browser-hint'>Opens Canvas in a window. "
+                    "No access token needed.</div>"
+                    if help_text_enabled() else "",
+                    unsafe_allow_html=True)
+
+                # ── Use the browser the student already uses ─────────────
+                # THE ONLY ROUTE THAT ASKS FOR NOTHING AT ALL. Every other one
+                # needs at least the Canvas address; this one gets the host
+                # from the tab the extension read, so no institution is
+                # picked, no URL typed and no password entered - all three
+                # already happened, in Chrome, for Canvas itself.
+                #
+                # Supplementary by the product owner's ruling (2026-09-12):
+                # the in-app sign-in stays the straight path and nobody has to
+                # install anything. So this sits BELOW it, and its copy says
+                # what it needs rather than selling it.
+                #
+                # A form_submit_button for the same reason as its neighbour: a
+                # plain st.button inside st.form cannot rerun. Unlike its
+                # neighbour it reads no field, because there is nothing to
+                # read - which is the point.
+                _handoff_clicked = st.form_submit_button(
+                    'Use the Canvas tab in my browser',
+                    use_container_width=True, key="login_handoff_btn")
+
+                # ONE element, CONTENT varying by state - never a conditional
+                # element. Streamlit reconciles by position and a row that
+                # comes and goes hands the next element its DOM node, which on
+                # this page is the access-token separator.
+                st.markdown(_handoff_card_html(), unsafe_allow_html=True)
+
+                # Structural, never gated: it names the relationship between
+                # the two routes, so hiding it would leave a button and a field
+                # with nothing saying they are alternatives.
+                st.markdown(
+                    "<div class='login-authsep'><span>or use an access token"
+                    "</span></div>", unsafe_allow_html=True)
+
                 # Same two-column shape as the URL row above, so the token
                 # shortcut lines up under the institution picker: one column
                 # of controls that fill the field beside them. The link's
@@ -2759,6 +4270,47 @@ def render_login_page(fetch_courses_fn):
                     'Reconnect' if _reauth_mode else 'Log In',
                     type="primary", use_container_width=True, key="login_submit_btn")
 
+            if _handoff_clicked:
+                # The extension reports the host it read, so the address is
+                # still not REQUIRED here and nothing is validated into an
+                # error - `adopt_pending_handoff` adopts through the same door
+                # as every other credential.
+                #
+                # But if the student has already given us a usable address -
+                # typed, picked, or remembered from last time - opening their
+                # Canvas for them removes the one step they were being asked to
+                # do by hand. In reauth mode the address is already known and
+                # verified, so that is the best case of all.
+                _h_url = _saved_url if _reauth_mode else (
+                    st.session_state.get('url_input') or '').strip()
+                if not _h_url:
+                    _h_url = _saved_url or ''
+                begin_browser_handoff(_h_url)
+                st.rerun(scope="app")
+
+            if _browser_clicked:
+                # The address is all this route needs; there is no field to
+                # validate and no round-trip to protect, because the sign-in
+                # itself is the round-trip. In reauth mode the URL is already
+                # known and verified, so nothing is asked for at all.
+                _b_raw = _saved_url if _reauth_mode else (
+                    st.session_state.get('url_input') or '').strip()
+                _b_url = normalize_canvas_url(_b_raw)
+                if not _b_url:
+                    from ui.amber_notice import render_amber_notice
+                    render_amber_notice(
+                        "Enter your Canvas address first",
+                        detail=("Pick your school from the list beside the "
+                                "address field, or type the web address you "
+                                "use for Canvas, and then sign in."),
+                    )
+                else:
+                    st.session_state['api_url'] = _b_url
+                    begin_browser_signin(_b_url)
+                    # scope="app": the notice renders above this form, and a
+                    # fragment-scoped rerun would not repaint it.
+                    st.rerun(scope="app")
+
             if submitted:
                 # Cheap, specific input checks BEFORE the network round-trip.
                 # Without them the two most common first-run mistakes produce
@@ -2834,6 +4386,25 @@ def render_login_page(fetch_courses_fn):
                     config_data, _cfg_may_write = read_config_for_update()
 
                     config_data['api_url'] = st.session_state['api_url']
+                    # Recorded so the next launch restores the SAME way this
+                    # login happened. Written on both routes, so a user who
+                    # switches from a browser session to a token is not left
+                    # with a stale marker pointing the restore at a credential
+                    # they have stopped using.
+                    config_data['auth_method'] = TOKEN
+                    # A token the user pasted SUPERSEDES one the app minted,
+                    # and the minted bookkeeping has to go with it. Left
+                    # behind, the once-a-launch renewal reads an id that no
+                    # longer names the stored credential and tries to extend
+                    # a token this machine no longer has - and
+                    # `_token_was_minted` would keep offering "Sign in with
+                    # Canvas" to somebody who has just chosen not to.
+                    for _minted_key in ('minted_token_id',
+                                        'minted_token_expires_at',
+                                        'minted_token_days',
+                                        'minted_token_capped',
+                                        'token_source'):
+                        config_data.pop(_minted_key, None)
                     if 'concurrent_downloads' in st.session_state:
                         config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
                     if 'debug_mode' in st.session_state:
@@ -4606,11 +6177,30 @@ content: 'Unavailable while running' !important;
                     _delete_fallback_token(keyring_user)
                 except Exception:
                     pass
+                # Log out means log out, of BOTH kinds of credential and of the
+                # web view that holds the live Canvas session. Clearing only the
+                # token would leave a signed-in browser profile behind, so the
+                # next launch would silently sign the user straight back in -
+                # on a shared machine, as the previous user.
+                delete_browser_credential(st.session_state.get('api_url', '') or '')
+                _reset_browser_login_state()
+                _clear_webview_session()
 
                 st.session_state['is_authenticated'] = False
                 st.session_state['api_token'] = ""
                 st.session_state['token_loaded'] = False
                 st.session_state['user_name'] = ''
+                # Keep the school on screen. `force_reauth` has prefilled the
+                # address on the mid-session route since it was written, and
+                # logout simply never did - so signing out dropped the user on
+                # a login screen that had forgotten which Canvas they use,
+                # while an expired token remembered it. The address is still in
+                # the config either way, so this only decides whether the app
+                # SHOWS what it already knows. It stays editable, so switching
+                # school is typing over it.
+                if st.session_state.get('api_url'):
+                    st.session_state['url_input'] = st.session_state['api_url']
+                    st.session_state['url_verified'] = True
                 # Same reason as force_reauth: the credential this verdict was
                 # about no longer exists, and a stale one would suppress the
                 # next genuine unlock for the rest of the process.
@@ -4625,7 +6215,7 @@ content: 'Unavailable while running' !important;
                 fetch_courses_fn.clear()
                 if os.path.exists(CONFIG_FILE):
                     try:
-                        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                        with open(CONFIG_FILE, 'r', encoding='utf-8-sig') as f:
                             config_data = _migrate_config(json.load(f))
                         # (api_token / mac_api_token are in RETIRED_CONFIG_KEYS,
                         #  so _migrate_config has already removed them.)

@@ -11,6 +11,7 @@ import unicodedata
 from pathlib import Path, PurePath
 from datetime import datetime, timezone
 from canvasapi import Canvas
+from canvasapi.requester import Requester
 from canvasapi.exceptions import (CanvasException, Forbidden,
                                   ResourceDoesNotExist, Unauthorized)
 import asyncio
@@ -19,6 +20,9 @@ import types
 import threading
 import aiofiles
 from core.canvas_debug import log_debug
+from core.canvas_auth import (CanvasCredential, SESSION_COOKIE_NAMES,
+                              coerce as coerce_credential,
+                              is_login_redirect, visited_urls)
 import logging
 import requests
 from requests.adapters import HTTPAdapter
@@ -979,6 +983,25 @@ def _build_rubric_markdown(rubric) -> str:
     return md_content
 
 
+class CanvasSessionExpired(Exception):
+    """Canvas answered a non-API request by asking the user to sign in.
+
+    A distinct type rather than a crafted message, because the alternative is
+    every raiser having to remember to spell a word :func:`is_auth_error`
+    happens to match - which is how a fix lands on some sites and not others.
+    ``status_code`` is what makes it match: that check already existed and is
+    the one branch of :func:`is_auth_error` that is not a substring search.
+
+    Raised where a browser session expires and Canvas redirects to ``/login``
+    instead of answering 401 - the file download and the Panopto launch. See
+    :func:`core.canvas_auth.is_login_redirect` for the measurement.
+    """
+
+    #: Read by is_auth_error. An expired session IS a 401; Canvas simply says
+    #: it with a redirect outside the API.
+    status_code = 401
+
+
 def is_auth_error(exc) -> bool:
     """Return True if *exc* is an authentication/authorization failure (expired or
     revoked Canvas token), centralizing the scattered 401 / "unauthorized" checks.
@@ -1167,9 +1190,49 @@ def file_in_scope(disk_name, file_filter: str) -> bool:
     return PurePath(name).suffix.lower() in STUDY_FILE_EXTENSIONS
 
 
+class _SessionCookieRequester(Requester):
+    """A canvasapi ``Requester`` that authenticates with session cookies.
+
+    canvasapi formats ``Authorization: Bearer <access_token>`` onto every
+    request unless ``use_auth`` is false, and here that header must not be sent
+    at all. This is not tidiness: Canvas runs
+    ``load_pseudonym_from_access_token`` *before* it looks at the session, and a
+    token it cannot accept - an empty one included - raises there and answers
+    401. The session cookie only gets its turn when no token is presented.
+
+    The cookies themselves ride on ``self._session``, installed with an
+    explicit domain by ``CanvasCredential.apply_to_requests_session`` so that
+    ``requests`` drops them when a file URL redirects onto the content CDN.
+
+    ``use_auth`` is overridden rather than forwarded because the one caller in
+    canvasapi that sets it (``upload.py``) already passes False; there is no
+    case where this requester should send a bearer.
+    """
+
+    def request(self, method, endpoint=None, headers=None, use_auth=True, **kwargs):
+        return super().request(method, endpoint, headers, False, **kwargs)
+
+
 class CanvasManager:
+    #: Class-level defaults, so these two attributes EXIST on any instance -
+    #: including one built with ``__new__`` (which the tests do), and one whose
+    #: ``__init__`` raised before reaching them. Every authenticated path in
+    #: the app reads ``self.auth``, and an AttributeError there surfaces deep
+    #: inside a download worker as "could not fetch items for module", which
+    #: names the wrong cause entirely. An unusable credential is the honest
+    #: default: it means "not signed in", which is exactly what an object that
+    #: never ran its constructor is.
+    auth: CanvasCredential = CanvasCredential()
+    api_key: str = ''
+
     def __init__(self, api_key, api_url):
-        self.api_key = api_key
+        # `api_key` is whatever the construction sites are carrying: the
+        # historical access-token string, or a CanvasCredential holding a
+        # browser session. `coerce` normalises both, and this is the ONLY
+        # place that choice is made - see core/canvas_auth.py for why the
+        # VALUE carries the answer rather than each of the 13 call sites
+        # asking "am I on cookies?" and one of them eventually forgetting to.
+        _raw_credential = api_key
         # Clean and validate URL
         api_url = api_url.strip()
         if not api_url:
@@ -1220,9 +1283,20 @@ class CanvasManager:
             except Exception:
                 self.api_url = api_url.rstrip("/")
             
+        # Resolved AFTER the URL, so a browser credential that was harvested
+        # against a vanity address (canvas.cbs.dk) learns the canonical host
+        # the redirect chain actually landed on (cbscanvas.instructure.com).
+        # Cookies are scoped by host, so the wrong one sends nothing.
+        self.auth: CanvasCredential = coerce_credential(_raw_credential, self.api_url)
+        # Kept as a plain str so anything still reading `.api_key` gets the
+        # type it has always had. Empty in browser mode, which is the honest
+        # answer: there is no token, and a caller that needs to authenticate
+        # must go through `.auth`.
+        self.api_key = self.auth.token
+
         # Initialize Canvas object
         try:
-            self.canvas = self._new_canvas_client(self.api_url, self.api_key)
+            self.canvas = self._new_canvas_client(self.api_url, self.auth)
         except Exception:
             # If URL is completely malformed, Canvas init might fail immediately
             self.canvas = None
@@ -1235,9 +1309,71 @@ class CanvasManager:
         """Redacted repr - never expose the Canvas Access Token in tracebacks or log output."""
         return f"CanvasManager(api_url={self.api_url!r}, api_key='****')"
 
+    def refreshed_credential(self):
+        """This client's credential updated with a session cookie Canvas rotated
+        in, or ``None`` when nothing changed. Token mode always answers ``None``.
+
+        **This is what decides how long a browser sign-in lasts**, and the
+        numbers come from Canvas' own configuration rather than from guesswork.
+        ``config/initializers/session_store.rb`` sets ``expire_after: 1.day``
+        and ``config/session_store.yml.example`` documents it as
+        ``86400 # 1 day in seconds``. So a Canvas session is **one day**, not
+        the months a personal access token lasts.
+
+        It is a ROLLING day, not an absolute one. Rack decides whether to
+        re-issue a session cookie in ``commit_session?`` ->
+        ``forced_session_update?``, and ``force_options?`` lists
+        ``:expire_after`` - so with that option set, any response for a
+        NON-EMPTY session re-sends the cookie with a fresh day on it. Read from
+        ``rack-session`` master 2026-09-12. (The anonymous probe that suggested
+        otherwise measured an EMPTY session, which ``!session.empty?`` excludes.)
+
+        The consequence is the whole point: the live ``requests``/``aiohttp``
+        jars absorb that refresh automatically and then get thrown away, so the
+        copy in the OS credential store stayed frozen at whatever was harvested
+        on the day the user signed in - and expired a day later however much
+        they used the app. Carrying the refresh back turns "one day after you
+        signed in" into "one day after you last used it", which for anyone
+        opening the app weekly is the difference between a silent renewal every
+        single launch and none at all.
+
+        Costs nothing if the premise is ever wrong: an unchanged cookie answers
+        ``None`` and nothing is written.
+        """
+        cred = getattr(self, 'auth', None)
+        if not isinstance(cred, CanvasCredential) or not cred.is_browser:
+            return None
+        try:
+            jar = self.canvas._Canvas__requester._session.cookies
+        except Exception:                                       # noqa: BLE001
+            # A stand-in client, or one built with __new__. Not an error: it
+            # simply has no live jar to learn from.
+            return None
+        fresh = dict(cred.cookies)
+        changed = False
+        for name in SESSION_COOKIE_NAMES:
+            try:
+                value = jar.get(name, domain=cred.host) or jar.get(name)
+            except Exception:                                   # noqa: BLE001
+                # A jar holding one name for two domains raises rather than
+                # guessing. Nothing to learn, and never worth failing a login.
+                continue
+            if value and value != fresh.get(name):
+                fresh[name] = value
+                changed = True
+        return cred.with_cookies(fresh) if changed else None
+
     @staticmethod
-    def _new_canvas_client(api_url, api_key):
+    def _new_canvas_client(api_url, credential):
         """Build a canvasapi ``Canvas`` with the shared request-timeout adapter mounted.
+
+        *credential* is a :class:`~core.canvas_auth.CanvasCredential` (a plain
+        token string is still accepted, so an older caller keeps working). In
+        browser mode the requester is swapped for one that sends the session
+        cookies instead of a bearer; everything canvasapi does afterwards is
+        identical, because the objects it hands out capture whichever requester
+        is in place when they are created - and that swap happens here, before
+        the first call.
 
         Each ``Canvas`` owns its own ``requests.Session``.  A dedicated client is
         required whenever a Canvas call must run **concurrently** with another one
@@ -1246,7 +1382,27 @@ class CanvasManager:
         timeout adapter makes slow calls raise ``Timeout`` instead of hanging
         forever on cross-continent connections.
         """
-        canvas = Canvas(api_url, api_key)
+        cred = coerce_credential(credential, api_url)
+        canvas = Canvas(api_url, cred.token)
+
+        if cred.is_browser:
+            # Swapping the whole requester, rather than blanking the token on
+            # the stock one, is what guarantees no Authorization header is ever
+            # formatted - including on the endpoints canvasapi reaches through
+            # its own paginated-list plumbing.
+            try:
+                requester = _SessionCookieRequester(api_url, '')
+                cred.apply_to_requests_session(requester._session)
+                canvas._Canvas__requester = requester
+            except Exception as _e:
+                # Falling through would leave a client that quietly sends no
+                # credentials at all and reports every call as "token revoked".
+                # Say what actually happened.
+                logging.getLogger(__name__).error(
+                    f"Could not install the Canvas browser session on the API "
+                    f"client: {_e}", exc_info=True)
+                raise
+
         try:
             _adapter = _CanvasTimeoutAdapter(max_retries=_CANVAS_RETRY)
             canvas._Canvas__requester._session.mount('https://', _adapter)
@@ -1275,8 +1431,17 @@ class CanvasManager:
         token report itself as expired. Canvas says "expired" when it means it;
         this wording covers only what the exception actually proves.
         """
+        # What the user has to go and fix differs by how they signed in, and
+        # naming the wrong one sends them to a settings page that cannot help.
+        # The KEYWORDS the login screen routes on ("Unauthorized", and the
+        # deliberate absence of "expired") are identical either way, so the
+        # routing cannot tell the two apart and does not need to.
+        _credential_noun = ('Canvas sign-in' if self.auth.is_browser
+                            else 'Canvas Access Token')
+
         if not self.api_url or not self.canvas:
-            return False, 'Login failed. Please check that your Canvas URL and Canvas Access Token are correct.'
+            return False, (f'Login failed. Please check that your Canvas URL '
+                           f'and {_credential_noun} are correct.')
 
         try:
             # We attempt to fetch the user. This validates both the URL and Token.
@@ -1287,14 +1452,17 @@ class CanvasManager:
             # token is no longer accepted. Lead with a phrase the UI matches, and
             # let Canvas's own text (appended in the parentheses) be the thing
             # that says "expired" when that is genuinely the cause.
+            _revoked = ('is no longer valid - signing in again will fix it'
+                        if self.auth.is_browser
+                        else 'is not valid or has been revoked')
             return False, (
-                'Unauthorized - your Canvas Access Token is not valid or '
-                f'has been revoked. ({humanize_canvas_error(e)})'
+                f'Unauthorized - your {_credential_noun} {_revoked}. '
+                f'({humanize_canvas_error(e)})'
             )
         except Exception as e:
             msg = humanize_canvas_error(e)
-            return False, msg or ('Login failed. Please check that your Canvas URL '
-                                  'and Canvas Access Token are correct.')
+            return False, msg or (f'Login failed. Please check that your Canvas URL '
+                                  f'and {_credential_noun} are correct.')
 
     def get_courses(self, favorites_only=True):
         """
@@ -1452,7 +1620,7 @@ class CanvasManager:
             Returns {page_slug: page_stub}."""
             _meta = {}
             try:
-                _client = self._new_canvas_client(self.api_url, self.api_key)
+                _client = self._new_canvas_client(self.api_url, self.auth)
                 _course = _client.get_course(course.id)
                 for _pg in _course.get_pages():
                     _slug = getattr(_pg, 'url', '') or ''
@@ -1639,7 +1807,7 @@ class CanvasManager:
         def _worker_course():
             _c = getattr(_tls, 'course', None)
             if _c is None:
-                _c = self._new_canvas_client(self.api_url, self.api_key).get_course(course.id)
+                _c = self._new_canvas_client(self.api_url, self.auth).get_course(course.id)
                 _tls.course = _c
             return _c
 
@@ -2925,10 +3093,16 @@ class CanvasManager:
         timeout = aiohttp.ClientTimeout(total=3600, sock_read=60, sock_connect=15)
         connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit, ssl=get_ssl_context())
 
+        # Auth comes from the credential, never a Bearer string formatted here:
+        # in browser mode it installs a cookie jar SCOPED to the Canvas host, so
+        # the redirect a file URL makes onto the content CDN
+        # (*.canvas-user-content.com, inst-fs) drops the session cookie instead
+        # of forwarding a login to a third party. A bare `cookies={...}` has no
+        # domain and would be sent to every host the session touches.
         async with aiohttp.ClientSession(
-            headers={'Authorization': f'Bearer {self.api_key}'},
             timeout=timeout,
-            connector=connector
+            connector=connector,
+            **self.auth.aiohttp_session_kwargs()
         ) as session:
             downloaded_files_info = []
             # Whether the Canvas Content phase has already run for this course.
@@ -3803,10 +3977,16 @@ class CanvasManager:
             log_debug(f"\n{'='*50}\n--- Isolated Retry Mode for {course.name} ---\n{'='*50}", debug_file)
 
         connector = aiohttp.TCPConnector(limit=concurrent_limit, limit_per_host=concurrent_limit, ssl=get_ssl_context())
+        # Auth comes from the credential, never a Bearer string formatted here:
+        # in browser mode it installs a cookie jar SCOPED to the Canvas host, so
+        # the redirect a file URL makes onto the content CDN
+        # (*.canvas-user-content.com, inst-fs) drops the session cookie instead
+        # of forwarding a login to a third party. A bare `cookies={...}` has no
+        # domain and would be sent to every host the session touches.
         async with aiohttp.ClientSession(
-            headers={'Authorization': f'Bearer {self.api_key}'},
             timeout=timeout,
-            connector=connector
+            connector=connector,
+            **self.auth.aiohttp_session_kwargs()
         ) as session:
             for error_obj in error_queue:
                 if check_cancellation and check_cancellation():
@@ -4735,13 +4915,43 @@ class CanvasManager:
 
                             log_debug(f"Response Status: {response.status} Content-Type: {response.headers.get('Content-Type', 'unknown')}", debug_file)
                             if response.status == 200:
+                                # --- Did Canvas ask us to sign in? ---
+                                # This is FIRST, and it is the only check that
+                                # can see an expired BROWSER SESSION here.
+                                # Measured against real Canvas: a file download
+                                # with no valid credential answers 302 -> /login
+                                # and, once the redirect is followed - which
+                                # every client does by default - ends at the
+                                # institution's identity provider with HTTP 200
+                                # and 45 KB of HTML login page. A revoked TOKEN
+                                # answers a plain 401 on the same URL, which is
+                                # why this whole class was invisible until a
+                                # browser session could expire mid-run.
+                                #
+                                # The signal is the redirect CHAIN, not the
+                                # final response: a legitimate download is also
+                                # a redirect (onto the content CDN) and also
+                                # ends 200. Only the unauthenticated one passes
+                                # through /login.
+                                if is_login_redirect(visited_urls(response)):
+                                    raise CanvasSessionExpired(
+                                        "Canvas asked for a sign-in instead of sending the file "
+                                        "(401 - the session expired during the download)."
+                                    )
                                 # --- Content-Type Validation ---
                                 # Guards against Canvas returning HTML error pages
                                 # with a 200 status (common LMS failure mode).
+                                #
+                                # `file_size_bytes > 0` used to gate this and no
+                                # longer does: Canvas reports no size for some
+                                # files, and a 0 there meant the guard was SKIPPED
+                                # for exactly those - so the error page was written
+                                # to disk under the real filename. The size is not
+                                # evidence about the body; the Content-Type is.
                                 resp_ct = (response.headers.get('Content-Type', '') or '').lower().split(';')[0].strip()
                                 is_html_response = resp_ct == 'text/html'
                                 expects_html = filepath.suffix.lower() in ('.html', '.htm')
-                                if is_html_response and not expects_html and file_size_bytes > 0:
+                                if is_html_response and not expects_html:
                                     raise ValueError(
                                         f"Content-Type mismatch: server returned 'text/html' "
                                         f"but expected a binary file ({filepath.suffix}). "
@@ -4886,6 +5096,30 @@ class CanvasManager:
                                 if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
                                 self._log_error(error_root_path, err)
                                 return
+
+                except CanvasSessionExpired as e:
+                    # Permanent for this run, exactly like the TLS failure below
+                    # and for the same reason: the credential will not change
+                    # between attempts, so retrying spends the whole backoff
+                    # schedule to fail three more times. Fail fast and let the
+                    # error carry the 401 that routes the user to reconnect -
+                    # `is_auth_error` reads DownloadError.raw_error, so this is
+                    # classified as an expired sign-in rather than as a generic
+                    # per-file failure. Without it a browser session that lapsed
+                    # mid-run reported every remaining file as a "Content-Type
+                    # mismatch", which names Canvas as the culprit and offers
+                    # the user nothing to do.
+                    if mb_tracker and _attempt_bytes:
+                        mb_tracker['bytes_downloaded'] = max(0, mb_tracker['bytes_downloaded'] - _attempt_bytes)
+                    log_debug(f"SESSION EXPIRED (permanent, no retry): {filename}: {e}", debug_file)
+                    err = DownloadError(
+                        course_name, filename, "Session Expired", str(e),
+                        raw_error=e,
+                        context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter}
+                    )
+                    if progress_callback: progress_callback(err, progress_type='error', file_size=file_size_bytes)
+                    self._log_error(error_root_path, err)
+                    return
 
                 except aiohttp.ClientConnectorCertificateError as e:
                     # MUST precede the ValueError clause: this exception also

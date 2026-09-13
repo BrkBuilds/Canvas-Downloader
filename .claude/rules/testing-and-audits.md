@@ -307,3 +307,113 @@ The `_path_key` fix earlier the same day taught that `os.path.normcase` does not
 - **`excludes` cannot beat `collect_all`.** Adding a package to `scripts/build_excludes.py` stops it being IMPORTED; `collect_all` also runs `collect_data_files`, which copies the package in as **DATA** regardless. `pync` survived an exclude for exactly that reason and had to be removed from the spec's `collect_all` list *and* its explicit `binaries` entry.
 - **`pync` broke the whole signature.** It vendors a nested `terminal-notifier.app`, PyInstaller rewrites `.` to `__dot__` in those directory names, and `codesign --verify --strict` then fails for the ENTIRE app ("the main executable or Info.plist must be a regular file"). Harmless while the app ships ad-hoc/unsigned, so this is a **latent** blocker, not a current one - but notarization rejects it, and `--force --deep` silently produces an unverifiable artifact. Dropped: it is notification fallback #3 of 4, its import is already guarded, and the primary `UNUserNotificationCenter` path is verified working. After the change `--verify --strict` and `--verify --deep --strict` are both rc=0 with the `apple-events` entitlement intact.
 - **Verify in the BUNDLE, not just in source - and know which half you verified.** Pointing a browser at the packaged app's Streamlit port exercises the frozen backend (bundled modules, real config dir, real keychain, signed binary) and **not** WKWebView rendering; that needs a screenshot of the app's own window. Both halves were covered separately. The packaged app was proven to: verify strictly, convert Word→PDF (genuine `%PDF`, source deleted only after verification, manifest repointed), honour the short keychain probe, record exactly one clean exit, and render the FDA nudge.
+
+## Evidence only adds up when it can fail SEPARATELY (2026-09-13)
+Three independent-looking verifications of the browser sign-in all passed while
+the feature had never once worked: the extension's success screen, the app's own
+`Accepted a Canvas session handoff` log line, and `scripts/check_handoff.py`
+reporting ten of ten. Every one was talking to an ORPHANED listener left by a
+module re-import. Full mechanism in `.claude/rules/browser-login.md`; the
+transferable part is why the checking failed rather than why the code did.
+- **They were not three pieces of evidence.** They were written by one author in
+  one sitting from one mental model, and all three inherited the same premise -
+  *there is exactly one listener and it is ours* - which is exactly where the
+  defect was. **Count independent failure modes, not checks.**
+- **A CHECKER MUST NOT DISCOVER ITS TARGET THE WAY THE PRODUCT DOES.**
+  `check_handoff.py` took "the first port that answers", identically to
+  `background.js`. A tool that reimplements the assumption under test cannot
+  falsify it. Where the product's own discovery must be reused, enumerate every
+  candidate and FAIL on multiplicity - which is what that checker does now, with
+  a positive control that a single healthy listener still passes.
+- **A 2xx is the SENDER's opinion.** For anything crossing a process, thread or
+  machine boundary, success is the RECEIVER's observable state change, read
+  independently. "Someone accepted my bytes" is not "the app is signed in".
+- **"The suite is green" is a claim about the TEST PROCESS.** pytest imports a
+  module once and runs no file watcher; `python dev.py` re-imports every watched
+  module on every edit. A defect needing a re-import can never appear in that
+  suite, so no amount of test-writing would have found it. **State the
+  environment delta before calling something verified** - re-imports, a second
+  window, a frozen bundle, another process holding the same resource - and say
+  which of them the evidence covered.
+- **A 100% mutation score is a claim about the HARNESS too.** The same day, this
+  repo's handoff pass printed **38/38** while three mutants were in fact
+  surviving: a `dev.py` held the ports, the fixture errored on every run, and a
+  broken fixture caught every mutant. **Spot-check one mutant by hand whenever a
+  pass comes back perfect**, and read WHICH tests failed. The harness now
+  refuses to start when the ports are held and aborts when a mutant produces
+  skips rather than failures.
+- **A fixture that SKIPS can hide the very defect the suite exists to catch.**
+  Making `listening` skip when no port was free was right for "another program
+  holds them" and wrong for "the code under test leaked them" - it turned the
+  mutant *"stop() leaves the socket open"* from CAUGHT into 27 skips. The two
+  cases now get opposite verdicts, told apart by whether this session had ever
+  bound a port successfully.
+
+## Route a new file to its RULE FILE in the same commit (2026-09-13)
+`.claude/rules/*.md` load by `paths:` frontmatter, so a file nobody added to a
+list gets none of this repo's recorded lessons - and the absence is invisible,
+because a rule that did not load looks exactly like a rule that does not exist.
+`browser-login.md` claimed four files while the feature it documents spanned
+nine; the four it missed are where the feature broke. `scripts/check_handoff.py`
+matched `scripts/check_*.py` and therefore loaded RELEASE rules, which is worse
+than loading nothing.
+- `tests/test_rule_routing.py` is a census: every module under `core/`, `ui/`,
+  `sync/`, `engine/`, `converters/`, `panopto/`, `shared/`, the top-level app
+  files and `extension/*.js` must be claimed by some rule file or named in
+  `_UNROUTED_BY_DESIGN` with a reason. It fails on a NEW unrouted file, which is
+  the case that matters, and it carries a positive control - without one, a
+  matcher that matched everything would pass with the whole repo unrouted.
+
+## `dev.py` was not keeping the session record production keeps (2026-09-13)
+Found by reading the LOGS of a real run rather than the code, which is the
+transferable part: `diagnostics/health.log` was **zero bytes** after a complete
+download. `start.py` calls `session_start()` / `session_end()`; `dev.py` called
+neither.
+- So phase recording, the failure tally, the clean-exit signal and the recorded
+  children the next launch reaps were **unexercised in the tool built to
+  exercise production faithfully** - and anything verified about them under
+  `python dev.py` was verified against nothing.
+- **It was never a decision.** The orphan reap three lines above it already
+  says *"Reaped before the loop starts, same as start.py"*, so mirroring
+  production was the stated intent and this was an omission. When a harness
+  claims to be production-faithful, the claim needs a census, not a comment:
+  `tests/test_dev_tooling.py` now asserts both calls and their ORDER (the
+  record closes before the children are killed, as `start.py` orders it).
+- Safe to write from a dev run because a source run's config dir is the repo
+  root, so these records land in `<repo>/diagnostics` and cannot mix with an
+  installed app's.
+
+## 62 mutants, and BOTH survivors were gaps in the tests (2026-09-13)
+The handoff pass came back **52/54**, and neither survivor was an equivalent
+mutant - which is this file's standing expectation and held again:
+- *"two causes collapse back to one sentence"* survived because the mutant
+  changed only the **headline** while
+  `test_EVERY_failure_CAUSE_has_its_own_card` compared only **bodies**. The
+  headline is the line a student reads first, so two causes sharing one is
+  precisely the defect the test is named after. It now checks both halves.
+- *"an uncollected handoff is DISCARDED on re-arm"* survived because nothing
+  tested it at all: the behaviour had been fixed and no test written. Closed by
+  a test that posts a handoff, presses the button again, and requires the
+  credential to still be there.
+**Re-run the pass rather than the suite**: the suite was green through both.
+
+## `set_active_debug_file` raises app logger LEVELS, and a test must put them back (2026-09-13)
+It calls `_lg.setLevel(logging.INFO)` for every prefix in
+`_APP_LOGGER_PREFIXES` and never lowers them again. That is correct in the app
+- one-way, per run, and the whole reason INFO records reach the debug file -
+and it is a **cross-file trap in a test**, because a logger left at INFO drops
+the `logger.debug` calls a LATER test file asserts on.
+- **Measured**: `tests/test_debug_log_noise.py` left `engine` at INFO, and
+  `tests/test_office_automation_lock_coverage.py::test_the_boring_cases_stay_at_debug`
+  then failed with an EMPTY capture while passing in isolation. It reads as an
+  Office regression and is the other file leaking - the most expensive shape a
+  test-ordering bug has, because the failure names an innocent subsystem.
+- The fixture now snapshots and restores every level it touches. **Any test
+  that installs the debug bridge owes the same restore**, and a `monkeypatch`
+  will not do it for you: the mutation happens inside the app's own function,
+  not through a patched attribute.
+- General form, worth carrying past this file: **a test that calls a REAL
+  app function for its side effects inherits every global that function
+  touches**, and only the ones you can name will be undone. Prefer to snapshot
+  the module's public surface before the call rather than reason about which
+  globals it reaches.

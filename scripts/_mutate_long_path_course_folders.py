@@ -61,8 +61,10 @@ LONG_PATH_COURSE_FOLDER_MUTANTS = [
      "base_path.mkdir(parents=True, exist_ok=True)"),
     ("the MODULE folder mkdir loses the prefix (modules mode fails first)",
      LOGIC,
-     "Path(make_long_path(target_path)).mkdir(parents=True, exist_ok=True)",
-     "target_path.mkdir(parents=True, exist_ok=True)"),
+     "target_path = base_path / module_name\n"
+     "                            Path(make_long_path(target_path)).mkdir(parents=True, exist_ok=True)",
+     "target_path = base_path / module_name\n"
+     "                            target_path.mkdir(parents=True, exist_ok=True)"),
     ("the SYNC ROOT mkdir loses the prefix",
      SYNCMGR,
      "Path(make_long_path(self.local_path)).mkdir(parents=True, exist_ok=True)",

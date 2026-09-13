@@ -100,11 +100,23 @@ def _loaded_names(scope_node):
 
     Child scopes are excluded because they are visited in their own right, with
     this scope's bindings added to theirs - which is what makes closures pass.
+
+    ``scope_node``'s own DECORATORS are excluded too, and that is a correctness
+    fix rather than a refinement: a decorator expression is evaluated in the
+    scope the ``def`` sits in, *before* the function exists, so attributing its
+    loads to the function's own scope asks the wrong question entirely. It
+    produced a false alarm on the first ``@property`` / ``@x.setter`` pair
+    written in this repo - ``@title.setter`` reads ``title``, which the class
+    body binds two lines above and no method scope ever sees. See
+    :func:`_decorator_loads`, which checks them where they really run.
     """
     found = []
+    skip = list(getattr(scope_node, 'decorator_list', ()) or ())
 
     def walk(node):
         for child in ast.iter_child_nodes(node):
+            if any(child is s for s in skip):
+                continue
             if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda,
                                   ast.ClassDef, ast.ListComp, ast.SetComp,
                                   ast.DictComp, ast.GeneratorExp)):
@@ -117,6 +129,35 @@ def _loaded_names(scope_node):
     return found
 
 
+def _decorator_loads(node):
+    """``(name, lineno)`` for every load in *node*'s own decorator expressions.
+
+    Nested scopes inside a decorator are skipped for the same reason they are
+    everywhere else in this file: a comprehension or lambda binds its own
+    targets, and a plain ``ast.walk`` cannot see that. The first version used
+    one and reported eleven false alarms across the suite, every one a
+    comprehension variable inside a ``@pytest.mark.parametrize`` argument.
+    """
+    found = []
+
+    def walk(n):
+        for child in ast.iter_child_nodes(n):
+            if isinstance(child, (ast.Lambda, ast.ListComp, ast.SetComp,
+                                  ast.DictComp, ast.GeneratorExp,
+                                  ast.FunctionDef, ast.AsyncFunctionDef,
+                                  ast.ClassDef)):
+                continue
+            if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Load):
+                found.append((child.id, child.lineno))
+            walk(child)
+
+    for dec in getattr(node, 'decorator_list', ()) or ():
+        if isinstance(dec, ast.Name) and isinstance(dec.ctx, ast.Load):
+            found.append((dec.id, dec.lineno))
+        walk(dec)
+    return found
+
+
 def unbound_loads(source: str, label: str = '<src>') -> list[tuple[int, str, str]]:
     """``(lineno, function, name)`` for every load nothing reachable binds."""
     tree = ast.parse(source)
@@ -126,8 +167,17 @@ def unbound_loads(source: str, label: str = '<src>') -> list[tuple[int, str, str
     module_scope = _bound_names(tree) | _BUILTINS
     findings: list[tuple[int, str, str]] = []
 
-    def visit(node, enclosing: set[str]):
+    def visit(node, enclosing: set[str], here: set[str] | None = None):
+        # *enclosing* is what a nested function BODY can see. *here* is what the
+        # body currently being walked can see as it executes top to bottom -
+        # which for a class body includes its own earlier names, and is the only
+        # scope in which a decorator on one of its methods is ever evaluated.
+        here = enclosing if here is None else here
         for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                for name, line in _decorator_loads(child):
+                    if name not in here:
+                        findings.append((line, child.name, name))
             if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 scope = enclosing | _bound_names(child)
                 for name, line in _loaded_names(child):
@@ -136,10 +186,18 @@ def unbound_loads(source: str, label: str = '<src>') -> list[tuple[int, str, str
                 visit(child, scope)
             elif isinstance(child, ast.ClassDef):
                 # A class body's names are NOT visible to methods, so methods are
-                # visited with the enclosing scope, not with the class's.
-                visit(child, enclosing)
+                # visited with the enclosing scope, not with the class's. Its
+                # DECORATORS are the exception, because they run in the class
+                # body itself - so that body's own bindings are passed as *here*.
+                #
+                # The whole class body is used rather than only the names bound
+                # ABOVE each decorator. That is deliberately the loose direction:
+                # it can only suppress an alarm, never invent one, and this file's
+                # contract is that it never false-alarms. Ordering inside a class
+                # body is not a defect class this repo has ever hit.
+                visit(child, enclosing, here=enclosing | _bound_names(child))
             else:
-                visit(child, enclosing)
+                visit(child, enclosing, here=here)
 
     visit(tree, module_scope)
     return findings
@@ -222,9 +280,44 @@ class CanvasManager:
     # a method must NOT see class-body names... and must not be flagged for the
     # ones it legitimately reaches through self
     "class C:\n    ATTR = 1\n    def m(self):\n        return self.ATTR\n",
+    # a property setter: `@title.setter` reads a name the CLASS BODY binds two
+    # lines above, and no method scope ever sees it. This was a real false
+    # alarm - the first such pair written in this repo failed the suite.
+    "class C:\n"
+    "    @property\n"
+    "    def title(self):\n"
+    "        return self._t\n"
+    "    @title.setter\n"
+    "    def title(self, v):\n"
+    "        self._t = v\n",
+    # the same shape at module level, where a decorator reads a module global
+    "import functools\n\n@functools.cache\ndef f():\n    return 1\n",
 ])
 def test_no_false_positive(src):
     assert unbound_loads(src) == [], f"false positive on:\n{src}"
+
+
+def test_a_decorator_reading_a_name_nothing_binds_is_still_caught():
+    """The fix for the property-setter false alarm must not blind the check.
+
+    A decorator is still a load, it just runs in the enclosing scope - so a
+    genuinely unbound one is a NameError at import time, which is the worst
+    version of this defect rather than a lesser one.
+    """
+    src = "@not_defined_anywhere\ndef f():\n    return 1\n"
+    assert [(h[1], h[2]) for h in unbound_loads(src)] == [
+        ('f', 'not_defined_anywhere')]
+
+    # And inside a class, where the decorator CAN see the class body but still
+    # cannot see a name nothing binds.
+    src = ("class C:\n"
+           "    @property\n"
+           "    def t(self):\n"
+           "        return 1\n"
+           "    @nope.setter\n"
+           "    def t2(self):\n"
+           "        return 2\n")
+    assert [(h[1], h[2]) for h in unbound_loads(src)] == [('t2', 'nope')]
 
 
 def test_a_star_import_is_skipped_rather_than_guessed():

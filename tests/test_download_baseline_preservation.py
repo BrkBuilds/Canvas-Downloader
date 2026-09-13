@@ -182,6 +182,79 @@ def test_an_explicit_md5_always_wins(tracked):
     assert _baseline(sm) == hashlib.md5(new).hexdigest()
 
 
+def test_the_SIBLING_writer_has_no_unclassified_caller():
+    """`add_file_to_manifest` hashes from disk whenever no md5 is passed, and
+    that is CORRECT for its two callers - but only because of a fact about
+    them, not about it.
+
+    Flagged for review on 2026-09-11 as the same shape as the defect this file
+    exists for, and investigated on 2026-09-12. It does not reproduce:
+
+      * `sync/execution.py:1128` - the real file download - passes
+        `local_md5=_dl_hasher.hexdigest()`, the bytes just pulled off the
+        network. The disk hash never runs.
+      * `sync/execution.py:1735` - the synthetic shortcut / Canvas Page path -
+        passes nothing, and every route to it WRITES the file immediately
+        above: the real page HTML, else the redirect stub, else the `.url`
+        shortcut. A path with nothing to write hits `continue` and never
+        reaches the call.
+
+    So the unconditional hash always hashes bytes the app itself just wrote,
+    which is the right baseline - the same distinction that made the fix in
+    `record_downloaded_file` correct.
+
+    **The invariant is stated in that docstring and enforced nowhere**, and
+    that is exactly how its sibling acquired the bug: a third caller was added
+    later which recorded skipped-but-existing files, and the docstring stayed
+    true of the original two. This is the census, so a new caller has to be
+    classified rather than assumed.
+    """
+    import ast
+
+    repo = Path(__file__).resolve().parents[1]
+
+    #: Call sites allowed to omit `local_md5`, each with the reason it is safe.
+    #: A site belongs here ONLY if the app writes the file's bytes immediately
+    #: before the call, so hashing from disk records our own write.
+    WRITES_ITS_OWN_BYTES = {
+        'sync/execution.py': (
+            "the synthetic shortcut / Page branch writes the file (real page "
+            "HTML, redirect stub, or .url) immediately above the call, and a "
+            "path with nothing to write `continue`s before reaching it"),
+    }
+
+    unclassified = []
+    for path in sorted(repo.glob('**/*.py')):
+        rel = path.relative_to(repo).as_posix()
+        if rel.startswith(('tests/', 'dist/', 'build/', 'scripts/')):
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding='utf-8'))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            fn = node.func
+            if not (isinstance(fn, ast.Attribute)
+                    and fn.attr == 'add_file_to_manifest'):
+                continue
+            passes_md5 = any(kw.arg == 'local_md5' for kw in node.keywords) \
+                or len(node.args) >= 4
+            if passes_md5 or rel in WRITES_ITS_OWN_BYTES:
+                continue
+            unclassified.append(f"{rel}:{node.lineno}")
+
+    assert not unclassified, (
+        f"{len(unclassified)} call site(s) of `add_file_to_manifest` pass no "
+        f"`local_md5`, so the baseline is hashed FROM DISK, and they are not "
+        f"classified as writing their own bytes: {unclassified}. If the site "
+        f"records a file it did not just write, that hash is the file's "
+        f"CURRENT content - which is how a student's edited file stops being "
+        f"protected (see this module's docstring). Either pass the bytes' own "
+        f"md5, or add the site to WRITES_ITS_OWN_BYTES with the reason.")
+
+
 def test_a_row_that_EXISTS_with_an_empty_baseline_is_still_hashed(tmp_path):
     """The distinction the mutation pass forced.
 

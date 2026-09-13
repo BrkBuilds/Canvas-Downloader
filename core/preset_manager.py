@@ -310,7 +310,7 @@ class PresetManager:
             if not self.presets_path.exists():
                 return [], True
             try:
-                with open(self.presets_path, 'r', encoding='utf-8') as f:
+                with open(self.presets_path, 'r', encoding='utf-8-sig') as f:
                     data = json.load(f)
             except OSError as e:
                 # Nothing is wrong with the FILE. Refuse the write rather than

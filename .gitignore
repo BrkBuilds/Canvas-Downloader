@@ -30,6 +30,21 @@ sync_library.json
 *.json.bak
 saved_download_presets.json
 update_banner_dismissed.json
+# The embedded web view's profile (core.browser_login.webview_profile_dir).
+# Holds the LIVE cookies of the user's Canvas and identity-provider sessions -
+# a complete login - so it is the single most sensitive thing the app writes.
+# A dev run puts it in the repo root, because get_config_dir() resolves there
+# when running as a script.
+webview/
+# `python dev.py --isolated` puts a throwaway profile beside it. Same contents,
+# same sensitivity - a complete login - so it is ignored for the same reason.
+webview-dev/
+# The DPAPI-encrypted credential fallback (ui.auth._save_fallback_token). It was
+# rare while it only caught a keyring refusal; browser login makes it the NORMAL
+# Windows store, because a real Canvas session serialises to ~3,260 bytes and
+# Credential Manager refuses anything over 2,560 (measured). A dev run writes it
+# into the repo root for the same reason webview/ lands there.
+.token_fallback
 Streamlit UI Manipulation Guide.md
 .playwright-mcp/*
 

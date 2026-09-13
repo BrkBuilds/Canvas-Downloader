@@ -932,9 +932,66 @@ if __name__ == "__main__":
     # Before any window exists - see _match_macos_webview_background.
     _match_macos_webview_background()
 
+    # ── The web view's profile has to SURVIVE the session ────────────────────
+    #
+    # pywebview defaults to `private_mode=True`, which runs WebView2 InPrivate
+    # and points the profile at a temp directory that is thrown away on exit.
+    # That is fine for a window that only ever shows localhost, and fatal for
+    # "Sign in with Canvas": the whole value of that route is that the user
+    # signs in once and the institution's SSO session - typically weeks for an
+    # Entra tenant - renews Canvas' own day-long session silently afterwards.
+    # In private mode every launch would be a fresh login, which is more
+    # friction than the access token it replaces.
+    #
+    # Both settings are PROCESS-GLOBAL in pywebview (they live on `_state`, not
+    # on a window), so this is the only place either can be set, and it applies
+    # to the main window too. That is intended: the main window is Streamlit on
+    # localhost, and a persisted profile there costs nothing.
+    #
+    # One documented consequence: pywebview's own `clear_user_data()` teardown
+    # (Dispose + WaitForExit) runs in private mode ONLY, so with it off that
+    # step no longer fires. `_terminate_child_processes()` already reaps the
+    # whole tree on every exit path, which is the stronger guarantee, so this
+    # loses nothing - see its docstring for the WebView2 processes it covers.
+    #
+    # Degrades rather than fails: if the profile directory cannot be created or
+    # written, the app starts in the old private mode. Signing in with Canvas
+    # still works for that session; it simply will not be remembered, which is
+    # a far better outcome than refusing to launch.
+    _webview_kwargs: dict = {}
+    try:
+        from core.browser_login import webview_profile_dir
+        _profile_dir = webview_profile_dir()
+        os.makedirs(_profile_dir, exist_ok=True)
+        if not os.access(_profile_dir, os.W_OK):
+            raise OSError(f"{_profile_dir} is not writable")
+        _webview_kwargs = {'private_mode': False, 'storage_path': _profile_dir}
+        logger.info(f"Web view profile: {_profile_dir}")
+        # A WebView2 left wedged by a previous run still holds this folder, and
+        # a shared profile makes that FATAL rather than untidy: measured twice,
+        # the next launch waits ~45s and then CoreWebView2 creation fails with
+        # E_ABORT, so the app's own window never loads. Reaped HERE and not from
+        # the health record in `_boot`, because that pass runs on a background
+        # thread while `webview.start()` is already creating the window - a race
+        # this cannot afford to lose. Only processes whose owning app is gone
+        # are taken; a second live instance keeps its own (see the docstring).
+        try:
+            from core.health_log import reap_webview_orphans
+            _n, _pids = reap_webview_orphans(_profile_dir)
+            if _n:
+                logger.warning("Reaped %d stranded web view process(es) holding "
+                               "the profile: %s", _n, _pids)
+        except Exception as _reap_err:                 # pragma: no cover
+            logger.debug(f"Web view orphan sweep skipped: {_reap_err}")
+    except Exception as _profile_err:
+        logger.warning(
+            "Could not prepare a persistent web view profile (%s). Canvas "
+            "sign-in will still work, but it will not be remembered between "
+            "launches.", _profile_err, exc_info=True)
+
     _exit_reason = "clean"
     try:
-        webview.start(_boot)
+        webview.start(_boot, **_webview_kwargs)
     # BaseException is the POINT here, and nothing is swallowed: this re-raises
     # on the next line. SystemExit and KeyboardInterrupt derive from
     # BaseException, not Exception (the same reason RerunException slips past

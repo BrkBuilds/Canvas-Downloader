@@ -18,7 +18,7 @@ from __future__ import annotations
 import html as _html
 import logging
 import re
-from urllib.parse import unquote, urljoin, urlparse
+from urllib.parse import parse_qs, quote, unquote, urljoin, urlparse
 
 import requests
 
@@ -283,7 +283,71 @@ def parse_lti_form(html: str):
     return action, form_data
 
 
-def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: int = 20):
+def in_app_launch_url(sessionless_launch_api_url: str) -> str:
+    """The IN-APP equivalent of a ``sessionless_launch`` API URL, or ``""``.
+
+    **Canvas refuses ``sessionless_launch`` to anything but an access token**,
+    and that is Canvas' own rule, not a permission quirk of one course
+    (``app/controllers/lti/concerns/sessionless_launches.rb``)::
+
+        def generate_session_token
+          # only allow from API, and not from files domain
+          raise UnauthorizedClient unless @access_token
+
+    Measured against real Canvas on a browser session: **every** launch, on all
+    36 Panopto items of one course and in both URL shapes, answered
+    ``403 user not authorised to perform that action`` - while ``users/self``
+    and the Files API on the SAME session answered 200. So a browser-session
+    user would get no recordings, no transcripts and no subtitles at all.
+
+    A student watching that lecture in a browser is not doing anything
+    exotic, though: they click the module item, and Canvas performs the LTI
+    launch from their session. That route is open to us for the same reason,
+    and the three shapes below are the in-app equivalents of the three
+    ``sessionless_launch`` URLs this app builds. All three were driven end to
+    end on a real session (3 hops each, landing on the Panopto host with
+    ``.ASPXAUTH`` and no Canvas cookie reaching Panopto):
+
+    ==========================================  ============================================
+    ``sessionless_launch?...``                  in-app
+    ==========================================  ============================================
+    ``launch_type=module_item&module_item_id``  ``/courses/<cid>/modules/items/<item_id>``
+    ``?id=<tool>&url=<tool url>``               ``/courses/<cid>/external_tools/retrieve?url=``
+    ``?id=<tool>``                              ``/courses/<cid>/external_tools/<tool_id>``
+    ==========================================  ============================================
+
+    Only the module-item form lands on the RECORDING (its delivery id is in the
+    URL); the other two land on the course FOLDER, which is exactly what their
+    sessionless counterparts do as well.
+    """
+    try:
+        parsed = urlparse(sessionless_launch_api_url or "")
+        params = parse_qs(parsed.query)
+        base = f"{parsed.scheme}://{parsed.netloc}"
+        parts = parsed.path.strip("/").split("/")
+        # .../api/v1/courses/<cid>/external_tools/sessionless_launch
+        if "courses" not in parts:
+            return ""
+        cid = parts[parts.index("courses") + 1]
+        if not cid:
+            return ""
+        item_id = (params.get("module_item_id") or [""])[0]
+        if item_id:
+            return f"{base}/courses/{cid}/modules/items/{item_id}"
+        tool_url = (params.get("url") or [""])[0]
+        if tool_url:
+            return (f"{base}/courses/{cid}/external_tools/retrieve"
+                    f"?url={quote(tool_url, safe='')}")
+        tool_id = (params.get("id") or [""])[0]
+        if tool_id:
+            return f"{base}/courses/{cid}/external_tools/{tool_id}"
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning("Could not derive an in-app launch URL from %r: %s",
+                       sessionless_launch_api_url, e, exc_info=True)
+    return ""
+
+
+def lti_launch(sessionless_launch_api_url: str, canvas_credential, *, timeout: int = 20):
     """Run the full Canvas -> Panopto LTI handshake.
 
     Returns ``(session, final_url, real_video_id, panopto_base, folder_id)`` on
@@ -296,21 +360,52 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT})
 
-    try:
-        r = requests.get(
-            sessionless_launch_api_url,
-            headers={"Authorization": f"Bearer {canvas_token}"},
-            timeout=timeout,
-        )
-        r.raise_for_status()
-        launch_url = r.json().get("url", "")
-    except Exception as e:
-        logger.warning(f"Panopto LTI: sessionless_launch API failed: {e}")
-        return None, None, None, None, None
+    # This one call is to CANVAS, not Panopto, so it carries the Canvas
+    # credential - a bearer, or a host-scoped session cookie jar. `session`
+    # above is the PANOPTO session and stays untouched: the handshake below
+    # earns its own cookies, and mixing the two would send a Canvas login to
+    # a Panopto host. See core/canvas_auth.py.
+    from core.canvas_auth import coerce as _coerce_credential
+    _canvas_cred = _coerce_credential(canvas_credential, sessionless_launch_api_url)
+
+    launch_url = ""
+    if _canvas_cred.is_browser:
+        # Canvas will not mint a sessionless launch for a session cookie at all
+        # (see in_app_launch_url), so take the route a student's own click
+        # takes. The Canvas cookies ride on the PANOPTO session's jar, which is
+        # safe for one measured reason: they are installed with an explicit
+        # DOMAIN, so requests drops them at the first Panopto hop. Verified on a
+        # real launch - Panopto received none of them. Only the cookies are
+        # copied, never the User-Agent, so the handshake keeps the UA it has
+        # always sent.
+        launch_url = in_app_launch_url(sessionless_launch_api_url)
+        if launch_url:
+            _jar = _canvas_cred.requests_cookie_jar()
+            if _jar is not None:
+                session.cookies.update(_jar)
+        else:
+            logger.warning("Panopto LTI: no in-app launch URL could be derived "
+                           "from %s; falling back to the API form, which Canvas "
+                           "refuses for a browser session.",
+                           sessionless_launch_api_url.split("?")[0])
 
     if not launch_url:
-        logger.warning("Panopto LTI: sessionless_launch returned no launch URL.")
-        return None, None, None, None, None
+        try:
+            r = requests.get(
+                sessionless_launch_api_url,
+                headers=_canvas_cred.auth_headers(),
+                cookies=_canvas_cred.requests_cookie_jar(),
+                timeout=timeout,
+            )
+            r.raise_for_status()
+            launch_url = r.json().get("url", "")
+        except Exception as e:
+            logger.warning(f"Panopto LTI: sessionless_launch API failed: {e}")
+            return None, None, None, None, None
+
+        if not launch_url:
+            logger.warning("Panopto LTI: sessionless_launch returned no launch URL.")
+            return None, None, None, None, None
 
     def _loc(u: str) -> str:
         """host+path of *u* - never the query (it can carry auth material)."""
@@ -325,6 +420,23 @@ def lti_launch(sessionless_launch_api_url: str, canvas_token: str, *, timeout: i
     except Exception as e:
         logger.warning(f"Panopto LTI: GET launch url failed: {e}")
         return None, None, None, None, None
+
+    # An expired BROWSER SESSION does not 401 here - Canvas redirects the
+    # module-item page to /login and on to the institution's identity provider,
+    # which answers 200 with a login form. The form-chain walker below would
+    # then dutifully try to submit the IdP's sign-in form, exhaust its ten
+    # steps, and report "no delivery id" - i.e. "this course has no
+    # recordings", which is the wrong answer to "you are signed out" and the
+    # only one a user would ever see. Raised, not returned, so it reaches the
+    # same reconnect routing as every other 401 in the app.
+    from core.canvas_auth import is_login_redirect as _is_login_redirect
+    from core.canvas_auth import visited_urls as _visited_urls
+    if _is_login_redirect(_visited_urls(r)):
+        from core.canvas_logic import CanvasSessionExpired
+        raise CanvasSessionExpired(
+            "Canvas asked for a sign-in instead of starting the Panopto launch "
+            "(401 - the session has expired)."
+        )
 
     # Chain trace: one entry per hop (hosts+paths, form-field NAMES only).
     # Logged when the handshake fails to reach Panopto, so a dead chain is

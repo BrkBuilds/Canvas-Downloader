@@ -891,6 +891,29 @@ restore_saved_session()
 from ui.auth import adopt_pending_keychain_unlock
 adopt_pending_keychain_unlock()
 
+# The same shape, for the other credential: a Canvas sign-in runs in the app's
+# own browser window on a background thread, and this is the pass that turns a
+# finished one into a signed-in session. It sits here, beside its Keychain
+# sibling and BEFORE _write_nav_to_query_params, for the same reason - that
+# helper writes ?mode=auth while signed out, so the URL would still say "auth"
+# on the very run that signs in.
+from ui.auth import adopt_pending_browser_login
+adopt_pending_browser_login()
+
+# A Canvas session handed over by the browser extension. A separate pass for
+# the same reason as its two siblings above: it arrives on the listener's own
+# thread, which has no ScriptRunContext, so a Streamlit run has to collect it.
+from ui.auth import adopt_pending_handoff
+adopt_pending_handoff()
+
+# Keep a long-lived access token this app minted from ever running out. Once
+# per process, on a daemon thread, and a no-op unless the stored token is one
+# we created and is within three weeks of its expiry - so for almost every
+# launch this costs a dict lookup. Here rather than in `restore_saved_session`
+# because that runs on the script thread during init.
+from ui.auth import maybe_extend_minted_token
+maybe_extend_minted_token()
+
 _write_nav_to_query_params()
 
 # Breadcrumb for the local health record: if this session dies without running
@@ -3026,3 +3049,13 @@ else:
 # components.html iframe is pulled out of flow by global.css, so it adds no gap.
 from shared.components import inject_app_shell_bridge
 inject_app_shell_bridge()
+
+
+# ─── One-shot notices ─────────────────────────────────────────────────────────
+# LAST, after every stylesheet on the page. `st.toast` writes to the event root
+# container, which Streamlit reconciles by INDEX and which every style-only
+# `st.html()` also writes to - so a CONDITIONAL toast emitted earlier shifts
+# each later stylesheet onto its neighbour's host for that run. See
+# `render_pending_token_notice` for the full mechanism.
+from ui.auth import render_pending_token_notice
+render_pending_token_notice()

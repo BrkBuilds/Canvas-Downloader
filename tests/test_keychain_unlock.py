@@ -428,9 +428,16 @@ def test_the_notice_renders_above_the_login_form():
     """It answers "why am I looking at a login screen at all", so it has to be
     read before the form, not after it."""
     src = AUTH_SRC.read_text(encoding="utf-8")
-    notice = src.index("render_keychain_unlock_notice()\n\n            if _reauth_mode:")
-    form = src.index('with st.form("auth_form"')
-    assert notice < form
+    # Anchored on the PROPERTY - the notice is read before the form, and before
+    # the reauth header that replaces the form's title - rather than on the two
+    # being textually adjacent. The Canvas sign-in notice now renders between
+    # them, which changes nothing about what this test is protecting; an
+    # adjacency anchor would have reported a guard that is plainly still there
+    # as missing.
+    notice = src.index("            render_keychain_unlock_notice()")
+    reauth_header = src.index("            if _reauth_mode:", notice)
+    form = src.index('with st.form("auth_form"', notice)
+    assert notice < reauth_header < form
 
 
 def test_markup_and_stylesheet_agree():
@@ -463,10 +470,96 @@ def test_every_path_that_drops_the_credential_resets_the_unlock():
     """A cached 'denied' outlives the credential it was about: left standing it
     makes begin_keychain_unlock a no-op for the rest of the process, so the
     notice would advertise a prompt that never appears."""
-    src = AUTH_SRC.read_text(encoding="utf-8")
-    deletes = len(re.findall(r"_safe_keyring_delete\(KEYRING_SERVICE", src))
-    resets = len(re.findall(r"reset_keychain_unlock\(\)", src))
-    assert deletes >= 2, "expected the logout and force_reauth delete sites"
-    # one definition + one call per delete site
-    assert resets >= deletes + 1, (
-        f"{deletes} credential-clearing sites but only {resets - 1} unlock resets")
+    tree = ast.parse(AUTH_SRC.read_text(encoding="utf-8"))
+
+    # A CENSUS, matched on the CALL via AST rather than on a regex count.
+    # The counting form this replaced could not tell a place that DECIDES to
+    # drop a credential from the low-level helper that performs the delete, so
+    # adding the browser-session deleter made it fail against correct code.
+    #
+    # The rule generalises rather than loosens: the app now holds TWO kinds of
+    # credential, each with a cached verdict that outlives it - the Keychain
+    # unlock for the token, the sign-in job state for the browser session - and
+    # a stale verdict of either kind makes the next attempt a silent no-op. So
+    # every site that drops a credential must reset BOTH.
+    DELETERS = {"_safe_keyring_delete", "delete_browser_credential"}
+    RESETS = {"reset_keychain_unlock", "_reset_browser_login_state"}
+    # The primitives are what the deciding sites CALL; they clear one store and
+    # own no policy, so requiring a reset inside them would be requiring it in
+    # the wrong place.
+    PRIMITIVES = {"delete_browser_credential", "_reset_browser_login_state",
+                  "_clear_webview_session"}
+
+    sites, offenders = [], []
+    for fn in ast.walk(tree):
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if fn.name in PRIMITIVES:
+            continue
+        calls = _calls(fn)
+        if not (DELETERS & calls):
+            continue
+        sites.append(fn.name)
+        missing = RESETS - calls
+        if missing:
+            offenders.append(f"{fn.name} drops a credential but never calls "
+                             f"{sorted(missing)}")
+
+    assert len(sites) >= 2, (
+        f"expected at least the logout and force_reauth sites, found {sites}")
+    assert not offenders, "\n".join(offenders)
+
+
+# ---------------------------------------------------------------------------
+# Logout must not report a failure when there was simply nothing stored
+# ---------------------------------------------------------------------------
+
+def test_an_ABSENT_keyring_entry_is_success_not_a_warning(monkeypatch, caplog):
+    """Reported twice in one evening by the product owner (2026-09-12):
+    `Keyring delete_password failed: CanvasDownloader` on every logout.
+
+    `PasswordDeleteError` is what the Windows backend raises when there is
+    nothing to delete, and its message is only the service name - so the line
+    read as though the service were the error. There is often nothing to delete
+    BY DESIGN: a browser-login credential is about 3,260 bytes and Credential
+    Manager refuses anything over 2,560, so the credential lives in the DPAPI
+    fallback and no keyring entry was ever written.
+    """
+    import logging
+    from keyring.errors import PasswordDeleteError
+    import ui.auth as auth
+
+    def _raise(*_a, **_k):
+        raise PasswordDeleteError('CanvasDownloader')
+
+    monkeypatch.setattr(auth, '_run_keyring_op', _raise)
+    with caplog.at_level(logging.DEBUG, logger='ui.auth'):
+        ok = auth._safe_keyring_delete('CanvasDownloader', 'user')
+
+    assert ok is True, (
+        "an absent entry was reported as a failed delete, so a normal logout "
+        "looks broken")
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING], (
+        "a normal logout logged a warning")
+
+
+def test_a_REAL_keyring_failure_is_still_a_warning(monkeypatch, caplog):
+    """The positive control, and the reason the two cases stay separable.
+
+    Logout is the one action whose whole job is to leave nothing behind. If a
+    genuine failure and an empty store look the same, nobody can tell whether a
+    logout on a shared machine actually cleared anything.
+    """
+    import logging
+    import ui.auth as auth
+
+    def _raise(*_a, **_k):
+        raise OSError('the credential store is locked')
+
+    monkeypatch.setattr(auth, '_run_keyring_op', _raise)
+    with caplog.at_level(logging.DEBUG, logger='ui.auth'):
+        ok = auth._safe_keyring_delete('CanvasDownloader', 'user')
+
+    assert ok is False
+    assert [r for r in caplog.records if r.levelno >= logging.WARNING], (
+        "a real delete failure was swallowed below warning")

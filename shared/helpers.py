@@ -537,7 +537,19 @@ def read_json_for_update(path, expect: type = dict) -> tuple:
     if not os.path.exists(path):
         return empty, True
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        # `utf-8-sig`, not `utf-8`, and this is a DATA-SAFETY fix rather than a
+        # tidiness one. A UTF-8 BOM is a legal encoding of the same document -
+        # Notepad and a PowerShell `>` redirect both write one - but `utf-8`
+        # hands the BOM through as a leading ﻿ and `json.load` then raises
+        # `JSONDecodeError`, which lands in the quarantine branch below. So a
+        # settings file that was never damaged is MOVED ASIDE and replaced, and
+        # with it goes the saved Canvas address, `auth_method` (the marker that
+        # says a browser session should be restored at all), the acknowledged
+        # Panopto notice and the download defaults. Corruption must be proven,
+        # not assumed; a BOM proves nothing. `utf-8-sig` reads both forms and is
+        # a no-op on a file that has no BOM. Writes stay `utf-8`, so nothing
+        # here starts EMITTING one.
+        with open(path, 'r', encoding='utf-8-sig') as f:
             data = json.load(f)
     except OSError as e:
         logger.warning(
@@ -756,7 +768,7 @@ def load_sync_pairs(config_dir: str = None) -> list[dict]:
         if not path.exists():
             return []
         try:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, 'r', encoding='utf-8-sig') as f:
                 pairs = json.load(f)
             return _resolve_active_pairs(pairs)
         except (json.JSONDecodeError, IOError, ValueError):
@@ -790,7 +802,7 @@ def atomic_update_sync_pairs(modifier_func: callable, config_dir: str = None) ->
         pairs = []
         if path.exists():
             try:
-                with open(path, 'r', encoding='utf-8') as f:
+                with open(path, 'r', encoding='utf-8-sig') as f:
                     data = json.load(f)
                     if isinstance(data, list):
                         pairs = data
@@ -850,7 +862,7 @@ def atomic_update_sync_pairs(modifier_func: callable, config_dir: str = None) ->
             # Return what's currently on disk so callers don't act on uncommitted data (M-22).
             if path.exists():
                 try:
-                    with open(path, 'r', encoding='utf-8') as f:
+                    with open(path, 'r', encoding='utf-8-sig') as f:
                         data = json.load(f)
                         if isinstance(data, list):
                             return data

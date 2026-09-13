@@ -204,6 +204,52 @@ _APP_LOGGER_PREFIXES = (
 )
 
 
+#: Exception types that mean ONLY "the browser tab went away".
+#:
+#: MEASURED on the product owner's own download log, 2026-09-13: **37,360 of
+#: 49,250 lines (76%) were these**, as 3,736 full tracebacks. His app's actual
+#: content was 62 INFO lines, 2 locked-file errors and one warning. An earlier
+#: log the same week was 4.7 MB with the app's own lines at 0.4%.
+#:
+#: The mechanism is that the bridge is installed on the ROOT logger, so
+#: `asyncio`'s "Task exception was never retrieved" - an ERROR, from a
+#: non-app logger, therefore passed by the level rule below - arrives carrying
+#: a chained `StreamClosedError` -> `WebSocketClosedError` every time Streamlit
+#: fails to push a repaint to a socket the browser has already closed. A long
+#: download with a backgrounded tab produces thousands.
+#:
+#: This is the file a user attaches when something goes wrong, so drowning it
+#: is not untidiness - it is the diagnostic being destroyed by the framework's
+#: bookkeeping. Note the app's OWN loggers are exempt: a `ConnectionResetError`
+#: from a Canvas download is a real fact about a real transfer.
+_BROWSER_DISCONNECTS = ('WebSocketClosedError', 'StreamClosedError')
+
+#: How often to say the suppression is happening. NOT silent: the first one is
+#: kept in full so the reader can see what it is, and a counted line follows
+#: every N, so "nothing was hidden from you" stays true.
+_DISCONNECT_NOTE_EVERY = 250
+
+_disconnect_noise = 0
+
+
+def _is_browser_disconnect(record: logging.LogRecord) -> bool:
+    """Whether this record is only "the page that was watching us went away".
+
+    Walks the `__cause__` / `__context__` chain, because the record's own
+    exception is the outer one: the measured shape is a `StreamClosedError`
+    raised while handling a `WebSocketClosedError`, and which of the two is
+    outermost is tornado's business, not ours.
+    """
+    exc = record.exc_info[1] if record.exc_info else None
+    seen = 0
+    while exc is not None and seen < 10:          # bounded: cycles are possible
+        if type(exc).__name__ in _BROWSER_DISCONNECTS:
+            return True
+        exc = exc.__cause__ or exc.__context__
+        seen += 1
+    return False
+
+
 class _DebugFileBridge(logging.Handler):
     """Mirrors logging records into the active debug file, and into breadcrumbs.
 
@@ -219,6 +265,24 @@ class _DebugFileBridge(logging.Handler):
         # App modules: INFO and up. Everything else: WARNING and up.
         if record.levelno < (logging.INFO if is_app_logger else logging.WARNING):
             return
+        # A framework logger reporting a closed browser socket says nothing
+        # about this run. Keep the FIRST in full, then count them: the reader
+        # learns what is happening once and is told how often, instead of
+        # losing the log to it. See `_BROWSER_DISCONNECTS`.
+        if not is_app_logger and _is_browser_disconnect(record):
+            global _disconnect_noise
+            with _active_lock:
+                _disconnect_noise += 1
+                count = _disconnect_noise
+            if count > 1:
+                if count % _DISCONNECT_NOTE_EVERY == 0:
+                    log_debug(
+                        f"[INFO] [canvas_debug] {count} browser-connection "
+                        f"notices so far this run; only the first is kept in "
+                        f"full. They mean the page stopped listening (a "
+                        f"background tab, a reload) and say nothing about the "
+                        f"download.", debug_file)
+                return
         try:
             msg = record.getMessage()
             if record.exc_info and record.exc_info[1] is not None:

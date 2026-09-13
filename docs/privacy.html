@@ -512,6 +512,14 @@
       <ul>
         <li><strong>Your Canvas Access Token.</strong> You generate this yourself in your Canvas account settings and paste
           it into the app. It is used solely to authenticate to your university's Canvas server on your behalf.</li>
+        <li><strong>An access token the app creates for you (only if you sign in with Canvas).</strong> A Canvas
+          sign-in normally lasts about a day, which would mean signing in again almost every time you open the app. So
+          straight after you sign in, the app asks Canvas for a long-lived access token of your own, named
+          <em>Canvas Downloader</em>, and uses that instead. Two things worth knowing: it is created in your Canvas
+          account, so you can see it and delete it at any time under <em>Account, Settings, Approved Integrations</em>;
+          and many universities switch this off for students, in which case nothing is created and the app simply keeps
+          using your sign-in. The token is stored on your computer exactly like a token you paste in yourself, and it is
+          never sent to the developer.</li>
         <li><strong>Your own Canvas course data.</strong> When you start a download or sync, the app requests the
           courses, files, assignments, announcements, and similar content that <em>your</em> account already has access
           to.</li>
@@ -523,8 +531,13 @@
         <li><strong>Local app settings.</strong> Your preferences, saved sync folders, and download history are stored
           locally so the app remembers your setup between sessions.</li>
       </ul>
-      <p>The app does <strong>not</strong> ask for your name, email, password, payment details, location, or contacts.
-        Your Canvas login password is never entered into or seen by the app, only the Canvas Access Token you create.</p>
+      <p>The app does <strong>not</strong> ask for your name, email, payment details, location, or contacts.</p>
+      <p><strong>About your password.</strong> If you use an Access Token, your password is never involved at all. If
+        you choose <em>Sign in with Canvas</em>, you type it into your own university's real sign-in page, shown in a
+        window the app opens for it. The app does not read it, store it itself, or send it anywhere. Because that
+        window is a browser, it can offer to remember the password for you, exactly as Microsoft Edge would: if you
+        accept, Windows encrypts it for your account only and it stays on your computer. Signing out of the app
+        deletes it again, along with your Canvas session.</p>
 
       <h2>How your information is used</h2>
       <p>Your information is used for one purpose only: to let the app authenticate to your university's Canvas server
@@ -535,6 +548,17 @@
       <ul>
         <li><strong>Canvas Access Token:</strong> stored securely in your operating system's credential vault, which is Windows Credential Manager on Windows and the Keychain on macOS. It is never written to a plain text file and never transmitted to
           the developer.</li>
+        <li><strong>Canvas sign-in (if you sign in instead of using a token):</strong> the app keeps the session your
+          browser window created, so it can talk to Canvas as you. It is stored in the same place as an access token:
+          Windows Credential Manager on Windows, the Keychain on macOS. Only the single session cookie is kept, not
+          everything your sign-in window collected. If your operating system's vault refuses it, the app falls back to a
+          file in its own settings folder that Windows encrypts for your account only. Either way it stays on your
+          computer, is never written as plain text and is never sent to the developer. Signing out deletes it and clears
+          the sign-in window.</li>
+        <li><strong>A password you asked the sign-in window to remember:</strong> kept in that window's own storage on
+          your computer, encrypted by Windows for your account only, in the same way Microsoft Edge keeps a saved
+          password. It is only there if you said yes when asked. Signing out of the app removes it, so a shared
+          computer does not leave it for the next person.</li>
         <li><strong>Downloaded files &amp; settings:</strong> stored only on your local disk, in the locations you
           choose
           (for files) and in your user profile (for app settings).</li>

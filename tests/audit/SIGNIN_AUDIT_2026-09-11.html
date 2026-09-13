@@ -1,0 +1,570 @@
+<title>Canvas Sign-In Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  :root {
+    --ink:        #0e1117;
+    --surface:    #171b24;
+    --surface-2:  #1e2430;
+    --line:       #2b3341;
+    --line-soft:  #222936;
+    --text:       #dfe5ee;
+    --text-dim:   #98a4b6;
+    --text-faint: #6d788a;
+    --accent:     #4da8da;
+    --accent-dim: rgba(77,168,218,0.12);
+    --crit:       #f0655a;
+    --major:      #f0a23c;
+    --minor:      #8fa3bd;
+    --good:       #57b894;
+    --bg:         var(--ink);
+    --card:       var(--surface);
+  }
+  :root[data-theme="light"] {
+    --ink:        #f7f8fa;
+    --surface:    #ffffff;
+    --surface-2:  #f0f2f6;
+    --line:       #d7dce5;
+    --line-soft:  #e5e9f0;
+    --text:       #1b2230;
+    --text-dim:   #4d596b;
+    --text-faint: #7d8899;
+    --accent:     #1f6f9e;
+    --accent-dim: rgba(31,111,158,0.10);
+    --crit:       #c0392b;
+    --major:      #a8690d;
+    --minor:      #5a6779;
+    --good:       #1f7a5c;
+    --bg:         var(--ink);
+    --card:       var(--surface);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ink:        #f7f8fa;
+      --surface:    #ffffff;
+      --surface-2:  #f0f2f6;
+      --line:       #d7dce5;
+      --line-soft:  #e5e9f0;
+      --text:       #1b2230;
+      --text-dim:   #4d596b;
+      --text-faint: #7d8899;
+      --accent:     #1f6f9e;
+      --accent-dim: rgba(31,111,158,0.10);
+      --crit:       #c0392b;
+      --major:      #a8690d;
+      --minor:      #5a6779;
+      --good:       #1f7a5c;
+      --bg:         var(--ink);
+      --card:       var(--surface);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 20px 96px;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  header.top {
+    display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end;
+    justify-content: space-between;
+    padding: 44px 0 20px; border-bottom: 2px solid var(--line);
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-faint); margin: 0 0 10px;
+  }
+  h1 {
+    font-family: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+    font-weight: 700; font-size: clamp(30px, 4.4vw, 44px); line-height: 1.06;
+    margin: 0; letter-spacing: -0.01em; text-wrap: balance;
+  }
+  .sub { color: var(--text-dim); margin: 12px 0 0; max-width: 60ch; }
+  .runmeta {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-faint);
+    display: grid; gap: 3px; text-align: right;
+  }
+  .runmeta b { color: var(--text-dim); font-weight: 500; }
+
+  h2 {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-faint); font-weight: 600;
+    margin: 56px 0 18px; padding-bottom: 9px; border-bottom: 1px solid var(--line-soft);
+  }
+
+  .verdict {
+    margin-top: 30px; padding: 22px 24px; border-radius: 3px;
+    border-left: 3px solid var(--crit); background: var(--surface);
+  }
+  .verdict p { margin: 0 0 10px; }
+  .verdict p:last-child { margin-bottom: 0; }
+  .verdict strong { color: var(--text); }
+
+  .tally { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 0; }
+  .tally div {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    padding: 7px 12px; border: 1px solid var(--line); border-radius: 2px;
+    color: var(--text-dim); background: var(--surface);
+  }
+  .tally b { color: var(--text); font-weight: 600; }
+
+  table.proof { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.proof th {
+    text-align: left; font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-faint); font-weight: 600;
+    padding: 0 14px 9px 0; border-bottom: 1px solid var(--line);
+  }
+  table.proof td {
+    padding: 11px 14px 11px 0; border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  table.proof td.m {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+    color: var(--text-dim); font-variant-numeric: tabular-nums;
+  }
+  .ok { color: var(--good); font-weight: 600; }
+
+  .finding {
+    display: grid; grid-template-columns: 92px 1fr; gap: 0 22px;
+    padding: 24px 0; border-bottom: 1px solid var(--line-soft);
+  }
+  .finding > .rail { display: flex; flex-direction: column; gap: 8px; }
+  .sev {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 0 3px 9px;
+    border-left: 3px solid var(--minor); color: var(--minor);
+  }
+  .sev.c { border-color: var(--crit);  color: var(--crit); }
+  .sev.j { border-color: var(--major); color: var(--major); }
+  .sev.n { border-color: var(--minor); color: var(--minor); }
+  .fid {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    color: var(--text-faint); padding-left: 12px;
+  }
+  .finding h3 {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 20px; font-weight: 600; line-height: 1.25;
+    margin: 0 0 8px; text-wrap: balance;
+  }
+  .finding p { margin: 0 0 10px; max-width: 72ch; }
+  .finding p:last-child { margin-bottom: 0; }
+  .where {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    color: var(--text-faint); margin: 0 0 10px;
+  }
+  pre {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; line-height: 1.55;
+    background: var(--surface-2); border: 1px solid var(--line-soft);
+    border-radius: 2px; padding: 12px 14px; margin: 0 0 12px;
+    overflow-x: auto; color: var(--text-dim);
+  }
+  pre b { color: var(--text); font-weight: 600; }
+  pre .hi { color: var(--crit); }
+  pre .gd { color: var(--good); }
+  code {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.9em;
+    background: var(--accent-dim); padding: 1px 5px; border-radius: 2px;
+    color: var(--text);
+  }
+  .fix {
+    border-left: 2px solid var(--accent); padding: 2px 0 2px 14px;
+    margin: 12px 0 0; color: var(--text-dim); max-width: 72ch;
+  }
+  .fix b { color: var(--accent); font-weight: 600;
+    font-family: "IBM Plex Sans Condensed", sans-serif; letter-spacing: 0.04em; }
+
+  .note { color: var(--text-dim); font-size: 14px; max-width: 72ch; }
+  ul.tight { margin: 0 0 10px; padding-left: 20px; max-width: 72ch; }
+  ul.tight li { margin-bottom: 6px; }
+  footer {
+    margin-top: 60px; padding-top: 22px; border-top: 1px solid var(--line);
+    color: var(--text-faint); font-size: 13px;
+  }
+  a { color: var(--accent); }
+  @media (max-width: 680px) {
+    .finding { grid-template-columns: 1fr; gap: 12px; }
+    .finding > .rail { flex-direction: row; align-items: center; gap: 12px; }
+    .runmeta { text-align: left; }
+  }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <p class="eyebrow">Audit · Sign in with Canvas</p>
+    <h1>Canvas Sign-In Audit</h1>
+    <p class="sub">Browser-session login, audited against the access-token path it has to
+    replace. Driven against real CBS Canvas, the real engine and the real app window.</p>
+  </div>
+  <div class="runmeta">
+    <div><b>date</b> 2026-09-11</div>
+    <div><b>tree</b> uncommitted, main</div>
+    <div><b>suite</b> 4,544 passed · 2 env-only fails</div>
+    <div><b>mutation</b> 31/32 (survivor documented)</div>
+  </div>
+</header>
+
+<div class="verdict">
+  <p><strong>The credential design is sound and the security boundary holds.</strong> The
+  cookie reaches the Canvas host and nothing else, downloads work, the app restores and
+  logs out correctly. All of that is now measured against real Canvas rather than mocks.</p>
+  <p><strong>One blocker: Panopto cannot work on a browser session as the code stands.</strong>
+  Canvas requires an access token to mint a sessionless launch, so every Panopto path 403s.
+  A working replacement route exists and was proven end to end during this audit.</p>
+  <p><strong>Second theme: friction.</strong> A first sign-in shows a spinner for ~15 s after
+  the login page is already loaded, and a second click throws the window away and starts the
+  wait again.</p>
+</div>
+
+<div class="tally">
+  <div><b>1</b> blocker</div>
+  <div><b>6</b> major</div>
+  <div><b>11</b> minor / housekeeping</div>
+  <div><b>9</b> properties verified against real Canvas</div>
+</div>
+
+<h2>What changed, and how each fix was proven</h2>
+<table class="proof">
+  <thead><tr><th style="width:34%">Fix</th><th>Proof</th></tr></thead>
+  <tbody>
+    <tr><td>Panopto uses the in-app LTI launch on a browser session (token mode untouched)</td>
+        <td class="m">real account: <code>lti_launch</code> → session + delivery id, DeliveryInfo 1115 s / 2 streams, <b>discovery 0 → 36 recordings in 15 s</b>; Panopto receives <b>no</b> Canvas cookie</td></tr>
+    <tr><td>Window appears when the page settles, not on a fixed clock</td>
+        <td class="m">real app, real CBS SSO: <b>17.0 s → 5.5 s</b> (page ready 3.2 s)</td></tr>
+    <tr><td>A second click brings the open window forward</td>
+        <td class="m">before: gone at 2.5 s, back at 17.6 s, form reloaded. after: window stays, page untouched</td></tr>
+    <tr><td>Only the session cookie is harvested</td>
+        <td class="m">3,260 → under the 2,560-byte Credential Manager limit; <code>canvas_session</code> alone verified against real Canvas</td></tr>
+    <tr><td>Expired browser session is renewed, not destroyed; reconnect copy matches the credential</td>
+        <td class="m">credential kept + hidden renewal armed (never awaited, so the script thread cannot block)</td></tr>
+    <tr><td>Wedged WebView2 reaped before the window is created</td>
+        <td class="m">wedge: reaped, next launch <b>3.3 s</b> (was 45 s then E_ABORT). live second instance: <b>0 killed</b>, all 6 processes kept</td></tr>
+    <tr><td>Census test for <code>.api_key</code> sites; vacuous cache test replaced</td>
+        <td class="m">the 7 previously unguarded sites now fail the suite; census has its own positive control</td></tr>
+    <tr><td>Verify throttle, <code>.token_fallback</code> gitignored, privacy page updated</td>
+        <td class="m">~1,200 API calls per sign-in → 1 per distinct session</td></tr>
+  </tbody>
+</table>
+<p class="note" style="margin-top:14px">Suite <b>4,564 passed</b> (2 pre-existing
+environment failures), architecture audit <b>0 violations</b>, mutation pass
+<b>42/43</b> — the survivor is the documented equivalent. The pass also found a
+gap it created: the settle rule masked the original "long clock" mutant, so a
+never-settling chain now has its own test. Still open: the exported-HTML verifier
+difference (Canvas-side), macOS verification, and the homepage wording, which is
+the owner's copy.</p>
+
+<h2>What was proven, and how</h2>
+<table class="proof">
+  <thead><tr><th>Property</th><th style="width:50%">Measurement</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td>Session cookie never leaves the Canvas host</td>
+        <td class="m">real file download, 4 hops: cbscanvas.instructure.com <b>cookies sent</b>; canvas-user-content.com, inst-fs-dub-prod.inscloudgate.net, cdn.inst-fs… <b>NONE</b></td>
+        <td class="ok">holds</td></tr>
+    <tr><td>Downloads work in browser mode</td>
+        <td class="m">real course 48672 through <code>download_course_async</code>: 11 files, 1.60 MB, 8.5 s, 0 error events</td>
+        <td class="ok">works</td></tr>
+    <tr><td>The app restores a stored session</td>
+        <td class="m">real app, real window: "Logged in as Birk", 14 favourites, 0 stException</td>
+        <td class="ok">works</td></tr>
+    <tr><td>Logout really logs out</td>
+        <td class="m">credential deleted; WebView2 profile emptied, still empty after relaunch — 3/3 trials quitting 0.2 s after logout</td>
+        <td class="ok">holds</td></tr>
+    <tr><td>Canvas does not prefix JSON for session auth</td>
+        <td class="m">5 live probes + <code>application_controller.rb</code>: no <code>while(1);</code> in the render path</td>
+        <td class="ok">non-issue</td></tr>
+    <tr><td>No credential in any log the app writes</td>
+        <td class="m">debug_log, health.log, session_state.json, downloads: 0 cookie values</td>
+        <td class="ok">clean</td></tr>
+    <tr><td>API works without the extra cookies</td>
+        <td class="m"><code>canvas_session</code> alone → 200 + name; <code>cf_clearance</code> not required; python-requests UA not challenged</td>
+        <td class="ok">confirmed</td></tr>
+    <tr><td>Mutation pass</td>
+        <td class="m">31/32 caught; survivor is the documented equivalent</td>
+        <td class="ok">as recorded</td></tr>
+    <tr><td>Full suite</td>
+        <td class="m">4,544 passed, 38 skipped; 2 failures are <code>shutil.which("bash")</code> resolving to the uninstalled WSL stub</td>
+        <td class="ok">green</td></tr>
+  </tbody>
+</table>
+
+<h2>Blocker</h2>
+
+<div class="finding">
+  <div class="rail"><div class="sev c">Blocker</div><div class="fid">F-01</div></div>
+  <div>
+    <h3>Panopto is dead on a browser session — Canvas requires a token to mint a launch</h3>
+    <p class="where">panopto/auth.py · panopto/discovery.py · panopto/runner.py · panopto/stream.py · sync/analysis.py</p>
+    <p>Every Panopto path in the app starts at <code>sessionless_launch</code>. Canvas refuses
+    that endpoint outright unless the request carries an access token — this is Canvas' own code,
+    not a permission quirk of one course:</p>
+<pre># canvas-lms app/controllers/lti/concerns/sessionless_launches.rb
+def generate_session_token
+  # only allow from API, and not from files domain
+  <span class="hi">raise UnauthorizedClient unless @access_token</span></pre>
+    <p>Measured on your account: all 36 Panopto items of course 43660, both URL forms the app
+    builds, every one <span class="hi">403 "user not authorised to perform that action"</span>,
+    while <code>users/self</code> and the Files API on the same session return 200. So a
+    browser-mode user gets no recordings, no transcripts and no subtitles — reported as
+    per-recording failures, not as an explanation.</p>
+    <div class="fix"><b>A working route exists, and it is proven.</b> Students watch these
+    lectures in a browser, so the <em>in-app</em> launch works. Starting the app's own LTI form
+    chain at the module-item page, with the Canvas credential on its domain-scoped jar:
+<pre>/courses/43660/modules/items/1087340
+  → /api/lti/authorize
+  → <span class="gd">cbs.cloud.panopto.eu/Panopto/Pages/Embed.aspx</span>
+  delivery id b58f9a14-…  ·  Panopto cookies .ASPXAUTH, csrfToken, sandboxCookie
+  DeliveryInfo <span class="gd">OK</span> — duration 1115 s, 2 streams
+  Canvas cookies leaked to Panopto: <span class="gd">none</span></pre>
+    The change is contained: build the in-app URL when the credential is a browser session and
+    attach the credential to the first hop. <code>discover_course_videos</code> already has the
+    module item id it needs.</div>
+  </div>
+</div>
+
+<h2>Major</h2>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">F-02</div></div>
+  <div>
+    <h3>Seven credential sites are pinned by no test at all</h3>
+    <p class="where">panopto/runner.py ×3 · panopto/stream.py · sync/analysis.py · core/canvas_logic.py ×2</p>
+    <p>The census test bans a hand-written <code>Bearer {…}</code> header. It does not notice a
+    site reverting to <code>cm.api_key</code>, which is <code>''</code> in browser mode — the
+    exact shape this repo keeps hitting. I wrote eight such mutants and ran them against every
+    related test file:</p>
+<pre>SURVIVED  panopto runner discovery reverts to cm.api_key
+SURVIVED  panopto runner auth bootstrap
+SURVIVED  panopto per-task credential
+SURVIVED  panopto duration probe
+SURVIVED  sync analysis Panopto discovery
+SURVIVED  per-worker module client from api_key
+SURVIVED  page-metadata client from api_key
+CAUGHT    download engine session built from a bearer      <span class="gd">← the only guarded one</span></pre>
+    <div class="fix"><b>Fix.</b> An AST census that fails on any new site passing
+    <code>.api_key</code> into a credential-consuming call (<code>lti_launch</code>,
+    <code>discover_course_videos</code>, <code>_CanvasREST</code>,
+    <code>_new_canvas_client</code>) — the same instrument the repo already uses for the
+    mkdir and delete-gate families.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">F-03</div></div>
+  <div>
+    <h3>First sign-in: 15 s of spinner over a login page that was ready in 3</h3>
+    <p class="where">core/browser_login.py — SILENT_TIMEOUT</p>
+    <p>Both modes start hidden on the same 15 s clock. Measured in the real app against real CBS:</p>
+<pre> 1.3 s  notice: "Checking your Canvas sign-in"
+ 3.3 s  hidden window is <b>already sitting on the CBS Entra login page</b>
+<span class="hi">17.0 s  window finally shown</span>   → 13.7 s of dead time</pre>
+    <p>The 15 s is a constant, so a faster laptop makes the gap <em>larger</em>, not smaller.
+    It is paid by exactly the people who must log in by hand — first run, and every re-login
+    after the SSO session lapses.</p>
+    <div class="fix"><b>Options.</b> Show the window as soon as the page has settled on a
+    non-Canvas host (the IdP), which is the moment a human is needed; or keep a fixed clock but
+    cut it to ~4 s for interactive attempts; or show immediately on click and accept a brief
+    flash when the silent path would have won.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">F-04</div></div>
+  <div>
+    <h3>Clicking "Sign in with Canvas" twice destroys the open window</h3>
+    <p class="where">ui/auth.py:begin_browser_signin → browser_login.reset()</p>
+    <p>The window is not modal and has no owner, so it can end up behind the main window. The
+    natural response is to click the button again. Measured:</p>
+<pre>0.2 s  window open, notice "Finish signing in to Canvas"
+2.5 s  <span class="hi">window destroyed</span>, notice back to "Checking your Canvas sign-in"
+17.6 s window returns — CBS login reloaded, anything typed is gone</pre>
+    <div class="fix"><b>Fix.</b> If a job for the same address is already <code>needs_user</code>,
+    re-show and focus that window instead of resetting. Cheap, and it removes a 15 s punishment
+    for a reasonable action.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">F-05</div></div>
+  <div>
+    <h3>When a browser session expires, the app tells the user to paste a token</h3>
+    <p class="where">ui/course_selector.py:2271,2273 · shared/components.py:226,228,1864 · ui/auth.py reauth header</p>
+    <p>All four <code>force_reauth</code> call sites hard-code token wording — "Please reconnect
+    with a new token" — and the reconnect screen adds "Generate a fresh access token (guide
+    below) and paste it here - that's the only thing that changed." At a school that has turned
+    token creation off, that instruction cannot be followed at all.</p>
+    <p>Worse, <code>force_reauth</code> <em>deletes</em> the stored browser credential, so the
+    silent renewal that would have fixed the session in a few seconds never runs.
+    <code>refresh_silently()</code> exists in <code>core/browser_login.py</code> and
+    <strong>has no callers</strong>.</p>
+    <div class="fix"><b>Fix.</b> Route a browser-mode expiry to a hidden renewal first, and only
+    fall back to the login screen — with sign-in-shaped copy — if that fails. This is the single
+    biggest lever on "I don't want to re-login too often".</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">F-06</div></div>
+  <div>
+    <h3>A stuck WebView2 from a previous launch can now stop the app starting</h3>
+    <p class="where">start.py — private_mode=False + storage_path</p>
+    <p>Before this feature every launch got its own temp profile, so a leftover WebView2 could
+    not affect the next start. Now both windows share one folder. Simulated the documented MSIX
+    shutdown hang (freeze the WebView2 processes, kill the host), then launched again — twice,
+    same result:</p>
+<pre>control (no wedge)   B loads in <span class="gd">5.4 s</span>
+wedged orphan        B waits 45 s → <span class="hi">WebView2 init fails, E_ABORT (0x80004004)</span>
+                     → the app's own window never loads</pre>
+    <p>An ordinary hard kill is <em>fine</em> — I measured 0 surviving WebView2 processes — so
+    this needs the specific wedge case. But the orphan reaper runs inside <code>_boot</code>,
+    racing the main window's WebView2 init, so it is not a reliable defence.</p>
+    <div class="fix"><b>Fix.</b> Reap before <code>webview.start()</code>, and treat "a live
+    msedgewebview2 holding <em>our</em> profile folder whose host process is gone" as proof of
+    ownership — the profile path is unique to this app.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">F-07</div></div>
+  <div>
+    <h3>The credential does not fit Windows Credential Manager — it always lands in a file</h3>
+    <p class="where">ui/auth.py:store_browser_credential → store_token → _save_fallback_token</p>
+    <p>Measured with your real session through the app's own writer:</p>
+<pre>payload 1,630 chars = <span class="hi">3,260 bytes</span>   (CredWrite limit 2,560)
+CredWrite → error 1783 "The stub received bad data"
+stored instead in <b>.token_fallback</b> (DPAPI)      load-back: <span class="gd">usable, verify OK</span>
+
+cookie sizes:  canvas_session 762 · cf_clearance 426 · _csrf_token 102 · log_session_id 32</pre>
+    <p>It works — <code>store_token</code>'s fallback-and-verify design absorbs it — but three
+    things are now untrue: <code>browser-login.md</code> says the login is stored "in the SAME OS
+    credential store as a token"; <code>privacy.html</code> and <code>index.html</code> tell users
+    their credential is in Credential Manager / Keychain; and on macOS there is <em>no</em>
+    fallback by design, so a Keychain refusal there means signing in again every launch.</p>
+    <div class="fix"><b>Fix.</b> Harvest only what authenticates: <code>canvas_session</code>
+    alone verified fine against real Canvas. Dropping the other three puts the payload near
+    1,800 bytes — inside the limit, in the OS store, and a smaller secret at rest. Otherwise keep
+    the fallback and correct the rule file and the website.</div>
+  </div>
+</div>
+
+<h2>Minor and housekeeping</h2>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Minor</div><div class="fid">F-08</div></div>
+  <div>
+    <h3>The sign-in poll hits the Canvas API up to ~1,200 times while the user types</h3>
+    <p class="where">core/browser_login.py:_worker</p>
+    <p>At any institution without SSO the window sits on the Canvas host, and Canvas hands an
+    anonymous visitor a session cookie — measured: <code>GET /login/canvas</code> returns
+    <code>Set-Cookie: canvas_session=…; httponly</code>. So <code>_harvest</code> succeeds and
+    <code>verify()</code> fires on every 0.5 s poll, for up to the 10-minute interactive window.</p>
+    <div class="fix"><b>Fix.</b> Skip <code>verify()</code> when the session cookie value is
+    unchanged since the last failed check. Canvas rotates it on login, so the successful attempt
+    still fires immediately.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Minor</div><div class="fid">F-09</div></div>
+  <div>
+    <h3>macOS parity: four real differences, none of them verified on a Mac</h3>
+    <p class="where">webview/platforms/cocoa.py (pywebview 6.1)</p>
+    <ul class="tight">
+      <li><code>storage_path</code> is <strong>ignored</strong> on macOS — the Cocoa backend
+      always uses <code>WKWebsiteDataStore.defaultDataStore()</code>. The
+      <code>webview/</code> folder <code>start.py</code> creates is empty there, and the
+      gitignore comment describing it as the profile is Windows-only.</li>
+      <li><code>get_cookies()</code> filters by <em>substring of the URL the window was opened
+      with</em> (<code>if domain not in self.url</code>), where Windows scopes to the current
+      URL. Same answer for Canvas; different mechanism, and a sibling host whose name is a
+      substring would be included.</li>
+      <li><code>clear_cookies()</code> is fire-and-forget (<code>AppHelper.callAfter</code>,
+      completion handler ignored) and removes <em>all</em> website data types. Windows' wipe is
+      synchronous and cookie-only. Logout-then-quit is verified on Windows, unverifiable here.</li>
+      <li><code>show()</code> calls <code>activateIgnoringOtherApps_</code> on macOS; Windows
+      calls <code>Activate()</code>, which under focus-stealing prevention may only flash the
+      taskbar — so the sign-in window can stay behind the app.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Minor</div><div class="fid">F-10</div></div>
+  <div>
+    <h3>No password autofill in the sign-in window, and it is one flag on Windows</h3>
+    <p class="where">WebView2 CoreWebView2Settings</p>
+    <p>Read off the live control: <code>IsPasswordAutosaveEnabled = false</code>,
+    <code>IsGeneralAutofillEnabled = true</code>. So the window never offers to save a password
+    and never fills one — every re-login is typed in full. On Windows this is settable; on macOS
+    WKWebView has no equivalent for a non-browser app, and passkeys need entitlements an
+    ad-hoc-signed bundle cannot carry. Also from the same read:
+    <code>AreDefaultContextMenusEnabled = false</code> (no right-click paste) and
+    <code>AreBrowserAcceleratorKeysEnabled = false</code> (no Back, no reload) — both tied to
+    pywebview's debug flag.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Minor</div><div class="fid">F-11</div></div>
+  <div>
+    <h3>Exported pages lose their file links in session mode</h3>
+    <p>Canvas adds <code>verifier=</code> to file URLs only for token requests
+    (<code>files_handler.rb:56</code>, <code>attachment.rb:110</code> — a session request is
+    <code>in_app</code>). Measured on real Canvas: <span class="hi">0 of 5</span> file URLs
+    carried a verifier. Downloads are unaffected (the cookie authenticates the first hop — proven
+    above), but images and links inside exported HTML/Markdown pages now need the reader to be
+    logged into Canvas in whatever browser opens them.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Minor</div><div class="fid">F-12</div></div>
+  <div>
+    <h3>Smaller items</h3>
+    <ul class="tight">
+      <li><b>.token_fallback is not gitignored</b> — and this feature makes it the primary store
+      on Windows. A dev run writes a credential blob into the repo root.</li>
+      <li><b>User-Agent capture is unreliable</b> — <code>evaluate_js</code> returned
+      <code>None</code> in 2 of 3 real runs (the bridge is re-injected per navigation). Harmless:
+      measured that Canvas accepts the python-requests UA and Cloudflare did not challenge.
+      Reading <code>CoreWebView2.Settings.UserAgent</code> would be deterministic.</li>
+      <li><b>Cookies for an IP-address Canvas are silently dropped</b> by
+      <code>aiohttp.CookieJar</code> (unsafe=False); <code>requests</code> drops them for a
+      dotless host like <code>localhost</code>. Only self-hosted-by-IP setups.</li>
+      <li><b>A two-session hot loop</b> is reachable in theory: with
+      <code>browser_login_pending</code> set and the job reset elsewhere, the poll fragment
+      reruns the app and <code>adopt_pending_browser_login</code> returns without clearing the
+      flag. Needs two live sessions; reasoned, not reproduced.</li>
+      <li><b>test_the_course_cache_really_accepts_a_browser_credential is vacuous</b> — it builds
+      a local dict and never touches <code>core.course_cache</code>, though its docstring claims
+      the opposite.</li>
+      <li><b>health_log's docstring is now false</b> — it says pywebview "hands it a fresh temp
+      folder every launch", which the persistent profile ends. The reaper still works.</li>
+      <li><b>A UTF-8 BOM in the settings file</b> silently discards every saved setting and the
+      saved login (<code>json.load</code> with <code>encoding='utf-8'</code>). Pre-existing;
+      <code>utf-8-sig</code> reads both. I hit this by accident writing a config from PowerShell.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <p>Evidence: real CBS Canvas (account 424242), real engine, real app window over WebView2's
+  debugging port. Offline probes used purpose-built local servers with positive controls — one
+  early result (cookies surviving logout) was an artifact of a fake IdP re-setting cookies on
+  <code>/favicon.ico</code> and is withdrawn.</p>
+  <p>The session cookies used for this audit are a complete login and appear in the session
+  transcript. Sign out of Canvas in that browser to invalidate them.</p>
+</footer>
+
+</div>

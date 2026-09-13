@@ -45,10 +45,12 @@ DOWNLOAD_BASELINE_MUTANTS = [
      "        if not local_md5:"),
     ("the hashing fallback is removed, so a row with no baseline never gets one",
      SYNC,
+     "                local_md5 = _prev[0]\n"
      "        if not local_md5:\n"
      "            full_path = self.local_path / local_path\n"
      "            if path_exists(full_path):\n"
      "                local_md5 = SyncManager.compute_local_md5(full_path) or \"\"",
+     "                local_md5 = _prev[0]\n"
      "        if False:\n"
      "            full_path = self.local_path / local_path\n"
      "            if path_exists(full_path):\n"

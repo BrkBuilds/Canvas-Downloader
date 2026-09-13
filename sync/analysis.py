@@ -19,6 +19,7 @@ import logging
 import time
 import traceback
 from pathlib import Path
+from core.canvas_auth import credential_of
 from shared.helpers import path_exists
 from urllib.parse import unquote_plus
 
@@ -468,7 +469,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
 
             if _pan_videos is None:
                 _pan_videos = discover_course_videos(
-                    cm.api_url, cm.api_key, course_id,
+                    cm.api_url, credential_of(cm), course_id,
                     include_folder_sessions=True,
                     is_cancelled=is_sync_cancelled,
                     on_event=_pan_scan,

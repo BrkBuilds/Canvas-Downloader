@@ -41,7 +41,14 @@ _JS = picker._BRIDGE_JS
 # the markup - and the stylesheet comes first, so a bare `.index()` measures
 # the CSS and reports nothing about where the element renders.
 _FORM_START = _AUTH_SRC.index('with st.form("auth_form"')
-_FORM = _AUTH_SRC[_FORM_START:_AUTH_SRC.index("st.form_submit_button(", _FORM_START)]
+# The form ends at its TERMINAL action, matched by key rather than by "the first
+# form_submit_button". The form now holds two of them - "Sign in with Canvas"
+# starts a route and "Log In" finishes one, and a plain st.button inside a form
+# cannot rerun, so both have to be submit buttons. Slicing at the first one cut
+# the body off above the token field and made every test below measure an empty
+# form.
+_FORM_END = _AUTH_SRC.index('key="login_submit_btn"', _FORM_START)
+_FORM = _AUTH_SRC[_FORM_START:_FORM_END]
 
 
 def _fn(name: str) -> str:
@@ -271,7 +278,8 @@ def test_the_link_renders_inside_the_login_form():
     where anyone looks for it - and the whole reason it is an anchor is that it
     is inside."""
     form = _AUTH_SRC.index('with st.form("auth_form"')
-    submit = _AUTH_SRC.index("st.form_submit_button(", form)
+    # The TERMINAL submit, not the first one - see _FORM_END above.
+    submit = _AUTH_SRC.index('key="login_submit_btn"', form)
     call = _AUTH_SRC.index("institution_picker.token_link_html(")
     assert form < call < submit
 

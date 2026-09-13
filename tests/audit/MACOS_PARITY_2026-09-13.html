@@ -1,0 +1,296 @@
+<title>macOS Parity: the new sign-in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  /* The house values from SIGNIN_AUDIT_2026-09-11.html: this is the fourth
+     document in the audit register and they should read as one set. */
+  :root {
+    --ink:        #f7f8fa;
+    --surface:    #ffffff;
+    --surface-2:  #f0f2f6;
+    --line:       #d7dce5;
+    --line-soft:  #e5e9f0;
+    --text:       #1b2230;
+    --text-dim:   #4d596b;
+    --text-faint: #7d8899;
+    --accent:     #1f6f9e;
+    --accent-dim: rgba(31,111,158,0.10);
+    --crit:       #c0392b;
+    --major:      #a8690d;
+    --good:       #1f7a5c;
+    --bg:         var(--ink);
+    --card:       var(--surface);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:        #0e1117;
+      --surface:    #171b24;
+      --surface-2:  #1e2430;
+      --line:       #2b3341;
+      --line-soft:  #222936;
+      --text:       #dfe5ee;
+      --text-dim:   #98a4b6;
+      --text-faint: #6d788a;
+      --accent:     #4da8da;
+      --accent-dim: rgba(77,168,218,0.12);
+      --crit:       #f0655a;
+      --major:      #f0a23c;
+      --good:       #57b894;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink:        #0e1117;
+    --surface:    #171b24;
+    --surface-2:  #1e2430;
+    --line:       #2b3341;
+    --line-soft:  #222936;
+    --text:       #dfe5ee;
+    --text-dim:   #98a4b6;
+    --text-faint: #6d788a;
+    --accent:     #4da8da;
+    --accent-dim: rgba(77,168,218,0.12);
+    --crit:       #f0655a;
+    --major:      #f0a23c;
+    --good:       #57b894;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 400 16px/1.62 "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    padding: 40px 24px 90px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  header { margin: 0 0 34px; }
+  h1 {
+    font-family: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+    font-weight: 700; font-size: 34px; line-height: 1.14;
+    margin: 0 0 10px; letter-spacing: -0.015em; text-wrap: balance;
+  }
+  .sub { color: var(--text-dim); font-size: 16.5px; margin: 0; max-width: 62ch; }
+  .stamp {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    color: var(--text-faint); letter-spacing: .04em; text-transform: uppercase;
+    margin: 0 0 14px;
+  }
+
+  h2 {
+    font-family: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+    font-weight: 600; font-size: 21px; margin: 40px 0 12px;
+    letter-spacing: -0.008em;
+  }
+  h3 { font-size: 16.5px; font-weight: 600; margin: 24px 0 6px; }
+  p { margin: 0 0 13px; max-width: 70ch; }
+  ul { margin: 0 0 13px; padding-left: 20px; max-width: 70ch; }
+  li { margin: 0 0 7px; }
+  code, .mono {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.88em;
+    background: var(--surface-2); padding: 1px 5px; border-radius: 4px;
+  }
+  strong { font-weight: 600; }
+
+  .banner {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 3px solid var(--major);
+    border-radius: 8px; padding: 15px 18px; margin: 0 0 30px;
+  }
+  .banner p { margin: 0; }
+
+  .verdict { display: grid; gap: 12px; margin: 0 0 8px; }
+  .route {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 9px; padding: 15px 18px;
+    display: grid; grid-template-columns: auto 1fr; gap: 4px 14px;
+    align-items: baseline;
+  }
+  .route .tag {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .ok   { background: rgba(31,122,92,.13);  color: var(--good); }
+  .warn { background: rgba(168,105,13,.13); color: var(--major); }
+  .route h3 { margin: 0; font-size: 16.5px; }
+  .route .body { grid-column: 2; color: var(--text-dim); font-size: 15px; }
+  .route .body p:last-child { margin: 0; }
+
+  .tablewrap { overflow-x: auto; margin: 0 0 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.6px; }
+  th, td {
+    text-align: left; vertical-align: top; padding: 10px 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  th {
+    font-family: "IBM Plex Sans Condensed", sans-serif; font-weight: 600;
+    font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--text-faint); border-bottom: 1px solid var(--line);
+  }
+  td:first-child { font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+  tr:last-child td { border-bottom: 0; }
+
+  ol.steps { counter-reset: s; list-style: none; padding-left: 0; }
+  ol.steps li {
+    counter-increment: s; position: relative; padding-left: 34px;
+    margin-bottom: 11px;
+  }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 1px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent-dim); color: var(--accent);
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600;
+    display: grid; place-items: center;
+  }
+
+  footer {
+    margin: 46px 0 0; padding-top: 18px; border-top: 1px solid var(--line);
+    color: var(--text-faint); font-size: 13.5px;
+  }
+</style>
+
+<div class="wrap">
+<header>
+  <p class="stamp">Audit register &middot; 13 September 2026</p>
+  <h1>macOS parity: the new sign-in</h1>
+  <p class="sub">Where the three ways into Canvas actually stand on macOS,
+  after the first sprint of the browser-based login.</p>
+</header>
+
+<div class="banner">
+  <p><strong>Nothing here has been run on a Mac.</strong> Every statement below
+  is read out of pywebview 6.1's own source and this codebase's platform
+  guards. That is enough to say what is missing and what to measure first; it
+  is not a substitute for a machine.</p>
+</div>
+
+<h2>The verdict, one line per route</h2>
+
+<div class="verdict">
+  <div class="route">
+    <span class="tag ok">At parity</span>
+    <h3>Access token</h3>
+    <div class="body"><p>Untouched by this work.</p></div>
+  </div>
+
+  <div class="route">
+    <span class="tag ok">At parity</span>
+    <h3>Use the Canvas tab in my browser (the Chrome extension)</h3>
+    <div class="body">
+      <p><code>core/handoff.py</code> contains <strong>no platform branch at
+      all</strong> - standard-library HTTP on loopback, <code>json</code>,
+      <code>threading</code>. The extension is Chrome, which is the same
+      product on macOS. Opening the student's Canvas goes through
+      <code>webbrowser.open</code>. <code>dev.py</code> and
+      <code>check_handoff.py</code> are equally platform-free.</p>
+      <p>This is the route with nothing left to port. If macOS parity has to
+      be bought cheaply, lead with it.</p>
+    </div>
+  </div>
+
+  <div class="route">
+    <span class="tag warn">Behind</span>
+    <h3>Sign in with Canvas (the app's own window)</h3>
+    <div class="body">
+      <p>Three features are Windows-only. None of them fails on macOS; they
+      are silent no-ops, so a Mac simply gets less.</p>
+    </div>
+  </div>
+</div>
+
+<h2>What the app's own sign-in window is missing</h2>
+
+<p>All three are guarded with <code>if sys.platform != 'win32': return</code>.</p>
+
+<div class="tablewrap">
+<table>
+  <thead>
+    <tr><th>Function</th><th>Windows</th><th>macOS</th><th>What the student feels</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>enable_password_manager</td>
+      <td>WebView2's <code>IsPasswordAutosaveEnabled</code> switched on, so the
+          institution password can be saved and filled.</td>
+      <td><strong>Nothing.</strong> WKWebView has no equivalent for a
+          non-browser app.</td>
+      <td>Types a full institutional password on <strong>every</strong>
+          sign-in.</td>
+    </tr>
+    <tr>
+      <td>persist_session_cookies</td>
+      <td>The app's own "stay signed in", re-dating session cookies in place.</td>
+      <td><strong>Nothing.</strong></td>
+      <td>At an institution whose identity provider offers no "stay signed in",
+          re-authenticates every launch.</td>
+    </tr>
+    <tr>
+      <td>_clear_profile_identity_data</td>
+      <td><code>ClearBrowsingDataAsync</code>, the only API that reaches saved
+          passwords and autofill.</td>
+      <td><strong>Returns False.</strong> <code>clear_cookies()</code> still
+          runs and is in fact broader (all website data types), but the
+          saved-password half is unreached.</td>
+      <td>Logout may leave saved identity data behind.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Four structural differences, already read out of pywebview</h2>
+
+<ul>
+  <li><strong><code>storage_path</code> is ignored on macOS.</strong>
+      <code>cocoa.py</code> always uses
+      <code>WKWebsiteDataStore.defaultDataStore()</code>; only
+      <code>private_mode</code> matters. So the <code>webview/</code> folder is
+      empty there and the real profile lives in
+      <code>~/Library/WebKit/&lt;bundle id&gt;</code>. The "Web view profile"
+      line <code>dev.py</code> prints is a Windows truth.</li>
+
+  <li><strong><code>get_cookies()</code> scopes differently.</strong> macOS
+      filters by substring of the URL the window was <em>opened</em> with;
+      Windows scopes to the <em>current</em> URL. Same answer for Canvas, but a
+      sibling host whose domain is a substring of the login URL would be
+      included on macOS only.</li>
+
+  <li><strong><code>clear_cookies()</code> is fire-and-forget on macOS</strong>
+      (<code>AppHelper.callAfter</code>, completion handler ignored) against a
+      synchronous <code>Invoke</code> on Windows. So "log out and quit
+      immediately" is verified on Windows and cannot be verified from here.</li>
+
+  <li><strong>Google SSO is the open risk.</strong> Google's embedded-webview
+      policy names <code>WKWebView</code> explicitly and does <em>not</em> name
+      WebView2 - which is exactly why Windows measured working with no change
+      at all. A Google-SSO institution may therefore be blocked on macOS while
+      working on Windows.</li>
+</ul>
+
+<p><strong>Do not "fix" a macOS block by spoofing the user agent.</strong>
+pywebview's <code>user_agent</code> is a <code>webview.start()</code>
+parameter, so it is process-global and would apply to the main window too - and
+it would be deliberate circumvention of a provider's security control. Detect
+and report instead.</p>
+
+<h2>The order to work in, when a Mac is available</h2>
+
+<ol class="steps">
+  <li><strong>Drive the extension route end to end.</strong> Expected to pass,
+      and it is the cheap win. If it does, macOS has a complete zero-typing
+      sign-in on day one.</li>
+  <li><strong>Drive the app's own window against a SAML or CAS institution,
+      then a Google one.</strong> The second is the one that might be blocked,
+      and it must be measured rather than assumed in either direction.</li>
+  <li><strong>Then decide</strong> whether the window's three missing pieces
+      are worth building WKWebView equivalents for, or whether macOS should
+      lead with the extension and the token. That is a product call, and it
+      should be made with the measurements in hand rather than before them.</li>
+</ol>
+
+<footer>
+  The same assessment, in the form future sessions read, is in
+  <code>.claude/rules/browser-login.md</code> under "macOS PARITY, as of the
+  first sprint". Keep the two in step or delete one.
+</footer>
+</div>

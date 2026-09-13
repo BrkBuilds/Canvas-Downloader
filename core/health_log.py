@@ -85,6 +85,127 @@ _WV_VERSION_RE = re.compile(r"[\\/]Application[\\/]([0-9][0-9.]+)[\\/]", re.IGNO
 _UDD_RE = re.compile(r'--user-data-dir(?:=|\s+)("[^"]+"|\S+)', re.IGNORECASE)
 
 
+# ── The web view profile: a leftover holding it blocks the NEXT launch ───────
+
+def reap_webview_orphans(profile_dir: str) -> tuple[int, list]:
+    """Kill WebView2 processes still holding OUR profile whose app is gone.
+
+    Returns ``(count, pids)``.  Windows-only in effect: macOS runs WKWebView
+    in-process, so there is nothing of this shape to leave behind.
+
+    **Why this exists.**  Until the browser-login work every launch got its own
+    throwaway user-data folder, so a WebView2 left wedged by a previous run
+    could not touch the next one.  The persistent profile ends that: both
+    windows now share one folder, and a browser process still holding it makes
+    the new environment fail.  Measured twice by simulating the documented MSIX
+    shutdown hang (suspend the WebView2 processes, then kill the host)::
+
+        control (no wedge)  the next launch loads in   5.4s
+        wedged orphan       45s, then CoreWebView2 init FAILS
+                            HRESULT 0x80004004 E_ABORT - the window never loads
+
+    An ordinary hard kill is NOT this case - measured 0 survivors, because the
+    browser process watches the host's handle - so this is the wedge only.
+
+    **Liveness is the whole guard, exactly as in ``_reap_recorded_orphans``.**
+    A second instance of this app is allowed to exist (the single-instance guard
+    fails open in three documented ways) and would legitimately share this
+    profile, so killing by profile path alone could take down a running window
+    or a sync in flight.  The proof used is the one that cannot be faked: a
+    WebView2 browser process is spawned BY the app, so if its parent is gone -
+    psutil resolves the parent by pid AND creation time, so a recycled pid is
+    not mistaken for it - the app that owned it is gone too.  A live instance's
+    processes still have a live parent and are left alone.
+
+    Never raises: this runs before the window exists, and a diagnostic must not
+    be the reason the app fails to start.
+    """
+    killed: list = []
+    target = os.path.normcase(os.path.abspath(profile_dir or ""))
+    if not target or sys.platform != "win32":
+        return 0, killed
+    try:
+        import psutil
+    except Exception:
+        return 0, killed
+
+    def _ours(proc) -> bool:
+        """Is this WebView2 running against OUR profile folder?
+
+        WebView2 does not use the folder it is handed verbatim - it creates
+        ``<profile>\\EBWebView`` and passes THAT as ``--user-data-dir`` (measured;
+        an equality test against the folder we passed matches nothing, which is
+        exactly how the first version of this function reaped zero).
+        """
+        try:
+            m = _UDD_RE.search(" ".join(proc.cmdline() or []))
+        except Exception:
+            return False
+        if not m:
+            return False
+        udd = os.path.normcase(os.path.abspath(m.group(1).strip('"')))
+        return udd == target or udd.startswith(target + os.sep)
+
+    try:
+        matches = []
+        for proc in psutil.process_iter(["name", "pid"]):
+            try:
+                if (proc.info.get("name") or "").lower() == "msedgewebview2.exe" \
+                        and _ours(proc):
+                    matches.append(proc)
+            except Exception:
+                continue
+        seen: set = set()
+        for proc in matches:
+            try:
+                if proc.pid in seen:
+                    continue        # already taken as somebody's child below
+                parent = proc.parent()
+                # Only the BROWSER process is judged: its parent is the app that
+                # launched it, while the renderer/gpu children hang off the
+                # browser process itself. Killing the browser takes the tree.
+                if parent is not None and (parent.name() or "").lower() == "msedgewebview2.exe":
+                    continue
+                # parent() answers None once the owner is gone - and psutil
+                # resolves it by pid AND creation time, so a recycled pid cannot
+                # impersonate a live owner. A live owner means a second instance
+                # of this app is running and these are ITS processes.
+                if parent is not None and parent.is_running():
+                    continue
+                for child in proc.children(recursive=True):
+                    try:
+                        child.kill()
+                        killed.append(child.pid)
+                        seen.add(child.pid)
+                    except Exception:
+                        continue
+                proc.kill()
+                killed.append(proc.pid)
+                seen.add(proc.pid)
+            except Exception:
+                continue                        # gone, or not ours to judge
+        if killed:
+            _psutil_wait(killed)
+    except Exception:
+        pass
+    return len(killed), killed
+
+
+def _psutil_wait(pids: list) -> None:
+    """Give the kills a moment to land, so WebView2 finds the profile free."""
+    try:
+        import psutil
+        procs = []
+        for pid in pids:
+            try:
+                procs.append(psutil.Process(pid))
+            except Exception:
+                continue
+        psutil.wait_procs(procs, timeout=3)
+    except Exception:
+        pass
+
+
 # ── Where the files live ─────────────────────────────────────────────────────
 
 def _diag_dir() -> str:
@@ -243,11 +364,16 @@ def _scan_children() -> tuple[float, float, list[dict], str]:
     what makes the sweep in ``_reap_recorded_orphans`` safe on both platforms: a
     pid alone is not an identity, and a recycled pid pointing at an innocent
     process is the one outcome that would be worse than the leak being cleaned
-    up.  For WebView2 the per-launch ``--user-data-dir`` is captured as a second,
-    independent proof - pywebview hands it a fresh temp folder every launch
-    (``winforms.init_storage`` -> ``tempfile.TemporaryDirectory().name``), and
-    several unrelated WebView2 hosts (Teams, WhatsApp, Widgets, Phone Link) are
-    normally running on the same machine.
+    up.  For WebView2 the ``--user-data-dir`` is captured as a second,
+    independent proof, because several unrelated WebView2 hosts (Teams,
+    WhatsApp, Widgets, Phone Link) are normally running on the same machine.
+
+    That folder is no longer unique per launch: since browser login the app
+    keeps ONE persistent profile (``core.browser_login.webview_profile_dir``),
+    so the udd now proves "ours", not "this run's".  The pid + creation-time
+    pair is what separates runs, and it always was.  A leftover holding that
+    shared profile is a different problem with its own reaper - see
+    ``reap_webview_orphans``, which runs before the window is created.
     """
     self_mb = tree_mb = 0.0
     children: list[dict] = []
@@ -283,20 +409,33 @@ def _scan_children() -> tuple[float, float, list[dict], str]:
 
 # ── Sampler ──────────────────────────────────────────────────────────────────
 
+def _sample_once() -> None:
+    """Take one reading into ``_state`` and persist it. Never raises."""
+    try:
+        self_mb, tree_mb, children, runtime = _scan_children()
+        with _lock:
+            _state["peak_self_mb"] = max(_state["peak_self_mb"], self_mb)
+            _state["peak_tree_mb"] = max(_state["peak_tree_mb"], tree_mb)
+            if children:
+                _state["children"] = children
+            if runtime:
+                _state["webview_runtime"] = runtime
+        _save_state()
+    except Exception:                                          # noqa: BLE001
+        pass
+
+
 def _sampler_loop(stop: threading.Event) -> None:
+    # SAMPLE BEFORE WAITING. `wait()` first meant the first reading was five
+    # seconds late, and `note_phase` persists the state on every phase change -
+    # so a session_state.json written inside that window reported
+    # `peak_self_mb: 0.0`, `peak_tree_mb: 0.0`, `uptime_s: 0`. Those read as
+    # MEASUREMENTS and were placeholders, which is the "a sentinel is not a
+    # measurement" trap this repo already records for the disk-space cells.
+    # Observed on a real run, 2026-09-13.
+    _sample_once()
     while not stop.wait(_SAMPLE_SECONDS):
-        try:
-            self_mb, tree_mb, children, runtime = _scan_children()
-            with _lock:
-                _state["peak_self_mb"] = max(_state["peak_self_mb"], self_mb)
-                _state["peak_tree_mb"] = max(_state["peak_tree_mb"], tree_mb)
-                if children:
-                    _state["children"] = children
-                if runtime:
-                    _state["webview_runtime"] = runtime
-            _save_state()
-        except Exception:
-            continue
+        _sample_once()
 
 
 def _save_state() -> None:
@@ -315,7 +454,22 @@ def _save_state() -> None:
     if _closed.is_set():
         return
     try:
+        # THE CHECK AND THE WRITE MUST BE ONE OPERATION. Testing `_closed` and
+        # then writing is check-then-act: a sampler that passed the test above
+        # can still be inside `os.replace` when `session_end` latches, and it
+        # then lands `clean_exit: False` ON TOP of the clean marker - a tidy
+        # shutdown reported as a crash on the next launch, which is the one
+        # signal this module exists for.
+        #
+        # It was always reachable and never reached, because the sampler waited
+        # five seconds before its first tick. Taking that first reading
+        # immediately (so a state file written early stops reporting zeros it
+        # never measured) made the window ordinary, and
+        # `test_a_late_sampler_tick_cannot_undo_the_clean_marker` failed within
+        # one run. `session_end` latches under this same lock.
         with _lock:
+            if _closed.is_set():
+                return
             snap = {
                 "pid": os.getpid(),
                 "clean_exit": False,
@@ -328,10 +482,10 @@ def _save_state() -> None:
                 "uptime_s": round(time.monotonic() - _state["started_monotonic"]),
                 "env": environment(),
             }
-        tmp = _state_path() + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as fh:
-            json.dump(snap, fh)
-        os.replace(tmp, _state_path())     # atomic: never a half-written state
+            tmp = _state_path() + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump(snap, fh)
+            os.replace(tmp, _state_path())  # atomic: never a half-written state
     except Exception:
         pass
 
@@ -565,12 +719,15 @@ def session_end(reason: str = "clean") -> None:
             tree_peak = _state["peak_tree_mb"]
             runtime = _state["webview_runtime"]
             uptime = round(time.monotonic() - _state["started_monotonic"])
+            # Latched UNDER THE LOCK `_save_state` writes under, so a sampler
+            # cannot be between its own check and its `os.replace` when this
+            # happens. Latching outside the lock leaves exactly that gap, and
+            # the gap is what puts a stale `clean_exit: False` on top of the
+            # marker written below - a clean shutdown read as a crash next
+            # launch.
+            _closed.set()
         if stop is not None:
             stop.set()
-        # Latch BEFORE the final write: a sampler already past its wait() and
-        # inside _scan_children() must not be able to land a stale, unclean
-        # snapshot on top of the marker written below.
-        _closed.set()
         # One last sample: a short session may never have ticked.
         self_mb, tree_mb, _children, rt = _scan_children()
         self_peak = max(self_peak, self_mb)

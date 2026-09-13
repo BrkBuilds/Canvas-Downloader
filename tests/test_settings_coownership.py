@@ -26,6 +26,7 @@ the property keeps passing.
 from __future__ import annotations
 
 import ast
+import codecs
 import json
 import os
 import shutil
@@ -107,6 +108,10 @@ def _write_full(path):
     path.write_text(json.dumps(FULL, indent=2), encoding="utf-8")
 
 
+#: The UTF-8 byte order mark, spelled once.
+BOM = codecs.BOM_UTF8
+
+
 def _damage_utf8(path):
     """A file re-saved by an editor in a local ANSI codepage.
 
@@ -164,6 +169,50 @@ def test_damaged_content_is_preserved_on_disk_not_silently_overwritten(cfg, dama
             f"accepted notice and settings are gone with nothing to recover from")
         assert quarantined[0].read_bytes() == original, (
             f"{name}: the quarantined copy is not the bytes that were there")
+
+
+def test_a_utf8_BOM_is_not_damage_and_nothing_is_quarantined(cfg):
+    """A BOM is a legal encoding of the SAME document, and this file is one a
+    human can easily end up re-saving: Notepad writes a BOM by default, and so
+    does a PowerShell ``>`` redirect.
+
+    Read as ``utf-8`` the BOM survives decoding as a leading ``﻿`` and
+    ``json.load`` raises ``JSONDecodeError`` - indistinguishable, to the
+    handler, from a truncated file. So an intact settings file was moved aside
+    as corrupt and replaced, taking the saved Canvas address, the accepted
+    Panopto notice, the download defaults and ``auth_method`` with it - and
+    ``auth_method`` is the marker that decides whether a saved browser sign-in
+    is restored at all, so the user was also silently signed out. Corruption
+    must be PROVEN; a BOM proves nothing.
+    """
+    for name, fn in _writers():
+        for f in cfg.parent.iterdir():
+            f.unlink() if f.is_file() else shutil.rmtree(f)
+        cfg.write_bytes(BOM + json.dumps(FULL, indent=2).encode("utf-8"))
+
+        _assert_isolated(cfg)
+        assert fn() is True, f"{name} refused a file whose only sin is a BOM"
+
+        assert not [p for p in cfg.parent.iterdir() if "corrupt" in p.name], (
+            f"{name} quarantined an intact settings file because of its BOM")
+        after = json.loads(cfg.read_text(encoding="utf-8-sig"))
+        missing = [k for k in FULL if k not in after]
+        assert not missing, (
+            f"{name} lost another owner's keys to a BOM: {missing}")
+
+
+def test_writes_never_EMIT_a_bom(cfg):
+    """`utf-8-sig` on the READ is the fix; on a write it would ADD a BOM.
+
+    Every other reader of these files - the sync engine, a user's own editor,
+    a support diff - is entitled to a plain UTF-8 file, and a store that starts
+    emitting a BOM would hand the next reader the very byte this fixed.
+    """
+    for name, fn in _writers():
+        _write_full(cfg)
+        assert fn() is True, name
+        assert not cfg.read_bytes().startswith(BOM), (
+            f"{name} wrote a UTF-8 BOM into the settings file")
 
 
 def test_quarantine_never_overwrites_an_earlier_one(cfg):

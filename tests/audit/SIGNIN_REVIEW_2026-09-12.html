@@ -1,0 +1,589 @@
+<meta charset="utf-8">
+<title>Sign-In Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  :root {
+    --ink:        #0e1117;
+    --surface:    #171b24;
+    --surface-2:  #1e2430;
+    --line:       #2b3341;
+    --line-soft:  #222936;
+    --text:       #dfe5ee;
+    --text-dim:   #98a4b6;
+    --text-faint: #6d788a;
+    --accent:     #4da8da;
+    --accent-dim: rgba(77,168,218,0.12);
+    --crit:       #f0655a;
+    --major:      #f0a23c;
+    --minor:      #8fa3bd;
+    --good:       #57b894;
+    --bg:         var(--ink);
+    --card:       var(--surface);
+  }
+  :root[data-theme="light"] {
+    --ink:        #f7f8fa;
+    --surface:    #ffffff;
+    --surface-2:  #f0f2f6;
+    --line:       #d7dce5;
+    --line-soft:  #e5e9f0;
+    --text:       #1b2230;
+    --text-dim:   #4d596b;
+    --text-faint: #7d8899;
+    --accent:     #1f6f9e;
+    --accent-dim: rgba(31,111,158,0.10);
+    --crit:       #c0392b;
+    --major:      #a8690d;
+    --minor:      #5a6779;
+    --good:       #1f7a5c;
+    --bg:         var(--ink);
+    --card:       var(--surface);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ink:        #f7f8fa;
+      --surface:    #ffffff;
+      --surface-2:  #f0f2f6;
+      --line:       #d7dce5;
+      --line-soft:  #e5e9f0;
+      --text:       #1b2230;
+      --text-dim:   #4d596b;
+      --text-faint: #7d8899;
+      --accent:     #1f6f9e;
+      --accent-dim: rgba(31,111,158,0.10);
+      --crit:       #c0392b;
+      --major:      #a8690d;
+      --minor:      #5a6779;
+      --good:       #1f7a5c;
+      --bg:         var(--ink);
+      --card:       var(--surface);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 20px 96px;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  header.top {
+    display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end;
+    justify-content: space-between;
+    padding: 44px 0 20px; border-bottom: 2px solid var(--line);
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-faint); margin: 0 0 10px;
+  }
+  h1 {
+    font-family: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+    font-weight: 700; font-size: clamp(30px, 4.4vw, 44px); line-height: 1.06;
+    margin: 0; letter-spacing: -0.01em; text-wrap: balance;
+  }
+  .sub { color: var(--text-dim); margin: 12px 0 0; max-width: 60ch; }
+  .runmeta {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-faint);
+    display: grid; gap: 3px; text-align: right;
+  }
+  .runmeta b { color: var(--text-dim); font-weight: 500; }
+
+  h2 {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-faint); font-weight: 600;
+    margin: 56px 0 18px; padding-bottom: 9px; border-bottom: 1px solid var(--line-soft);
+  }
+
+  .verdict {
+    margin-top: 30px; padding: 22px 24px; border-radius: 3px;
+    border-left: 3px solid var(--crit); background: var(--surface);
+  }
+  .verdict p { margin: 0 0 10px; }
+  .verdict p:last-child { margin-bottom: 0; }
+  .verdict strong { color: var(--text); }
+
+  .tally { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 0; }
+  .tally div {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    padding: 7px 12px; border: 1px solid var(--line); border-radius: 2px;
+    color: var(--text-dim); background: var(--surface);
+  }
+  .tally b { color: var(--text); font-weight: 600; }
+
+  table.proof { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.proof th {
+    text-align: left; font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-faint); font-weight: 600;
+    padding: 0 14px 9px 0; border-bottom: 1px solid var(--line);
+  }
+  table.proof td {
+    padding: 11px 14px 11px 0; border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  table.proof td.m {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+    color: var(--text-dim); font-variant-numeric: tabular-nums;
+  }
+  .ok { color: var(--good); font-weight: 600; }
+
+  .finding {
+    display: grid; grid-template-columns: 92px 1fr; gap: 0 22px;
+    padding: 24px 0; border-bottom: 1px solid var(--line-soft);
+  }
+  .finding > .rail { display: flex; flex-direction: column; gap: 8px; }
+  .sev {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 0 3px 9px;
+    border-left: 3px solid var(--minor); color: var(--minor);
+  }
+  .sev.c { border-color: var(--crit);  color: var(--crit); }
+  .sev.j { border-color: var(--major); color: var(--major); }
+  .sev.n { border-color: var(--minor); color: var(--minor); }
+  .fid {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    color: var(--text-faint); padding-left: 12px;
+  }
+  .finding h3 {
+    font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 20px; font-weight: 600; line-height: 1.25;
+    margin: 0 0 8px; text-wrap: balance;
+  }
+  .finding p { margin: 0 0 10px; max-width: 72ch; }
+  .finding p:last-child { margin-bottom: 0; }
+  .where {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    color: var(--text-faint); margin: 0 0 10px;
+  }
+  pre {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; line-height: 1.55;
+    background: var(--surface-2); border: 1px solid var(--line-soft);
+    border-radius: 2px; padding: 12px 14px; margin: 0 0 12px;
+    overflow-x: auto; color: var(--text-dim);
+  }
+  pre b { color: var(--text); font-weight: 600; }
+  pre .hi { color: var(--crit); }
+  pre .gd { color: var(--good); }
+  code {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.9em;
+    background: var(--accent-dim); padding: 1px 5px; border-radius: 2px;
+    color: var(--text);
+  }
+  .fix {
+    border-left: 2px solid var(--accent); padding: 2px 0 2px 14px;
+    margin: 12px 0 0; color: var(--text-dim); max-width: 72ch;
+  }
+  .fix b { color: var(--accent); font-weight: 600;
+    font-family: "IBM Plex Sans Condensed", sans-serif; letter-spacing: 0.04em; }
+
+  .note { color: var(--text-dim); font-size: 14px; max-width: 72ch; }
+  ul.tight { margin: 0 0 10px; padding-left: 20px; max-width: 72ch; }
+  ul.tight li { margin-bottom: 6px; }
+  footer {
+    margin-top: 60px; padding-top: 22px; border-top: 1px solid var(--line);
+    color: var(--text-faint); font-size: 13px;
+  }
+  a { color: var(--accent); }
+  @media (max-width: 680px) {
+    .finding { grid-template-columns: 1fr; gap: 12px; }
+    .finding > .rail { flex-direction: row; align-items: center; gap: 12px; }
+    .runmeta { text-align: left; }
+  }
+</style>
+
+<style>
+  /* This report's own additions. `hi`/`gd` are scoped to `pre` upstream; these
+     make them usable in running text, and `tag` replaces `.sev` in the parity
+     table, where a left-bordered uppercase rail reads as a heading. */
+  p .hi, li .hi, .fix .hi, td .hi { color: var(--crit); font-weight: 500; }
+  p .gd, li .gd, .fix .gd, td .gd { color: var(--good); font-weight: 500; }
+  td.tag { font-family: "IBM Plex Mono", monospace; font-size: 11px;
+           font-weight: 600; letter-spacing: 0.04em; }
+  td.tag.ok   { color: var(--good); }
+  td.tag.gap  { color: var(--major); }
+  td.tag.no   { color: var(--crit); }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <p class="eyebrow">Review · Sign in with Canvas</p>
+    <h1>Sign-In: Security, Robustness and Token Parity</h1>
+    <p class="sub">A second pass over the browser-session login, one day after the audit that
+    shipped it. Three questions: can it be made safer, can it be made harder to break, and does
+    a user who signs in get the same app as a user who pastes an access token.</p>
+  </div>
+  <div class="runmeta">
+    <div><b>date</b> 2026-09-12</div>
+    <div><b>tree</b> uncommitted, main</div>
+    <div><b>suite</b> 4,591 passed &middot; 0 failed</div>
+    <div><b>mutation</b> 50/51 (survivor documented)</div>
+  </div>
+</header>
+
+<div class="verdict">
+  <p><strong>Parity is close, and the two remaining gaps are known and bounded.</strong> Panopto,
+  which was the blocker yesterday, now takes the in-app LTI launch and works. Downloads, sync,
+  the course cache, logout, reconnect and the optimistic offline restore all run through the same
+  code for both credentials. What a browser session still does not give you is a
+  <code>verifier=</code> on file URLs embedded in exported HTML pages, and a credential that
+  lasts as long as a token does.</p>
+  <p><strong>Seven defects found and fixed</strong>, three of which are security-relevant. The
+  most interesting is not a bug in the new code at all: trimming the harvest to fit the Windows
+  credential store also stripped the WAF clearance cookie off the <em>live</em> session, so an
+  institution behind a Cloudflare challenge would have been told its session had expired, with
+  nothing it could do about that.</p>
+  <p><strong>The largest remaining security item is not in this app.</strong> A harvested Canvas
+  session cannot be revoked by the user the way an access token can. That is stated below rather
+  than fixed, because fixing it needs a measurement against a live authenticated session that
+  this pass could not take.</p>
+</div>
+
+<div class="tally">
+  <div><b>3</b> security fixes</div>
+  <div><b>4</b> robustness fixes</div>
+  <div><b>2</b> parity gaps, both bounded</div>
+  <div><b>3</b> open items, stated not fixed</div>
+</div>
+
+<h2>What changed, and how each fix was proven</h2>
+<table class="proof">
+  <thead><tr><th style="width:36%">Fix</th><th>Proof</th></tr></thead>
+  <tbody>
+    <tr><td>The live session keeps every cookie the Canvas host set; only <code>canvas_session</code> is persisted</td>
+        <td class="m">full jar <b>3,260 bytes</b> (refused by CredWrite, limit 2,560), stored copy <b>2,018 bytes</b> - measured through the app's own serialiser</td></tr>
+    <tr><td>Harvested cookies are filtered by DOMAIN, not only by name</td>
+        <td class="m">closes pywebview's macOS substring filter; 7 parametrised cases incl. the <code>scanvas.</code> suffix trap</td></tr>
+    <tr><td>The sign-in window names the host it is on, punycoded</td>
+        <td class="m">driven end to end with no GUI: title lands on <code>login.microsoftonline.com</code>; Cyrillic homoglyph renders <code>xn--pple-43d.com</code></td></tr>
+    <tr><td>An idle job no longer leaves the page reruning once a second</td>
+        <td class="m">driven, not read: <code>adopt_pending_browser_login</code> with a reset job now clears the flag</td></tr>
+    <tr><td>A superseded sign-in closes its window instead of leaving it up for its own clock</td>
+        <td class="m">driven: window <code>destroy</code> observed on the second <code>begin_login</code></td></tr>
+    <tr><td>A UTF-8 BOM in the settings file is no longer read as corruption</td>
+        <td class="m">mutation-checked both ways: with the fix reverted the test fails and the log shows the intact file being quarantined</td></tr>
+    <tr><td>TLS validation in the sign-in window is pinned by a census</td>
+        <td class="m"><code>IGNORE_SSL_ERRORS=False</code> at import, no <code>ssl=</code> on <code>webview.start</code></td></tr>
+    <tr><td>The unbound-name guard stops false-alarming on property setters</td>
+        <td class="m">found by the FULL suite after the targeted file was green; 2 controls added so the fix cannot have blinded it</td></tr>
+  </tbody>
+</table>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Guard</div><div class="fid">G-01</div></div>
+  <div>
+    <h3>The full suite caught the one defect the targeted run could not</h3>
+    <p class="where">tests/test_unbound_names.py</p>
+    <p><code>tests/test_browser_login.py</code> was green at 101 and the mutation pass was
+    finished; the full suite then failed. The hit was in a <em>guard</em>, not in the product,
+    and it was a false alarm in a file whose docstring promises it never produces one.</p>
+    <p><b>A decorator is evaluated in the scope the <code>def</code> sits in</b>, not in the
+    function's own scope. The checker walked <code>ast.iter_child_nodes</code> of the
+    <code>FunctionDef</code>, which includes <code>decorator_list</code>, so
+    <code>@title.setter</code> was checked against the method's scope - where
+    <code>title</code> is of course not bound. The class body binds it two lines above, and a
+    method never sees class-body names, which is exactly the rule that file gets right
+    everywhere else. The first <code>@property</code> / <code>@x.setter</code> pair in this
+    repo's history was written this session, in the new test fakes:
+    <span class="hi">a guard is only exercised by the shapes somebody actually writes</span>.</p>
+    <div class="fix"><b>Fix, and the false start inside it.</b> Decorators are now checked
+    against the enclosing body's names, with a class body passing its own bindings down. The
+    first attempt used <code>ast.walk</code> over the decorator expression and reported
+    <b>eleven</b> new false alarms - every one a comprehension variable inside a
+    <code>@pytest.mark.parametrize</code> argument, because a comprehension is its own scope
+    binding its own targets. Two controls were added so the fix cannot have blinded the check:
+    an unbound decorator at module level and one inside a class are both still caught.</div>
+  </div>
+</div>
+
+<h2>Security</h2>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">S-01</div></div>
+  <div>
+    <h3>A storage limit was silently narrowing the live credential</h3>
+    <p class="where">core/browser_login.py · core/canvas_auth.py</p>
+    <p>Yesterday's fix trimmed the harvest to <code>canvas_session</code> because a real CBS
+    credential serialised to <b>3,260 bytes</b> against Windows Credential Manager's 2,560-byte
+    ceiling, so the whole thing fell through to the DPAPI file instead of the OS vault. That
+    reasoning is correct and the measurement reproduces exactly. But it was applied at the wrong
+    end of the pipe.</p>
+    <p>The size limit is a fact about the <em>keyring</em>. Applying it at harvest time also threw
+    the extras away for the <em>live</em> session, and one of them can be load-bearing: an
+    institution behind a WAF issues a clearance cookie (Cloudflare's <code>cf_clearance</code>,
+    426 characters on the measured session). Without it the first API call meets a challenge page
+    - a 200 whose body is not JSON - which <code>verify()</code> reports as
+    <span class="hi">"Your Canvas session has expired"</span>. At an institution that needs it,
+    that is a login that can never succeed and never says why. The code comment anticipated this
+    and proposed widening the allowlist; a per-WAF allowlist is a list nobody can finish.</p>
+    <div class="fix"><b>Fix.</b> Harvest everything the Canvas host set; trim in
+    <code>to_storable()</code>. The at-rest secret is unchanged and still the smallest thing that
+    authenticates, so nothing is given up:
+<pre>full jar (the old harvest)      3260 bytes -&gt; <span class="hi">REFUSED (error 1783)</span>
+session-only (what is stored)   2018 bytes -&gt; <span class="gd">FITS</span>
+live in-memory cookies          _csrf_token, canvas_session, cf_clearance, log_session_id
+persisted cookies               canvas_session</pre>
+    A restored credential carries the session cookie alone. If that is ever not enough, the
+    request fails the way any expired session does and the silent renewal harvests a fresh
+    complete jar, so the degradation is self-healing rather than terminal.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">S-02</div></div>
+  <div>
+    <h3>On macOS the harvest could adopt another tenant's Canvas session</h3>
+    <p class="where">core/browser_login.py · core/canvas_auth.py</p>
+    <p>pywebview's two backends do not scope <code>get_cookies()</code> the same way. Windows asks
+    WebView2 for the current URL's cookies and is correct. macOS filters the whole cookie store
+    with a plain <b>substring</b> test:</p>
+<pre># pywebview/platforms/cocoa.py
+domain = c.domain()[1:] if c.domain().startswith('.') else c.domain()
+<span class="hi">if domain not in self.url:</span>
+    continue</pre>
+    <p>For a window opened on <code>https://cbscanvas.instructure.com/login</code>, a cookie
+    belonging to the unrelated tenant <code>canvas.instructure.com</code> passes that filter,
+    because that string does occur inside the URL. The name allowlist happened to limit the blast
+    radius before; widening the harvest for S-01 would have removed that accident, and the
+    pre-existing hole was already reachable for <code>canvas_session</code> itself - the one
+    cookie that decides the sign-in has finished.</p>
+    <p>Everything harvested goes into a jar scoped to <em>our</em> Canvas host, which is to say it
+    becomes something the app sends to Canvas. A foreign cookie must not reach it.</p>
+    <div class="fix"><b>Fix.</b> <code>cookie_domain_matches()</code> in
+    <code>core/canvas_auth.py</code> - the browser rule, exact host or a real subdomain, with the
+    dot boundary that stops <code>scanvas.instructure.com</code> counting as a parent of
+    <code>cbscanvas.instructure.com</code>. Applied at the harvest, so both platforms now agree.
+    A morsel with no domain still passes, because that is what a backend which already scoped its
+    query returns.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">S-03</div></div>
+  <div>
+    <h3>The user could not see whose login page they were typing a password into</h3>
+    <p class="where">core/browser_login.py</p>
+    <p>The address bar is the one thing an embedded web view takes away, and the chain really does
+    leave Canvas: CBS goes to <code>login.microsoftonline.com</code> and back. The window was
+    titled <code>Sign in to Canvas</code> for its whole life, with no URL anywhere on it, so
+    "am I really on my own institution's login page?" was a question a student could not answer.
+    This is the standing objection to embedded-webview SSO and the reason Google blocks it
+    outright.</p>
+    <div class="fix"><b>Fix.</b> The title carries the current origin and follows the redirect
+    chain: <code>Sign in to Canvas - login.microsoftonline.com</code>. Two details are
+    load-bearing:
+    <ul>
+      <li><b>Punycoded.</b> <code>urlparse().hostname</code> returns whatever the URL contained, so
+      an internationalised host arrives in its Unicode form - the form that can be built out of
+      homoglyphs to read as somebody else's domain. A Cyrillic "a" now renders
+      <code>xn--pple-43d.com</code>. Ugly is the correct answer here.</li>
+      <li><b>It must not block.</b> pywebview's title setter opens with
+      <code>events.loaded.wait(15)</code>, and this runs inside the 0.5 s poll loop that owns the
+      harvest, the settle counter and the cancel check. <code>_set_title</code> checks
+      <code>is_set()</code> first. <code>loaded</code> is cleared only by <code>load_url</code>
+      and <code>load_html</code>, never by the redirect chain, so once the first page is in it
+      stays set.</li>
+    </ul>
+    Tracked against the title last applied rather than against the previous URL: the ordinary way
+    the window appears is the settle rule, four polls of an <em>unchanged</em> URL, so
+    "has the URL changed since last poll?" is false on exactly the poll after it is first shown,
+    and the indicator would never have appeared on the common path.</div>
+  </div>
+</div>
+
+<h2>Robustness</h2>
+
+<div class="finding">
+  <div class="rail"><div class="sev j">Major</div><div class="fid">R-01</div></div>
+  <div>
+    <h3>A UTF-8 BOM in the settings file quarantined it and signed the user out</h3>
+    <p class="where">shared/helpers.py and 11 sibling read sites</p>
+    <p>Carried forward from yesterday's audit as a smaller item; it is worse than it was recorded.
+    A BOM is a legal encoding of the same document, and it is one a human can easily produce -
+    Notepad writes one by default, so does a PowerShell <code>&gt;</code> redirect. Read as
+    <code>utf-8</code> the BOM survives decoding as a leading <code>U+FEFF</code> and
+    <code>json.load</code> raises <code>JSONDecodeError</code>, which is indistinguishable to the
+    handler from a truncated file. So <code>read_json_for_update</code> did not merely discard the
+    settings, it took the documented corruption path:</p>
+<pre>WARNING shared.helpers: Config file canvas_downloader_settings.json was unreadable
+(JSONDecodeError: <span class="hi">Unexpected UTF-8 BOM (decode using utf-8-sig)</span>);
+moved it to canvas_downloader_settings.corrupt.json</pre>
+    <p>An intact file moved aside and replaced, taking the saved Canvas address, the accepted
+    Panopto notice, the download defaults and <code>auth_method</code> with it - and
+    <code>auth_method</code> is the marker that decides whether a saved browser sign-in is restored
+    at all. This is the "never destroy data on an error you have not identified" rule: corruption
+    must be proven, and a BOM proves nothing.</p>
+    <div class="fix"><b>Fix.</b> <code>utf-8-sig</code> on every JSON <em>read</em>, which handles
+    both forms and is a no-op on a file without a BOM. Twelve sites, all of one class: the shared
+    reader, both direct config reads, the credential fallback reads, the sync-pair store, the
+    library, the presets and the sync history. Writes stay <code>utf-8</code>, pinned by its own
+    test, so nothing starts emitting a BOM.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Minor</div><div class="fid">R-02</div></div>
+  <div>
+    <h3>A pending flag with no job reran the app about once a second, for ever</h3>
+    <p class="where">ui/auth.py</p>
+    <p>Recorded yesterday as reachable in theory and not reproduced. It is a plain control-flow
+    fact: <code>_browser_login_poll</code> treats <code>idle</code> as terminal and calls
+    <code>st.rerun(scope="app")</code>; <code>adopt_pending_browser_login</code> returned on the
+    same <code>idle</code> with the pending flag still set; the next run polls again. The pair is
+    reachable whenever the job is reset by someone other than this session, which is exactly what
+    a second window or a logout in another tab does - the job is process-global and the flag is
+    per session.</p>
+    <div class="fix"><b>Fix.</b> <code>idle</code> is terminal here too and clears the flag.
+    Silently: <code>idle</code> is the absence of an attempt, not a failure that happened to this
+    user, and <code>was_interactive()</code> cannot speak for a job that no longer exists. Pinned
+    by a test that <em>drives</em> the function rather than reading its AST - the old shape passes
+    every structural assertion in that file.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Minor</div><div class="fid">R-03</div></div>
+  <div>
+    <h3>A superseded sign-in left its window on screen for its own full clock</h3>
+    <p class="where">core/browser_login.py</p>
+    <p><code>begin_login</code> replaced <code>_job</code> and walked away. <code>_finish</code>
+    declines to record a state for a job that is no longer current, so the old worker never
+    reached the branch that closes its window: an already-visible window sat there until its own
+    ten-minute clock expired. Two sign-in windows, one of them for an address the user has moved
+    on from.</p>
+    <div class="fix"><b>Fix.</b> <code>begin_login</code> cancels and destroys the job it
+    supersedes. <code>ui/auth.begin_browser_signin</code> already called <code>reset()</code> first
+    and so covered the app's own route, which is why this never showed up; closing it in the
+    primitive is what stops the next caller rediscovering it.</div>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Minor</div><div class="fid">R-04</div></div>
+  <div>
+    <h3>Nothing pinned certificate validation in the sign-in window</h3>
+    <p class="where">start.py (guard added in tests)</p>
+    <p>No live defect: <code>IGNORE_SSL_ERRORS</code> is <code>False</code> and
+    <code>start.py</code> passes no <code>ssl=</code>, so certificates are validated today. It is
+    written down because the switch is <b>process-global</b>, the same hazard this codebase already
+    documents for <code>private_mode</code>, with a worse consequence. pywebview registers
+    <code>ServerCertificateErrorDetected -&gt; AlwaysAllow</code> when either flag is on, and it
+    would take effect in the <em>Canvas sign-in window</em> as well as the local Streamlit one -
+    the window where a student types a university password, on whatever campus or cafe network
+    they happen to be on.</p>
+    <div class="fix"><b>Fix.</b> A census test asserting both, so a future
+    <code>webview.start(ssl=True)</code> added for the local server fails the suite in the commit
+    that adds it.</div>
+  </div>
+</div>
+
+<h2>Is it 1:1 with the token path?</h2>
+
+<p class="sub">Everything below the auth layer is genuinely shared: one
+<code>CanvasCredential</code>, thirteen <code>CanvasManager</code> construction sites unchanged,
+one <code>_adopt_restored_credential</code> deciding what a network blip means, one
+<code>force_reauth</code> choosing reconnect copy by credential kind, one
+<code>auth_method</code> marker written on both login routes. Two differences remain.</p>
+
+<table class="proof">
+  <thead><tr><th style="width:26%">Area</th><th style="width:18%">Parity</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Course listing, downloads, sync</td><td class="tag ok">identical</td>
+        <td class="m">real course download in browser mode measured 2026-09-11: 11 files + 1 link + manifest, 1.60 MB, 8.5 s, zero error events</td></tr>
+    <tr><td>Panopto recordings, transcripts, subtitles</td><td class="tag ok">identical</td>
+        <td class="m">was the blocker; in-app LTI launch, discovery 0 -&gt; 36 recordings</td></tr>
+    <tr><td>Offline / flaky-network start</td><td class="tag ok">identical</td>
+        <td class="m">same optimistic restore, same <code>is_auth_error</code> split</td></tr>
+    <tr><td>Cache keying, logout, reconnect copy</td><td class="tag ok">identical</td>
+        <td class="m">hashable credential, namespaced keyring account, kind-aware reconnect wording</td></tr>
+    <tr><td>Credential storage location</td><td class="tag ok">identical</td>
+        <td class="m">2,018 bytes, inside the Credential Manager limit; the privacy page said otherwise and has been corrected</td></tr>
+    <tr><td><code>verifier=</code> on file URLs inside exported HTML/Markdown pages</td><td class="tag gap">absent</td>
+        <td class="m">Canvas adds it only for token requests; a session request is <code>in_app</code>. Downloads unaffected - the cookie authenticates the first hop - but images and links inside an exported page need the reader logged into Canvas in whatever browser opens them. Canvas-side, 0 of 5 file URLs carried one.</td></tr>
+    <tr><td>Credential lifetime</td><td class="tag gap">shorter</td>
+        <td class="m">measured on <code>cbscanvas.instructure.com</code>: <code>canvas_session</code> is <code>secure; httponly; samesite=none</code> with <b>no Expires</b>, and Canvas does <b>not</b> re-issue it on ordinary reads (4 consecutive requests, one <code>Set-Cookie</code>). So the stored copy has a fixed server-side lifetime from the moment of login, where a token lasts until revoked. Mitigated, not eliminated, by the silent renewal: the identity provider's session typically outlives Canvas' own by weeks.</td></tr>
+    <tr><td>Institutions using Google as the Canvas identity provider</td><td class="tag no">unsupported</td>
+        <td class="m">Google blocks OAuth sign-in in embedded webviews and names WKWebView explicitly. The token field is the only route there, and at a school that has also turned token creation off there is none.</td></tr>
+  </tbody>
+</table>
+
+<h2>Open, stated rather than fixed</h2>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Open</div><div class="fid">O-01</div></div>
+  <div>
+    <h3>Signing out of Canvas Downloader does not sign you out of Canvas</h3>
+    <p>Logout deletes the stored credential and wipes the web view's profile, which is the right
+    local behaviour and is verified on Windows. What it cannot do is invalidate the session on
+    Canvas' side, so the harvested <code>canvas_session</code> value stays valid until it expires
+    on its own. A user can revoke an access token from their Canvas settings page; there is no
+    equivalent gesture for a harvested session.</p>
+    <p><b>Why this is not fixed here.</b> Canvas' logout is a POST/DELETE that needs the
+    <code>_csrf_token</code> echoed as a header, and whether that actually invalidates a captured
+    cookie depends on how Instructure's session store is configured - which cannot be established
+    without driving it against a live authenticated session. Guessing would put an unmeasured
+    claim in a security-relevant place. The honest statement today is the one above.</p>
+    <p class="m">Worth noting the exposure is bounded: the value is now in the OS credential vault
+    rather than a file, it is never written to any log the app produces (scanned), and it never
+    leaves the Canvas host.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Open</div><div class="fid">O-02</div></div>
+  <div>
+    <h3><code>refresh_silently()</code> still has no callers</h3>
+    <p>Recorded yesterday as "the function this path wants". The renewal that was wired up instead
+    goes through <code>begin_browser_signin(..., interactive=False)</code> from the login page,
+    which is correct - it must not block the Streamlit script thread. So
+    <code>refresh_silently</code> is 46 lines of tested, unreachable code. It is the natural
+    implementation for a <em>mid-run</em> renewal, which is the one place a browser session is
+    meaningfully weaker than a token: if the session lapses during a long download, the run ends
+    and the user reconnects, where a token would simply have kept working. Either wire it to that
+    or delete it; leaving it is how a future reader assumes the path exists.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="rail"><div class="sev n">Open</div><div class="fid">O-03</div></div>
+  <div>
+    <h3>A self-hosted Canvas reached by IP address downloads nothing, silently</h3>
+    <p>Carried forward unfixed. <code>aiohttp.CookieJar()</code> refuses cookies for an
+    IP-address host unless constructed with <code>unsafe=True</code>, and <code>requests</code>'
+    jar refuses them for a dotless host like <code>localhost</code>. Niche, and the safe fix is
+    narrow (the jar only ever holds one host's cookies), but it should be a deliberate decision
+    rather than a discovery.</p>
+  </div>
+</div>
+
+<h2>Verified good, not re-measured</h2>
+<table class="proof">
+  <tbody>
+    <tr><td>No <code>Authorization</code> header in browser mode</td>
+        <td class="m">Canvas runs <code>load_pseudonym_from_access_token</code> before it looks at the session, so a stray bearer 401s a perfectly good cookie</td></tr>
+    <tr><td>The cookie never leaves the Canvas host</td>
+        <td class="m">real 4-hop redirect chain: cookies sent to Canvas, none to canvas-user-content.com or either inst-fs host</td></tr>
+    <tr><td>No credential value in any log the app writes</td>
+        <td class="m">debug_log.txt, health.log, session_state.json and the downloaded folder all scanned</td></tr>
+    <tr><td>Canvas does not prefix session-authenticated JSON with <code>while(1);</code></td>
+        <td class="m">5 live probes, both Accept headers</td></tr>
+    <tr><td>The sign-in window cannot save or fill a password, and cannot download</td>
+        <td class="m"><code>IsPasswordAutosaveEnabled=false</code>, <code>ALLOW_DOWNLOADS=false</code>, no context menu, no accelerator keys</td></tr>
+  </tbody>
+</table>
+
+<p class="sub" style="margin-top:2rem">macOS remains unverified for all of the above. Every primitive
+used is documented cross-platform pywebview, and S-02 above is specifically a macOS-only hole
+closed by reading the backend rather than by running it.</p>
+
+</div>

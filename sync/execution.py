@@ -23,6 +23,8 @@ import logging
 import os
 import platform
 import time as _time
+
+from core.canvas_auth import credential_of
 from collections import defaultdict, deque
 from datetime import datetime
 from pathlib import Path
@@ -651,9 +653,13 @@ def run_sync():
         _sync_connector = aiohttp.TCPConnector(
             limit=concurrent_limit, limit_per_host=concurrent_limit, ssl=get_ssl_context()
         )
+        # Same credential the download engine uses, asked the same way: in
+        # browser mode this installs a host-scoped cookie jar rather than a
+        # bearer, so a file URL redirecting onto the content CDN cannot carry
+        # the user's Canvas session with it. See core/canvas_auth.py.
         async with aiohttp.ClientSession(
-            headers={'Authorization': f'Bearer {cm.api_key}'}, timeout=timeout,
-            connector=_sync_connector
+            timeout=timeout, connector=_sync_connector,
+            **credential_of(cm).aiohttp_session_kwargs()
         ) as session:
             total_files = sum(
                 len(sel['new']) + len(sel['updates']) + len(sel['redownload'])

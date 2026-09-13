@@ -49,6 +49,7 @@ import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from core.canvas_auth import credential_of
 from shared.helpers import make_long_path, path_exists
 from panopto import models as pmodels
 from panopto.auth import lti_launch
@@ -336,7 +337,7 @@ class _Task:
     # auth context (resolved once per course during planning)
     session: object = None
     panopto_base: object = None
-    canvas_token: str = ""
+    canvas_credential: object = None
     # Serializes access to the shared per-course ``session`` across the concurrent
     # download workers (requests.Session is not thread-safe). All tasks of one
     # course share the SAME lock instance. Defaults to a private lock so a task
@@ -593,7 +594,7 @@ def _run_panopto_batch(
                         course.name, course.id)
             try:
                 videos = discover_course_videos(
-                    cm.api_url, cm.api_key, course.id,
+                    cm.api_url, credential_of(cm), course.id,
                     include_folder_sessions=True,
                     is_cancelled=is_cancelled,
                     on_event=_on_scan,
@@ -682,7 +683,7 @@ def _run_panopto_batch(
                     and v.launch_url not in _auth_candidates):
                 _auth_candidates.append(v.launch_url)
         for _try_no, _cand in enumerate(_auth_candidates if _media_wanted else [], 1):
-            session, _final, _rid, panopto_base, _folder = lti_launch(_cand, cm.api_key)
+            session, _final, _rid, panopto_base, _folder = lti_launch(_cand, credential_of(cm))
             _ok = bool(session and panopto_base)
             logger.info(
                 "Panopto auth bootstrap attempt %d/%d via %s -> %s",
@@ -800,7 +801,7 @@ def _run_panopto_batch(
                 record_fn=record_fn, ignore_fn=target.get("ignore_fn"),
                 max_bytes=_gate_bytes,
                 session=session, panopto_base=panopto_base,
-                canvas_token=cm.api_key, auth_lock=auth_lock,
+                canvas_credential=credential_of(cm), auth_lock=auth_lock,
                 tx_source=tx_source,
                 need_video=need_video,
                 need_audio=need_audio,
@@ -1273,7 +1274,7 @@ def _run_panopto_batch(
     return summary
 
 
-def _resolve_delivery(session, panopto_base, video, canvas_token):
+def _resolve_delivery(session, panopto_base, video, canvas_credential):
     """Resolve the Delivery node for a recording, with a per-video LTI fallback.
 
     Returns ``(session, panopto_base, delivery, error)``. Some Canvas links need
@@ -1290,7 +1291,7 @@ def _resolve_delivery(session, panopto_base, video, canvas_token):
         for _lurl in _launches:
             if not (_lurl and "sessionless_launch" in _lurl):
                 continue
-            v_session, _final, real_id, v_base, _folder = lti_launch(_lurl, canvas_token)
+            v_session, _final, real_id, v_base, _folder = lti_launch(_lurl, canvas_credential)
             if v_session and v_base:
                 _vid = real_id or video.video_id
                 _delivery, _err = get_delivery_info(v_session, v_base, _vid)
@@ -1410,7 +1411,7 @@ def _run_download_task(t, is_cancelled, ev_q) -> "_DLResult":
     from panopto.stream import _cookie_header
     with t.auth_lock:
         _session, panopto_base, delivery, derr = _resolve_delivery(
-            t.session, t.panopto_base, v, t.canvas_token)
+            t.session, t.panopto_base, v, t.canvas_credential)
         cookie_header = _cookie_header(_session, panopto_base) if _session else ""
     if not delivery:
         logger.warning("Panopto delivery resolve failed for '%s' (id=%s): %s",

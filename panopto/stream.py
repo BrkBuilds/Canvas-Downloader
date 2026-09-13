@@ -17,6 +17,8 @@ import subprocess
 import sys
 import time
 
+from core.canvas_auth import credential_of
+
 from shared.helpers import make_long_path, PANOPTO_UNAVAILABLE_REASON
 
 logger = logging.getLogger(__name__)
@@ -233,7 +235,7 @@ def fetch_durations(cm, videos, *, is_cancelled=None, max_workers: int = 10) -> 
             _candidates.append(_lurl)
     for _cand in _candidates:
         try:
-            session, _final, _rid, panopto_base, _folder = lti_launch(_cand, cm.api_key)
+            session, _final, _rid, panopto_base, _folder = lti_launch(_cand, credential_of(cm))
         except Exception as e:
             logger.debug("fetch_durations LTI launch failed: %s", e)
             session = panopto_base = None

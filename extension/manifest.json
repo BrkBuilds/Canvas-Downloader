@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Canvas Downloader Connector",
+  "version": "1.1.0",
+  "description": "Sign in to Canvas Downloader from the Canvas tab you already have open. No password to type, nothing to copy.",
+  "permissions": [
+    "cookies",
+    "activeTab",
+    "storage",
+    "alarms"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Sign in to Canvas Downloader",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

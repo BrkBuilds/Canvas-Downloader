@@ -185,7 +185,7 @@ def load_library() -> dict:
     if not p.exists():
         return _default()
     try:
-        with open(p, "r", encoding="utf-8") as f:
+        with open(p, "r", encoding="utf-8-sig") as f:
             data = json.load(f)
         if not isinstance(data, dict):
             _quarantine(p, f"root is {type(data).__name__}, not an object")

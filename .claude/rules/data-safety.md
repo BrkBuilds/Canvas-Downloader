@@ -217,3 +217,72 @@ Each was mechanical, whole-project, or driven against the real machine, so a fut
 2026-08-20 - see "iCloud 'Optimize Mac Storage'" below.)*
 
 **A leftover harness can impersonate the app, and it nearly cost a wrong conclusion.** Three streamlit processes from earlier sessions were still listening on 8599/8601/8603/8605. Launching the app on 8599 failed with "Port 8599 is already in use", the health check still answered 200, and the browser rendered the *completion-screen gallery* - which read exactly like "the app boots clean". **Always confirm the listener's PID is yours** (`lsof -nP -iTCP:<port> -sTCP:LISTEN`) before believing anything a local port tells you.
+
+## The debug log a user SENDS you was 76% framework noise (2026-09-13)
+Measured on the product owner's own download log, after a run he asked to have
+read: **37,360 of 49,250 lines (76%)** were one thing, as 3,736 full
+tracebacks. His app's entire contribution was **62 INFO lines, 2 locked-file
+errors and one warning**. An earlier log the same week was 4.7 MB with the
+app's own lines at **0.4%**.
+- **The mechanism**: `core/canvas_debug._DebugFileBridge` installs on the ROOT
+  logger and admits any non-app logger at WARNING and above. Streamlit's
+  `asyncio` logs *"Task exception was never retrieved"* at ERROR carrying a
+  chained `StreamClosedError` -> `WebSocketClosedError` every time it fails to
+  push a repaint to a socket the browser has already closed. A long download
+  with a **backgrounded tab** produces thousands, which is the ordinary case:
+  the app opens a Canvas tab in front of itself.
+- **This is not tidiness.** That file is the artifact a user attaches when
+  something has gone wrong, so drowning it is the diagnostic being destroyed by
+  the framework's own bookkeeping - and two separate sessions lost real time to
+  reading past it before anyone measured the ratio.
+- **The fix keeps the FIRST one in full and COUNTS the rest**, with a line
+  every 250 saying so. A silent filter would be the "destructive action that
+  reports nothing" this file already warns about, one level down: the reader
+  has to be able to see what is being left out. Measured with the real tornado
+  classes: **3,736 disconnects cost 36 lines instead of 37,360.**
+- **App loggers are deliberately exempt.** A `ConnectionResetError` from
+  `core.canvas_logic` is a fact about a transfer and is exactly what somebody
+  reading the file is looking for; only framework loggers are filtered. Both
+  directions are pinned, and the control (a real `RuntimeError` from an app
+  logger surviving a 300-notice storm) is what makes the rest mean anything.
+- **The detector walks the `__cause__`/`__context__` chain**, because the
+  record's own exception is the outer one and which of the pair tornado puts
+  outermost is its business, not ours.
+- `tests/test_debug_log_noise.py` (7), driving the real bridge with the real
+  exception shape; mutants in `scripts/_mutate_handoff.py` section 11.
+
+## A sampler that WAITS before its first reading reports zeros as measurements (2026-09-13)
+`core/health_log._sampler_loop` was `while not stop.wait(5.0)`, so the first
+reading was five seconds late - while `note_phase` persists the state on every
+phase change. A `session_state.json` written inside that window therefore read
+`peak_self_mb: 0.0`, `peak_tree_mb: 0.0`, `uptime_s: 0`, which look like
+measurements and are the sampler's untouched defaults. Observed on a real run.
+Same class as `check_disk_space`'s sentinel above: **0 means "not measured",
+never "none", and a field that cannot tell them apart is worse than absent.**
+Fixed by taking one reading BEFORE entering the wait loop - no schema change,
+so nothing that reads the file has to care.
+
+## A check-then-act guard is not a guard, it is a smaller window (2026-09-13)
+`core/health_log._save_state` tested `_closed.is_set()` and then wrote the
+file. Its own docstring explains the race it exists to prevent - a sampler
+landing a stale `clean_exit: False` on top of the marker `session_end` just
+wrote, so **a tidy shutdown is reported as a crash on the next launch**. The
+test was already there too.
+- **It was always reachable and never reached**, because the sampler waited
+  five seconds before its first tick. Taking that first reading immediately -
+  an unrelated fix, so a state file written early stops reporting zeros it
+  never measured - made the window ordinary, and
+  `test_a_late_sampler_tick_cannot_undo_the_clean_marker` failed on the next
+  full run. **The guard had been decorative for as long as it had existed.**
+- **The fix is to make the check and the write ONE operation**: `_save_state`
+  re-tests `_closed` INSIDE `_lock` and performs the `os.replace` there, and
+  `session_end` latches `_closed` under that same lock. Re-checking without
+  holding the lock across the write only narrows the window again.
+- Verified by hammering the exact sequence 200 times: **200/200 kept the clean
+  marker**, against a reproducible failure before.
+- **The transferable part is the diagnosis, not the lock.** A timing guard that
+  has never fired is indistinguishable from one that cannot, and the thing that
+  usually exposes it is an unrelated change to the *schedule* rather than to
+  the guard. When a change makes something happen sooner or more often, the
+  suite is testing a different program - read a failure in a neighbouring
+  module as evidence about the change, not about the neighbour.

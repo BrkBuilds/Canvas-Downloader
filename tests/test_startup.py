@@ -220,7 +220,11 @@ def test_reap_runs_before_the_hard_exit_and_survives_a_crash():
     happen first - and from a `finally`, or a crash inside webview.start()
     strands the same children by a different route."""
     src = open(os.path.join(_ROOT, "start.py"), encoding="utf-8").read()
-    i_start = src.index("webview.start(_boot)")
+    # Anchored on the call, not on its exact argument list: `webview.start`
+    # also carries the persistent-profile kwargs (private_mode / storage_path),
+    # and an anchor that breaks when someone passes an argument reports a live
+    # guard as missing - the brittle-anchor trap this repo has hit before.
+    i_start = src.index("webview.start(_boot")
     i_finally = src.index("finally:", i_start)
     i_reap = src.index("_terminate_child_processes()", i_finally)
     i_exit = src.index("os._exit(0)", i_reap)
@@ -314,16 +318,38 @@ def test_restore_is_a_noop_without_a_config(auth):
 
 
 def test_restore_runs_once_per_session(auth, monkeypatch):
+    """Three calls must cost no more than one.
+
+    The assertion used to be `len(reads) == 1`, which is a DIFFERENT property
+    from the one this test is named for and conflated two things: the
+    once-per-session guard, and how many credential-store keys one restore
+    looks at. There are legitimately two keys - the token under `api_url` and
+    the browser session under `browser::api_url` - and they cannot be fetched
+    in one lookup, so a launch with no token now reads twice. That is the
+    intended cost of finding a browser sign-in whose settings marker was
+    skipped.
+
+    So: pin the real guard (repeat calls are free), and pin a BOUND on the
+    per-session reads so the count cannot quietly creep. A bound is what stops
+    this relaxation from hiding a future regression.
+    """
     _write_config(auth)
     reads = []
     monkeypatch.setattr(auth, 'keyring_get_without_prompting',
                         lambda *a: (reads.append(1), ('', False))[1])
 
     auth.restore_saved_session()
+    first = len(reads)
     auth.restore_saved_session()
     auth.restore_saved_session()
 
-    assert len(reads) == 1
+    assert len(reads) == first, (
+        "the once-per-session guard is gone: repeating the call repeats the "
+        "credential-store reads, which on macOS is where a keychain modal "
+        "lands")
+    assert first <= 2, (
+        f"one restore made {first} credential-store reads; at most two are "
+        "accounted for (the token key, then the browser-session key)")
 
 
 def test_restore_survives_a_corrupt_config(auth, monkeypatch):

@@ -9,7 +9,10 @@ no account, no telemetry. Licence GPL-3.0-or-later.
 
 ```bash
 python start.py                        # run the app as users see it (pywebview window)
-streamlit run app.py                   # run the UI in a browser (faster dev loop)
+python dev.py                          # app in YOUR browser, sign-in window WORKS
+streamlit run app.py                   # UI in a browser; CANNOT open the sign-in window
+
+python scripts/check_handoff.py        # the browser-extension handoff, without Chrome
 
 pytest                                 # full suite, ~4,500 tests
 pytest tests/test_folder_scope.py -x   # one file, stop on first failure
@@ -20,6 +23,18 @@ pyinstaller --clean Canvas_Downloader_macOS.spec   # macOS bundle
 ```
 
 Tests must be green before a mutation pass; the harnesses refuse a red baseline.
+
+**`streamlit run app.py` cannot open the Canvas sign-in window, and never could.**
+pywebview only builds a second window once `webview.start()` has run on the process's
+MAIN thread, and under `streamlit run` Streamlit owns that thread - so
+`browser_login.is_available()` correctly answers False and the button refuses.
+`python dev.py` is production's threading model with the app window swapped for a small
+status window: the real `app.py` through `start.py`'s own `_launch_streamlit`, in one
+process, opened in your browser. It reimplements no screen (a test enforces that).
+`--window` renders the app in the pywebview window instead, in the same engine the
+shipped build uses, for anything about LAYOUT. Run from source the config dir is the
+repo root, so the web view profile is `<repo>/webview` - same as `python start.py`, and
+not the installed app's.
 
 ## Architecture
 
@@ -34,7 +49,10 @@ ui/               Streamlit screens: auth, course_selector, download_settings,
                   presets, institution_picker
 core/             library (saved pairs/groups/daily), pair_labels, state_registry,
                   cancellation, canvas_logic (API + async download engine),
-                  course_cache, sync_manager (SQLite manifest), preset_manager
+                  course_cache, sync_manager (SQLite manifest), preset_manager,
+                  canvas_auth (the ONE credential: access token or browser
+                  session), browser_login (signs in through the app's own
+                  web view and harvests the session cookies)
 sync/             analysis (diff), execution (background run), persistence, completion
 engine/           progress_dashboard, estimation (ETA), post_processing_bridge,
                   applescript_bridge (macOS osascript)
@@ -50,6 +68,14 @@ docs/             THE PUBLISHED WEBSITE (canvasdownloader.app) - never put notes
                   ones - see .claude/rules/website.md
 marketing/        launch, SEO and positioning register - LOCAL-ONLY, gitignored
 ```
+
+**Two ways in, and nothing below the auth layer may tell them apart**: a Canvas
+Access Token, or a real Canvas login performed in the app's own web view whose
+session cookies are then used exactly as a token would be. `core/canvas_auth.py`
+is the one credential type and the only place a bearer header is formatted;
+every one of the 13 `CanvasManager` construction sites is unchanged because the
+VALUE carries the answer. See `.claude/rules/browser-login.md` before touching
+any of it - several of its entries are bugs that shipped.
 
 **Runtime data files** (all gitignored - they hold real user data):
 `sync_library.json` (saved pairs, groups, daily set), `canvas_sync_pairs.json`,
@@ -119,6 +145,49 @@ bodies are 4,757 rows of data. Website tests are limited to health - links resol
 downloads reachable, content visible without JS - and never assert wording, a number
 a human typed, or a colour. Three such tests were deleted the same day.
 
+**A 2xx is the SENDER's opinion. The receiver's state is the only oracle.** For
+anything crossing a process, thread or window boundary, success is a change you
+can observe on the RECEIVING side, read independently of the thing that sent it.
+Measured 2026-09-13: the browser extension showed its success screen, the
+terminal logged `Accepted a Canvas session handoff`, and `scripts/check_handoff.py`
+passed ten of ten, while the app had never signed in. All three were talking to
+an orphaned listener, and nothing anywhere asserted the one fact that mattered -
+that the app now held a credential it did not have before. **Those were not three
+pieces of evidence.** They were written by one author in one sitting and shared a
+single premise ("there is exactly one listener and it is ours"), which is exactly
+where the defect was. Count independent failure modes, not checks - and never let
+a checker discover its target the way the product does, or it will agree with the
+product about the thing the product has wrong.
+
+**"The suite is green" is a claim about the TEST PROCESS, not about the app.**
+pytest imports each module once and runs no file watcher; `python dev.py` and
+`streamlit run` re-import EVERY watched module on ANY file change. A defect that
+needs a re-import can never appear in that suite, however many tests are added.
+Before calling anything verified, name what the real environment does that your
+evidence did not cover - re-imports, a second window, a frozen bundle, another
+process holding the same resource - and say which of those you actually drove.
+The same applies to a perfect harness score: 38/38 was once produced by a fixture
+that could not bind a port, so spot-check one mutant by hand whenever a pass comes
+back at 100%.
+
+**Model the LIFETIME before building anything that spans a process.** Write down
+each piece of state, who owns it, and what can destroy the owner. Module-global
+state that owns an OS resource - a socket, a file handle, a subprocess, a thread -
+must not live in a module a file watcher can unload: it is orphaned rather than
+closed, it goes on answering as though healthy, and nothing holds a reference that
+could ever stop it. Ask also how many instances can exist at once and what happens
+to the second.
+
+**A new file is ROUTED to its rule file in the same commit that creates it.**
+`.claude/rules/*.md` load by `paths:` frontmatter, so a file no list names gets
+none of this repo's recorded lessons - and the absence is invisible, because a
+rule that did not load looks exactly like a rule that does not exist.
+`browser-login.md` claimed four files while the feature it documents spanned nine,
+and the five it missed are where that feature broke; `scripts/check_handoff.py`
+matched `scripts/check_*.py` and so loaded RELEASE rules, which is worse than
+loading none. `tests/test_rule_routing.py` is the census and fails on any app
+module nothing claims.
+
 **Prose style**: no em dashes anywhere. Quote app copy character-exact rather than reflowing it.
 
 **A document written for the product owner to READ is HTML, not Markdown.** Stated by
@@ -137,6 +206,7 @@ measurement, and why the obvious fix is wrong.
 
 | Rule file | Loads when you touch |
 |---|---|
+| `browser-login.md` | `core/canvas_auth.py`, `core/browser_login.py`, `ui/auth.py`, `start.py` |
 | `streamlit-ui.md` | `app.py`, `sync_ui.py`, `ui/`, `styles/`, `shared/components.py` |
 | `sync-engine.md` | `core/`, `sync/` |
 | `converters-office.md` | `converters/`, `engine/applescript_bridge.py` |

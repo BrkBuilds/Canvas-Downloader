@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Canvas Downloader</title>
+  <style>
+    /*
+      EVERY COLOUR IS A TOKEN ON :root, AND THE DARK BLOCK REDEFINES ONLY
+      TOKENS. That is not tidiness, it is the fix for a real bug: the previous
+      version put `@media (prefers-color-scheme: dark)` ABOVE the base rules, so
+      the later base `.host { background: #f0f2f6 }` overrode the dark one while
+      `body` kept its light text - light text on a light box. The product owner
+      reported it as "the url in the chrome extension is almost invisible".
+      Styling through tokens makes that class of mistake impossible: there is
+      only one place a colour is chosen, and the media query cannot be
+      out-ordered by a component rule.
+    */
+    :root {
+      color-scheme: light dark;
+      --bg:        #ffffff;
+      --surface:   #f4f6fa;
+      --line:      #dde3ec;
+      --text:      #16202e;
+      --text-dim:  #55627a;
+      --text-faint:#7d8899;
+      --brand:     #0072CE;
+      --brand-ink: #ffffff;
+      --brand-dim: rgba(0,114,206,0.10);
+      --good:      #177a55;
+      --good-dim:  rgba(23,122,85,0.12);
+      --warn:      #9a6207;
+      --warn-dim:  rgba(154,98,7,0.12);
+      --bad:       #b3352a;
+      --step-off:  #c3cbd8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:        #161b23;
+        --surface:   #1e242f;
+        --line:      #2c3440;
+        --text:      #e6ebf3;
+        --text-dim:  #a3b0c2;
+        --text-faint:#7b8697;
+        --brand:     #3f9ae0;
+        --brand-ink: #06121d;
+        --brand-dim: rgba(63,154,224,0.16);
+        --good:      #56c79a;
+        --good-dim:  rgba(86,199,154,0.16);
+        --warn:      #e0a850;
+        --warn-dim:  rgba(224,168,80,0.16);
+        --bad:       #ef7f74;
+        --step-off:  #3a4250;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 340px;
+      padding: 16px 16px 14px;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 14px;
+    }
+    .brand img { width: 20px; height: 20px; display: block; }
+    .brand span { font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+
+    /* ── the three steps, which are the guide ───────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: 0; margin: 0 0 14px; }
+    .step {
+      display: grid; grid-template-columns: 22px 1fr; gap: 10px;
+      align-items: start; padding: 0 0 12px;
+      position: relative;
+    }
+    .step:last-child { padding-bottom: 0; }
+    /* the rail between the numbers */
+    .step:not(:last-child)::before {
+      content: ""; position: absolute; left: 10px; top: 22px; bottom: 2px;
+      width: 2px; background: var(--line); border-radius: 2px;
+    }
+    .dot {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 11.5px; font-weight: 700;
+      background: var(--surface); color: var(--text-faint);
+      border: 1.5px solid var(--step-off);
+      position: relative; z-index: 1;
+    }
+    .step .label { font-size: 13px; color: var(--text-faint); padding-top: 2px; }
+
+    .step.done .dot { background: var(--good-dim); border-color: var(--good);
+                      color: var(--good); }
+    .step.done .label { color: var(--text-dim); }
+    .step.now .dot { background: var(--brand); border-color: var(--brand);
+                     color: var(--brand-ink); }
+    .step.now .label { color: var(--text); font-weight: 600; }
+
+    /* ── the status card ────────────────────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 9px; padding: 12px 13px; margin: 0 0 12px;
+    }
+    .card .title {
+      font-size: 13.5px; font-weight: 650; margin: 0 0 3px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .card .body { font-size: 12.8px; color: var(--text-dim); margin: 0; }
+    .card.good .title { color: var(--good); }
+    .card.warn .title { color: var(--warn); }
+    .card.bad  .title { color: var(--bad); }
+
+    .site {
+      display: block; margin: 8px 0 0;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 11.5px; color: var(--text-dim);
+      background: var(--bg); border: 1px solid var(--line);
+      border-radius: 5px; padding: 5px 7px; overflow-wrap: anywhere;
+    }
+
+    /* ── the one action ─────────────────────────────────────────────── */
+    button {
+      width: 100%; padding: 11px 12px; font: inherit; font-weight: 650;
+      color: var(--brand-ink); background: var(--brand);
+      border: 0; border-radius: 8px; cursor: pointer;
+    }
+    button:hover:not(:disabled) { filter: brightness(1.08); }
+    button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+    button:disabled {
+      background: var(--surface); color: var(--text-faint);
+      border: 1px solid var(--line); cursor: default;
+    }
+    button.ghost {
+      background: transparent; color: var(--brand);
+      border: 1px solid var(--line); font-weight: 600;
+    }
+
+    .foot {
+      margin: 12px 0 0; font-size: 11.5px; color: var(--text-faint);
+      line-height: 1.45;
+    }
+
+    /* ── app on/off, always on screen ───────────────────────────────── */
+    .appstate {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 13px; padding: 8px 10px;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: var(--surface);
+      font-size: 12.8px; font-weight: 600; color: var(--text-dim);
+    }
+    .appstate .ind {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--step-off); flex: 0 0 auto;
+    }
+    .appstate.on  { color: var(--good); border-color: var(--good); }
+    .appstate.on .ind { background: var(--good); }
+    .appstate.off { color: var(--text-dim); }
+    .appstate.off .ind { background: var(--step-off); }
+    .appstate .recheck {
+      margin-left: auto; width: auto; flex: 0 0 auto;
+      padding: 3px 9px; font-size: 11.5px; font-weight: 600;
+      color: var(--text-dim); background: transparent;
+      border: 1px solid var(--line); border-radius: 6px;
+    }
+    .appstate .recheck:hover:not(:disabled) {
+      color: var(--text); border-color: var(--text-faint); filter: none;
+    }
+    .appstate .recheck:disabled {
+      opacity: .55; background: transparent; color: var(--text-faint);
+    }
+
+    /* ── the countdown out of the finished screen ───────────────────── */
+    .countdown {
+      margin: 9px 0 0; text-align: center;
+      font-size: 12px; color: var(--text-faint);
+      font-variant-numeric: tabular-nums;
+    }
+    .countdown b { color: var(--text-dim); font-weight: 700; }
+
+    /* ── the resting screen: nothing to do, so nothing to do it with ── */
+    .rest { text-align: center; padding: 4px 0 2px; }
+    .rest .mark {
+      width: 42px; height: 42px; border-radius: 50%; margin: 2px auto 12px;
+      display: grid; place-items: center;
+      background: var(--good-dim); color: var(--good);
+      border: 1.5px solid var(--good);
+      font-size: 19px; font-weight: 700; line-height: 1;
+    }
+    .rest .resttitle {
+      margin: 0 0 5px; font-size: 14px; font-weight: 650; color: var(--text);
+      text-wrap: balance;
+    }
+    .rest .restbody {
+      margin: 0 0 15px; font-size: 12.8px; color: var(--text-dim);
+    }
+    .again {
+      width: auto; padding: 0; background: transparent; border: 0;
+      font-size: 12px; font-weight: 600; color: var(--brand);
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .again:hover:not(:disabled) { filter: none; text-decoration-thickness: 2px; }
+
+    /*
+      ONE class hides the whole guide, and every part of it is named here, so a
+      new element added above cannot leak onto the resting screen by being
+      forgotten about.
+    */
+    body.resting .appstate,
+    body.resting .steps,
+    body.resting .card,
+    body.resting #go,
+    body.resting .countdown,
+    body.resting .foot { display: none; }
+    body:not(.resting) .rest { display: none; }
+
+    .spin {
+      width: 13px; height: 13px; border-radius: 50%;
+      border: 2px solid var(--brand-dim); border-top-color: var(--brand);
+      animation: sp .7s linear infinite; display: inline-block;
+    }
+    @keyframes sp { to { transform: rotate(360deg); } }
+    /*
+      A ring that does not turn reads as broken, so under reduced motion it is
+      REMOVED rather than frozen. Windows 11's "Animation effects: off" sets
+      this, which is the likely reason the spinner was reported as not moving.
+    */
+    @media (prefers-reduced-motion: reduce) {
+      .spin { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <img src="icon32.png" alt="">
+    <span>Canvas Downloader</span>
+  </div>
+
+  <!--
+    ALWAYS VISIBLE, in every state. The product owner's own instruction after
+    using it: the student has to be able to see whether the app is on or off
+    without reading anything else, because when it is off there is nothing the
+    extension can do for them at all.
+  -->
+  <div class="appstate" id="appstate">
+    <span class="ind" id="appDot"></span>
+    <span id="appText">Looking for Canvas Downloader</span>
+    <button class="recheck" id="recheck" type="button"
+            title="Check again">Check again</button>
+  </div>
+
+  <div class="steps" id="steps">
+    <div class="step" id="step1">
+      <div class="dot" data-n="1">1</div>
+      <div class="label">Open your Canvas page</div>
+    </div>
+    <div class="step" id="step2">
+      <div class="dot" data-n="2">2</div>
+      <div class="label">In Canvas Downloader, choose <b>Use the Canvas tab in
+        my browser</b></div>
+    </div>
+    <div class="step" id="step3">
+      <div class="dot" data-n="3">3</div>
+      <div class="label">In your Canvas page, open this extension and click
+        <b>Sign me in</b></div>
+    </div>
+  </div>
+
+  <div class="card" id="card">
+    <p class="title" id="cardTitle"><span class="spin"></span>Checking</p>
+    <p class="body" id="cardBody">One moment.</p>
+  </div>
+
+  <button id="go" disabled>Sign me in</button>
+
+  <p class="countdown" id="countdown" hidden>Finishing up in
+    <b id="countNum">5</b></p>
+
+  <p class="foot" id="foot">This extension never looks at any pages you
+    visit. It only checks whether Canvas Downloader is open on this
+    computer.</p>
+
+  <!--
+    THE RESTING SCREEN, shown when there is nothing for the student to do: the
+    sign-in already happened and the app is not asking for another one. A guide
+    towards a finished task is noise, so none of it is on screen. Asked for on
+    2026-09-13 - "a clean (no steps/walkthrough)... with the logo and a green
+    dot" - and reachable back the other way by the one link below it.
+  -->
+  <div class="rest" id="rest">
+    <div class="mark" aria-hidden="true">&#10003;</div>
+    <p class="resttitle" id="restTitle">Canvas Downloader is signed in</p>
+    <p class="restbody" id="restBody">Nothing to do here.</p>
+    <button class="again" id="again" type="button">Something not right? Go
+      through the steps again</button>
+  </div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
