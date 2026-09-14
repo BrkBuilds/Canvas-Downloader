@@ -591,6 +591,26 @@ def url_status_html() -> str:
     return _status_row_html("cd-url-status")
 
 
+# ── The primary sign-in button's label ───────────────────────────────────────
+# Naming the student's own university is the strongest trust signal this screen
+# has, and the picker has already resolved it, so it costs nothing.
+#
+# ONE definition, read by two consumers that must never disagree:
+# `ui.auth._signin_button_label` renders it server-side wherever the address is
+# already known, and the bridge below rewrites it live while somebody is
+# choosing. If those two drifted, the button would change wording on the first
+# rerun after a pick, which reads as a bug in the app rather than in a label.
+SIGNIN_LABEL_PREFIX = "Sign in to "
+SIGNIN_LABEL_GENERIC = "Sign in to Canvas"
+
+#: Longest school name the button will say. MEASURED: the window minimum is
+#: 1024x700 (`start.py`), where the card is ~560px and the button is full
+#: width, so a longer name wraps it onto two lines. Past this the label falls
+#: back to the generic form rather than truncating - a half-spelled university
+#: reads as a bug, a generic label reads as a choice.
+SIGNIN_LABEL_MAX_NAME = 34
+
+
 # The shortcut to Canvas's own token page, sitting beside the access-token
 # field exactly as the picker sits beside the URL field.
 #
@@ -1565,6 +1585,33 @@ _BRIDGE_JS = """
   // naming an institution the form was no longer pointing at. Deriving it also
   // gets the reverse for free: paste a different known school's address by hand
   // and the trigger updates to match.
+  // ── The primary button's label ─────────────────────────────────────────
+  // Config comes from Python so the wording has one definition; see
+  // SIGNIN_LABEL_* in this module.
+  var SIGNIN = __SIGNIN_CFG_TOKEN__;
+
+  function signinLabelHost() {
+    var btn = D.querySelector('div[class*="st-key-login_browser_btn"] button');
+    if (!btn) return null;
+    var host = btn.querySelector('[data-testid="stMarkdownContainer"]');
+    if (!host) return null;
+    // A PLAIN-TEXT Streamlit label renders with no paragraph element, while a
+    // label carrying inline markup gets one. Both shapes occur here, because
+    // the school name is Markdown-escaped and an escape introduces markup.
+    return host.querySelector('p') || host;
+  }
+
+  function syncSigninLabel() {
+    var host = signinLabelHost(); if (!host) return;
+    var inp = urlInput();
+    var name = inp ? knownByHost(hostOf(inp.value || '')) : null;
+    var want = (name && name.length <= SIGNIN.maxName)
+      ? (SIGNIN.prefix + name) : SIGNIN.generic;
+    // Guarded: no write when nothing changed, so the observer below cannot
+    // fire on its own mutation and loop.
+    if (host.textContent !== want) host.textContent = want;
+  }
+
   function syncTrigger() {
     var r = root(); if (!r) return;
     var lbl = r.querySelector('.cd-inst-label');
@@ -1575,6 +1622,7 @@ _BRIDGE_JS = """
     // textContent, not innerHTML: a matched row's label carries <mark> markup.
     lbl.textContent = name || trig.getAttribute('data-default-label') || '';
     r.setAttribute('data-picked', name ? '1' : '0');
+    syncSigninLabel();
   }
 
   function pick(opt) {
@@ -1666,10 +1714,41 @@ _BRIDGE_JS = """
   D.addEventListener('input', onInput, true);
   D.addEventListener('focusout', onFocusOut, true);
 
+  // Streamlit repaints the button on every rerun and puts the SERVER's label
+  // back, so the sync has to be re-applied rather than set once. Coalesced to
+  // one call per frame: a rerun is a burst of mutations and the callback would
+  // otherwise run hundreds of times for one repaint.
+  if (!reg.mo) {
+    var mainEl = D.querySelector('section[data-testid="stMain"]') || D.body;
+    var queued = false;
+    reg.mo = new P.MutationObserver(function () {
+      if (queued) return;
+      queued = true;
+      P.requestAnimationFrame(function () { queued = false; syncSigninLabel(); });
+    });
+    try { reg.mo.observe(mainEl, { childList: true, subtree: true }); } catch (e) {}
+  }
+  syncSigninLabel();
+
   settleMount(0);
 })();
 </script>
 """
+
+
+def _signin_cfg_json() -> str:
+    """The sign-in label wording, as JSON for the bridge.
+
+    `json.dumps` rather than string concatenation: a school name never reaches
+    this, but the PREFIX and the GENERIC label do, and a quote or a backslash
+    in either would end the JS string and take the whole bridge with it.
+    """
+    import json as _json
+    return _json.dumps({
+        "prefix": SIGNIN_LABEL_PREFIX,
+        "generic": SIGNIN_LABEL_GENERIC,
+        "maxName": SIGNIN_LABEL_MAX_NAME,
+    })
 
 
 def inject_bridge() -> None:
@@ -1680,4 +1759,9 @@ def inject_bridge() -> None:
     """
     import streamlit.components.v1 as components
 
-    components.html(_BRIDGE_JS, height=0)
+    # The config is CONSTANT, so the srcdoc is constant, so the
+    # iframe is reused across reruns exactly as before - see the
+    # components.html reuse rule in .claude/rules/streamlit-ui.md.
+    components.html(
+        _BRIDGE_JS.replace("__SIGNIN_CFG_TOKEN__", _signin_cfg_json()),
+        height=0)

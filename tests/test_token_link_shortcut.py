@@ -135,10 +135,20 @@ def test_there_is_exactly_one_way_to_reach_the_token_page():
     The bottom one is gone. If a second appears, it has to answer for itself:
     a duplicate whose state is computed a different way is the bug, not the
     duplication."""
-    assert "st.button(" not in _AUTH_SRC[
-        _AUTH_SRC.index('with st.container(key="login_help_expanders")'):
-        _AUTH_SRC.index("youtube-link")], (
-        "a second token-settings button is back in the help expanders"
+    # A CENSUS, not a window. This used to assert "no st.button between the
+    # help-expander container and the video link" - two landmarks that both
+    # stopped existing on 2026-09-14, when the URL guide became a tooltip and
+    # the video moved into the access-token disclosure. The test then failed
+    # with `substring not found`, which reads exactly like the guard it
+    # protects having been deleted. Fourth instance of that trap in this repo.
+    #
+    # Counting the RENDERS states the property directly and cannot be broken by
+    # moving the thing it guards.
+    assert _AUTH_SRC.count("institution_picker.token_link_html(") == 1, (
+        "there is more than one render of the token-settings shortcut; two "
+        "buttons for one action can disagree, and did - a returning login had "
+        "one enabled and the other greyed out, telling the user to enter a URL "
+        "the app already had"
     )
     assert "_canvas_url_reachable(" not in _AUTH_SRC, (
         "the click-time reachability check cannot work from inside st.form"
@@ -284,14 +294,32 @@ def test_the_link_renders_inside_the_login_form():
     assert form < call < submit
 
 
-def test_both_rows_use_the_same_column_split():
-    """The shortcut is meant to line up under the institution picker. Two
-    different ratios put two controls of different widths in one column - which
-    reads as a mistake, and is one."""
+def test_the_token_row_gives_the_shortcut_more_room_than_the_url_row():
+    """This used to require the two rows to use the SAME ratio, so the
+    shortcut would line up under the institution picker. That property died on
+    2026-09-14: the token field moved into its own card in the right-hand
+    column and the URL field stayed in the login card above, which is twice as
+    wide. There is no shared line left for them to land on.
+
+    What survives is the reason underneath it - the shortcut must be wide
+    enough to say what it does. Measured across widths with both rows on
+    [1.6, 1]: at 1366px, one of the commonest laptop widths there is, the
+    token card is 330px, the button gets 100px, and "Get a token" is cut to
+    "Get a to...". It needs 103px for its icon, gap, padding and label.
+
+    So the token row takes a SMALLER first number than the URL row, which
+    gives its second column a larger share. Equal would be a regression here,
+    and larger would be one too.
+    """
     ratios = re.findall(r"st\.columns\(\[([^\]]+)\], vertical_alignment=\"bottom\"\)",
                         _AUTH_SRC[_AUTH_SRC.index('with st.form("auth_form"'):])
     assert len(ratios) == 2, f"expected the URL row and the token row, got {ratios}"
-    assert ratios[0] == ratios[1], f"the two rows drifted apart: {ratios}"
+    url_first = float(ratios[0].split(",")[0])
+    tok_first = float(ratios[1].split(",")[0])
+    assert tok_first < url_first, (
+        f"the token row is in a card half the width of the URL row's and must "
+        f"give its shortcut a bigger share, not the same one: {ratios}"
+    )
 
 
 def test_reauth_mode_passes_the_saved_url_as_the_fallback():
@@ -374,13 +402,102 @@ def test_the_first_run_strip_is_two_lines():
     )
 
 
-def test_the_url_guide_does_not_open_itself():
-    """The picker answers 'what is my Canvas URL' in one click for thousands of
-    schools, so auto-expanding 'open Canvas and copy the address bar' above the
-    harder step is backwards."""
-    i = _AUTH_SRC.index("'How to find your Canvas URL?'")
-    assert "expanded=False" in _AUTH_SRC[i:i + 120], (
-        "the URL guide auto-expands again"
+def test_the_first_run_strip_never_sends_a_new_user_to_get_a_token():
+    """The one orienting sentence a brand-new user reads must name a route
+    they can actually take.
+
+    THE DEFECT THIS EXISTS FOR, found 2026-09-14. The strip read *"New here?
+    Find your school, get a token, log in - about 2 minutes."* Instructure
+    shipped `limit_personal_access_tokens` and
+    `restrict_personal_access_tokens_from_students` in September 2025 and they
+    were widely switched on after the April 2026 breach - CBS among them - so
+    for exactly the population "Sign in with Canvas" was built for, step two
+    of that instruction is not higher-friction, it is impossible. The strip
+    predates the browser routes and nothing revisited it when they landed.
+
+    The token field is NOT being hidden and this test does not ask for that:
+    it stays on the page, below its own divider, and for a school that still
+    allows tokens it is still the straight path. What may not happen is the
+    page's first line sending someone to a door their administrator closed.
+
+    Phrased against the STRIP alone rather than the page, because the token
+    walkthrough further down is allowed to say all of this - it sits under the
+    token field, where the user has already chosen that route.
+    """
+    i = _AUTH_SRC.index("_getstarted_html = (")
+    strip = _AUTH_SRC[i:_AUTH_SRC.index(") if (_first_run", i)]
+    # Only the rendered copy: the comment above it quotes the old wording on
+    # purpose, and a guard that reads its own explanation is the window-anchor
+    # trap this repo has been bitten by four times.
+    copy = "".join(strip.split("_getstarted_html = (", 1)[1:]).lower()
+
+    banned = ("get a token", "generate a token", "create a token",
+              "access token", "new access token")
+    hit = [phrase for phrase in banned if phrase in copy]
+    assert not hit, (
+        f"the first-run strip tells a new user to {hit[0]!r}, which a student "
+        f"at a school that has turned token creation off cannot do"
+    )
+    # It must still POINT somewhere real. It cannot name the button by its
+    # label any more - that label is the student's own university now - so
+    # it names the button by sight, which is the one description that stays
+    # true whatever the label resolves to.
+    assert "blue button" in copy or "sign in" in copy, (
+        "the strip no longer points at the route that works at every "
+        "institution"
+    )
+
+    # POSITIVE CONTROL. Without this the assertions above pass just as happily
+    # against an empty strip, which is the shape that made the stale
+    # `test_no_stored_session_never_triggers_a_hidden_renewal` read like a
+    # missing guard for a whole pass.
+    was_wrong = ("<div class='lgs-head'>New here? Find your school, get a "
+                 "token, log in - about 2 minutes.</div>").lower()
+    assert any(phrase in was_wrong for phrase in banned), (
+        "the banned list no longer recognises the exact copy that shipped, so "
+        "this test cannot say no"
+    )
+
+
+def test_the_url_guide_is_a_TOOLTIP_and_carries_the_answer_not_the_procedure():
+    """The guide is the URL field's own `help=` now, and it must stay short.
+
+    It was an expander below the card holding three numbered steps plus a
+    troubleshooting footnote. A hover tooltip DISMISSES the moment the pointer
+    moves toward the field it describes, which is fatal for content whose whole
+    job is "what do I type in this box": a student who goes to their browser to
+    copy the address comes back to an empty screen. So the tooltip carries the
+    ANSWER, readable in one glance, and the procedure is gone.
+
+    This guards the trim, not the move, because the trim is the part that rots.
+    The natural instinct when somebody reports confusion is to add a step, and
+    three steps in a tooltip is the shape that cannot be read.
+    """
+    assert "'How to find your Canvas URL?'" not in _AUTH_SRC, (
+        "the URL guide expander is back below the card"
+    )
+    i = _AUTH_SRC.index("'Your Canvas URL',")
+    # Wide enough to clear the comment block explaining the trim, which
+    # sits between the label and `help=`.
+    field = _AUTH_SRC[i:i + 3000]
+    assert "help=(" in field, "the URL field lost its tooltip"
+
+    # A bounded window rather than a hunt for the closing paren at a guessed
+    # indent: the content is ~250 characters and the next widget is far past
+    # this, so 600 cannot swallow a neighbour's copy.
+    help_text = field[field.index("help=("):][:600]
+    # Numbered steps are the thing that must not come back.
+    assert not re.search(r'"\s*\d\.\s', help_text), (
+        "the URL tooltip has grown numbered steps again; a tooltip that needs "
+        "reading in order is a tooltip that gets dismissed halfway through"
+    )
+    # It has to still name the two things that make it useful at a glance.
+    assert "instructure.com" in help_text, (
+        "the tooltip no longer shows what an address looks like"
+    )
+    assert "Find your institution" in help_text, (
+        "the tooltip no longer points at the picker, which is the real answer "
+        "for the thousands of schools that are on the list"
     )
 
 

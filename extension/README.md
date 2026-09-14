@@ -36,8 +36,25 @@ the steps if something looks wrong.
 Reads, for the tab you invoked it on, and only when you click:
 
 - `canvas_session` (or `_normandy_session` on a self-hosted Canvas)
-- `_csrf_token`, so the app can create a long-lived key without another round
-  trip to Canvas
+- `_csrf_token`, which Canvas requires alongside the sign-in before it will
+  create the long-lived key that means you stop having to do this
+
+**The stated reason for the second one used to be wrong, and it is worth knowing
+why it was kept anyway.** This file claimed it "saves a round trip". It does not:
+`core/token_mint.mint` always makes the one HTML request it describes, and reads
+the token back out of the jar afterwards. But that jar is the one
+`_session_for` has already installed the handed-over cookies into, so if Canvas
+does not re-set `_csrf_token` on that request, the value the extension supplied
+is the one that gets used. **Whether Canvas re-sets it has not been measured**,
+and dropping the cookie on that reasoning would risk breaking the long-lived key
+on the extension route specifically, which is the one route where nothing else
+can supply it. Measure it against a real Canvas first: sign in through the
+extension, and check whether the response to `GET /profile/settings` carries a
+`Set-Cookie: _csrf_token`. If it does, this cookie can go, and the privacy
+surface gets smaller for free.
+
+It is never stored either way: `CanvasCredential.to_storable` keeps only the
+session cookie, so nothing but the session cookie is ever written to disk.
 
 It does **not** read anything else, does not run on any page, has no content
 script, and holds no site access until you grant it. It posts to `127.0.0.1`

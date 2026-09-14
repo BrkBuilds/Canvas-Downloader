@@ -428,16 +428,25 @@ def test_the_notice_renders_above_the_login_form():
     """It answers "why am I looking at a login screen at all", so it has to be
     read before the form, not after it."""
     src = AUTH_SRC.read_text(encoding="utf-8")
-    # Anchored on the PROPERTY - the notice is read before the form, and before
-    # the reauth header that replaces the form's title - rather than on the two
-    # being textually adjacent. The Canvas sign-in notice now renders between
-    # them, which changes nothing about what this test is protecting; an
-    # adjacency anchor would have reported a guard that is plainly still there
-    # as missing.
-    notice = src.index("            render_keychain_unlock_notice()")
-    reauth_header = src.index("            if _reauth_mode:", notice)
-    form = src.index('with st.form("auth_form"', notice)
-    assert notice < reauth_header < form
+    # Anchored on RENDER ORDER, and on nothing else. Not on adjacency (the
+    # Canvas sign-in notice renders between them), not on the `st.form`
+    # statement (the form is now the OUTER context, so it opens before the card
+    # in the file while still rendering nothing before it), and not on an
+    # indent (both were nested one level deeper the day the disclosure cards
+    # moved out of the card). Each of those anchors has already reported this
+    # live guard as missing once.
+    # EVERY search starts at the card, not at the previous landmark. Searching
+    # from `notice` was the old shape and it made the whole chain vacuous: an
+    # index found AFTER the notice is greater than the notice by construction,
+    # so a mutant that put a text field above the notice passed. Measured, not
+    # reasoned - the mutant was planted and survived.
+    card = src.index('with st.container(key="login_card_wrapper")')
+    notice = src.index("render_keychain_unlock_notice()", card)
+    reauth_header = src.index("if _reauth_mode:", card)
+    first_input = src.index("st.text_input(", card)
+    assert card < notice < reauth_header < first_input, (
+        "the Keychain notice no longer renders before everything the user can "
+        "act on")
 
 
 def test_markup_and_stylesheet_agree():

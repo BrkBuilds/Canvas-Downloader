@@ -22,7 +22,7 @@ from html import escape as _he
 import streamlit as st
 
 from core.canvas_logic import CanvasManager
-from core.canvas_auth import (BROWSER, TOKEN, CanvasCredential,
+from core.canvas_auth import (BROWSER, TOKEN, CanvasCredential, canvas_host,
                               from_cookies, from_token)
 from version import __version__
 
@@ -90,6 +90,89 @@ RETIRED_CONFIG_KEYS = {
     'api_token',          # legacy plaintext token - now the OS keyring
     'mac_api_token',      # ditto, the macOS-specific variant
 }
+
+#: Where a student gets the browser extension. EMPTY until it is published.
+#:
+#: ONE constant, and publishing is a one-line change, because the alternative
+#: is what this screen already did once: advertise a thing with no way to get
+#: it. The extension card told students to "install the free Canvas Downloader
+#: Connector" while there was no store listing, no link anywhere in the app,
+#: and no copy of the folder inside the installer - so pressing that route
+#: opened their Canvas, armed a three-minute wait, and then blamed them for a
+#: sign-in that could never have arrived.
+#:
+#: Empty is therefore a STATE the copy has to handle honestly rather than a
+#: placeholder to be filled in later and forgotten: `_extension_cta_html`
+#: renders "not in the store yet" instead of a button that goes nowhere. A
+#: dead `href="#"` is the one shape that must not ship, because it looks live.
+EXTENSION_STORE_URL = ''
+
+#: Icons for the login page. Inline SVG rather than a data URI: these sit in
+#: `st.markdown` content, which lands in the main DOM where CSS can reach
+#: `currentColor` - so one glyph serves a hover state, a disabled state and
+#: both themes without a second encoded copy. `viewBox` on all of them so the
+#: size is set by the attributes and never by the path's own units.
+_ICO_GITHUB = (
+    "<svg class='login-inline-ico' viewBox='0 0 16 16' width='14' height='14' "
+    "aria-hidden='true'><path fill='currentColor' d='M8 0C3.58 0 0 3.58 0 8c0 "
+    "3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01."
+    "37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63"
+    "-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-"
+    ".2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 "
+    ".67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82"
+    " 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-"
+    "3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8"
+    ".013 8.013 0 0016 8c0-4.42-3.58-8-8-8z'/></svg>"
+)
+
+#: A GLOBE, and it is a fix rather than an addition: the "Go to website" link
+#: rendered the GitHub octocat, so both header links carried the same mark and
+#: neither said which was which. Stroked rather than filled, so it reads at the
+#: same weight as the solid octocat beside it at 14px.
+_ICO_GLOBE = (
+    "<svg class='login-inline-ico' viewBox='0 0 24 24' width='14' height='14' "
+    "fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+    "stroke-linejoin='round' aria-hidden='true'>"
+    "<circle cx='12' cy='12' r='10'/><path d='M2 12h20'/>"
+    "<path d='M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z'/></svg>"
+)
+
+#: The puzzle piece is the browser's OWN word for an extension - Chrome hides
+#: newly-installed ones behind exactly this glyph in its toolbar - so it is the
+#: one icon a student has already been taught the meaning of by Chrome itself.
+_ICO_PUZZLE = (
+    "<svg class='login-cta-ico' viewBox='0 0 24 24' width='16' height='16' "
+    "fill='currentColor' aria-hidden='true'><path d='"
+    "M20.5 11H19V7a2 2 0 0 0-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4a2 2 0 0 0-2 2v3.8h1.5a2.6 2.6 0 0 1 0 5.2H2V20a2 2 0 0 0 2 2h3.8v-1.5a2.6 2.6 0 0 1 5.2 0V22H17a2 2 0 0 0 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z"
+    "'/></svg>"
+)
+
+#: YouTube's own mark, kept as a constant so the walkthrough link can move
+#: between containers without the path being retyped at the new site. It is
+#: the one glyph here that must NOT take `currentColor`: a brand mark rendered
+#: in the surrounding text colour stops being recognisable, which is the whole
+#: reason it earns its place over the word "video".
+_ICO_YOUTUBE = (
+    "<svg class='youtube-icon' viewBox='0 0 24 24' width='18' height='18' "
+    "aria-hidden='true'><path fill='currentColor' d='M23.498 6.186a3.016 3.016 "
+    "0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 "
+    "3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 "
+    "2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 "
+    "0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L"
+    "15.818 12l-6.273 3.568z'/></svg>"
+)
+
+#: A KEY, for the access-token disclosure. Not a padlock: a padlock is this
+#: app's "secure/private" mark (it is already on the first-run safety line and
+#: in the Keychain notice), and spending it here would say "this route is the
+#: safe one", which is a claim about the other two that is not true.
+_ICO_KEY = (
+    "<svg class='login-disc-ico' viewBox='0 0 24 24' width='16' height='16' "
+    "fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' "
+    "stroke-linejoin='round' aria-hidden='true'>"
+    "<circle cx='8.5' cy='12' r='5'/>"
+    "<path d='M13.5 12H22'/><path d='M18.5 12v4'/></svg>"
+)
 
 
 def _migrate_config(cfg: dict) -> dict:
@@ -2000,15 +2083,70 @@ def _keep_signed_in_enabled() -> bool:
         return True
 
 
-def _token_upgrade_enabled() -> bool:
-    """Whether to try trading a session for a long-lived token.
+#: Institutions that have answered "no" to a self-service access token, by HOST.
+#:
+#: A LIST OF HOSTS, and not the bare boolean this used to be. The answer is a
+#: setting on one Canvas ACCOUNT, so a single global flag states a fact about
+#: whichever school the user happened to be at when it was learned, and then
+#: states it about every school they use afterwards. Two ways that bites, both
+#: reachable: a student at two institutions (a joint programme, an exchange, a
+#: graduate who keeps an alumni account) gets no token at the school that
+#: allows them because a different school refused; and the flag is what any
+#: adaptive login screen would read, so a UI built on the global form would
+#: tell a student their school blocks tokens when it is a different school
+#: that does. The rule file requires this keying to land BEFORE the screen
+#: starts reading it, which is why it is here rather than in that change.
+_BLOCKED_HOSTS_KEY = 'token_upgrade_blocked_hosts'
 
-    Two ways to be off: the user turned it off, or this institution has
+#: The retired global form. Read for migration, never written.
+_BLOCKED_LEGACY_KEY = 'token_upgrade_blocked'
+
+
+def _blocked_hosts(config: dict) -> set:
+    """Hosts known to refuse a self-service token, including the legacy answer.
+
+    A NEW KEY rather than changing the old one's type, because a bool and a
+    list at one name means every reader has to know which version wrote it -
+    and the reader that gets it wrong fails by answering "not blocked", which
+    spends a request and logs a 401 at exactly the institutions this feature
+    exists for.
+
+    The legacy bool is attributed to the config's OWN `api_url`, which is
+    correct by construction: `_upgrade_to_access_token` writes that flag and
+    the address in the same function, against the one school the config
+    describes at a time. So a user upgrading from an older version keeps their
+    "do not ask again" instead of paying one more refusal.
+    """
+    hosts = set()
+    raw = config.get(_BLOCKED_HOSTS_KEY)
+    if isinstance(raw, (list, tuple, set)):
+        hosts.update(str(h).strip().lower() for h in raw if str(h).strip())
+    if config.get(_BLOCKED_LEGACY_KEY):
+        legacy = canvas_host(str(config.get('api_url') or ''))
+        if legacy:
+            hosts.add(legacy)
+    return hosts
+
+
+def _token_upgrade_enabled(api_url: str = '') -> bool:
+    """Whether to try trading a session for a long-lived token at *api_url*.
+
+    Two ways to be off: the user turned it off, or **this institution** has
     already answered no. The second is remembered because the answer is a
     setting on the Canvas account and cannot change between two sign-ins on
     the same afternoon - and asking again every time would put a pointless
     request, and a scary-looking 401 in the log, in front of exactly the users
     this app was built for.
+
+    **An unknown host answers True**, which is the safe direction: the cost of
+    asking is one request that the institution refuses, and the cost of
+    guessing "blocked" is a student who never gets the long-lived credential
+    their school would have granted.
+
+    KNOWN AND NOT DECIDED: a host that refused is never re-asked, for the life
+    of the install. An administrator CAN reverse the setting between semesters,
+    and nothing would notice. Re-asking on a clock is a five-line change and a
+    behaviour change, so it is recorded here rather than guessed at.
     """
     try:
         # `may_write` is deliberately ignored: an unreadable settings file
@@ -2021,7 +2159,36 @@ def _token_upgrade_enabled() -> bool:
         return True
     if not config.get('token_upgrade_enabled', True):
         return False
-    return not config.get('token_upgrade_blocked', False)
+    host = canvas_host(api_url or str(config.get('api_url') or ''))
+    if not host:
+        # No address to ask about. Not a reason to refuse: `mint` needs one
+        # anyway and answers `no_session` without spending a request.
+        return True
+    return host not in _blocked_hosts(config)
+
+
+def _record_token_upgrade_blocked(api_url: str) -> None:
+    """Remember that *api_url*'s institution refuses self-service tokens.
+
+    Writes the host into the list and drops the retired global flag in the
+    same write, so the migration happens once, on the next refusal, rather
+    than needing its own pass over everybody's settings file.
+    """
+    host = canvas_host(api_url or '')
+    if not host:
+        return
+    try:
+        config_data, may_write = read_config_for_update()
+        if not may_write:
+            return
+        hosts = _blocked_hosts(config_data)
+        hosts.add(host)
+        config_data[_BLOCKED_HOSTS_KEY] = sorted(hosts)
+        config_data.pop(_BLOCKED_LEGACY_KEY, None)
+        write_config_atomically(config_data)
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not record that this school does not "
+                       "allow access tokens", exc_info=True)
 
 
 def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
@@ -2037,7 +2204,7 @@ def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
     that survives a restart for one that does not.
     """
     api_url = st.session_state.get('api_url', '') or ''
-    if not _token_upgrade_enabled():
+    if not _token_upgrade_enabled(api_url):
         return False
 
     from core import token_mint
@@ -2053,15 +2220,9 @@ def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
 
     if not result:
         if result.permanent:
-            # Remember the no, so the next sign-in does not ask again.
-            try:
-                config_data, may_write = read_config_for_update()
-                if may_write:
-                    config_data['token_upgrade_blocked'] = True
-                    write_config_atomically(config_data)
-            except Exception:                                      # noqa: BLE001
-                logger.warning("Could not record that this school does not "
-                               "allow access tokens", exc_info=True)
+            # Remember the no FOR THIS INSTITUTION, so the next sign-in here
+            # does not ask again - and so a sign-in somewhere else still does.
+            _record_token_upgrade_blocked(api_url)
         return False
 
     if not store_token(api_url or 'default', result.token):
@@ -2091,6 +2252,15 @@ def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
             # Lets the reconnect screen offer "Sign in with Canvas" rather
             # than telling a user who never pasted a token to paste a new one.
             config_data['token_source'] = 'minted'
+            # `minted_token_capped` is a fact about the token being REPLACED -
+            # that this institution would not extend it further - so carrying
+            # it onto a freshly minted one silences the renewal before it has
+            # ever been tried. Reachable the moment a user mints at a second
+            # school, and it fails silently: the token simply stops renewing
+            # and expires months later, which reads as the feature not working
+            # rather than as a stale flag. Same class as the minted keys the
+            # paste-a-token path already clears for the same reason.
+            config_data.pop('minted_token_capped', None)
             config_data.pop('mac_api_token', None)
             config_data.pop('api_token', None)
             write_config_atomically(config_data)
@@ -2180,6 +2350,116 @@ _BROWSER_SVG = (
 )
 
 
+def _signin_button_label(api_url: str) -> str:
+    """What the primary button says, given the address we currently hold.
+
+    **Naming the student's own university is the strongest trust signal this
+    screen has**, and it costs nothing because the picker has already resolved
+    it. "Sign in to Copenhagen Business School" also sets the right
+    expectation, where "Sign in with Canvas" reads like "Sign in with Google"
+    and promises a one-click provider flow rather than a window containing
+    their university's ordinary login page.
+
+    Resolved SERVER-SIDE wherever the address is already known - a returning
+    user (the field is pre-filled from config) and reauth mode (no field is
+    rendered at all, the address is a saved chip). That matters because the
+    alternative is a label that paints generic and then flips a moment later,
+    which reads as jank. The only case that flips is a genuinely new user at
+    the instant they pick their school, where a changing label is FEEDBACK.
+
+    `institutions.match_url` is exact-host-only by design - it refuses to let
+    `evil-harvard.edu` match `harvard.edu` - so an unrecognised address is
+    answered honestly with the generic label rather than a guess. A great many
+    schools are not on the list, and that is the ordinary case, not an error.
+
+    The name is Markdown-escaped because a Streamlit button label IS Markdown:
+    this repo has already been bitten by `1. Semester` rendering as an ordered
+    list item with the number eaten.
+    """
+    # Function-scoped, like every other reach for this module in this file:
+    # `ui.auth` and `ui.institution_picker` would otherwise be a cycle.
+    from ui import institution_picker
+    generic = institution_picker.SIGNIN_LABEL_GENERIC
+    if not api_url:
+        return generic
+    try:
+        from shared.helpers import md_escape
+        from shared import institutions
+        row = institutions.match_url(api_url)
+    except Exception:                                              # noqa: BLE001
+        # A lookup failure must never cost the user their sign-in button.
+        logger.debug("Institution lookup failed for the sign-in label",
+                     exc_info=True)
+        return generic
+    name = (row[0] if row else '').strip()
+    if not name or len(name) > institution_picker.SIGNIN_LABEL_MAX_NAME:
+        return generic
+    return institution_picker.SIGNIN_LABEL_PREFIX + md_escape(name)
+
+
+def _extension_cta_html() -> str:
+    """The "get the extension" control, or an honest line saying there is none.
+
+    **`EXTENSION_STORE_URL` being empty is a STATE, not a missing value.** The
+    previous version of this screen told students to install an extension that
+    had no store listing, no link anywhere in the app, and no copy inside the
+    installer - so the route opened their Canvas, waited three minutes, and
+    then reported that nothing came back, in copy that reads like their
+    mistake. A dead `href="#"` would preserve exactly that failure while
+    looking live, which is why the empty case renders NO link at all.
+
+    Every character here is a literal. Nothing from Canvas, nothing from the
+    user, and not even the URL is interpolated unless this file set it - the
+    same rule `_browser_notice_html` and `_handoff_card_html` follow, so the
+    raw-HTML render is safe by construction rather than by an escaping call
+    somebody could later drop.
+    """
+    if not EXTENSION_STORE_URL:
+        return (
+            "<div class='login-ext-cta login-ext-cta-soon'>"
+            "<span>Not in the Chrome store yet. The blue button above "
+            "does the same job with no extension at all.</span></div>")
+    return (
+        "<div class='login-ext-cta'>"
+        f"<a class='login-ext-btn' href='{EXTENSION_STORE_URL}' target='_blank' "
+        "rel='noopener noreferrer'>"
+        f"{_ICO_PUZZLE}<span>Get the extension</span></a></div>")
+
+
+def _extension_guide_html() -> str:
+    """The three steps, for a student who has never installed an extension.
+
+    Numbered because this genuinely IS a sequence - the extension has to exist
+    before the tab matters, and the tab has to be open before the button does
+    anything - which is the one case where numbering encodes something true
+    rather than decorating a list.
+
+    The numbers are MARKUP, not list markers. A browser's own `<ol>` counter
+    cannot be styled into a badge, cannot be coloured separately from the line
+    it labels, and hangs outside the text block so every wrapped line indents
+    under nothing. Carrying the digit in a span costs three characters a row
+    and buys a marker that belongs to this card's own colour scheme.
+
+    The puzzle-piece sentence deliberately is NOT here. It belongs in the
+    waiting card, at the moment a student is hunting a toolbar for a button
+    Chrome has hidden; here it would be a warning about a problem they have
+    not met yet.
+    """
+    return (
+        "<div class='login-ext-steps'>"
+        "<div class='lxs-lead'>Signs you in from the Canvas tab you already "
+        "have open. Nothing to type.</div>"
+        "<ol class='lxs-list'>"
+        "<li><span class='lxs-n'>1</span><span class='lxs-t'>Add it to "
+        "<b>Chrome</b> or <b>Edge</b>.</span></li>"
+        "<li><span class='lxs-n'>2</span><span class='lxs-t'>Open your Canvas "
+        "in a tab.</span></li>"
+        "<li><span class='lxs-n'>3</span><span class='lxs-t'>Press the button "
+        "below, then click the <b>Canvas Downloader</b> icon and choose "
+        "<b>Sign me in</b>.</span></li>"
+        "</ol></div>")
+
+
 def _handoff_card_html() -> str:
     """The extension card. ONE element, every state, literals only.
 
@@ -2191,7 +2471,6 @@ def _handoff_card_html() -> str:
     # Function-scoped, like every other use of it in this file: `ui/auth.py`
     # reaches `shared.helpers` and back, so a module-level import here is a
     # cycle. `tests/test_unbound_names.py` caught this as a NameError.
-    from shared.helpers import help_text_enabled
     from core import handoff
     if st.session_state.get('handoff_waiting') and handoff.waiting():
         return (
@@ -2199,17 +2478,23 @@ def _handoff_card_html() -> str:
             "<b>Waiting for your browser.</b> Click the Canvas Downloader "
             "button in Chrome while your Canvas tab is open."
             "</div>")
-    if not help_text_enabled():
-        # Gated like every other explainer on this page: a returning user who
-        # has the extension does not need the instructions again. The BUTTON
-        # is unconditional; only this line is gated.
-        return "<div class='login-handoff'></div>"
-    return (
-        "<div class='login-handoff'>"
-        "Already signed in to Canvas in Chrome? Install the free "
-        "<b>Canvas Downloader Connector</b> extension and this signs you in "
-        "with no password and no address to type."
-        "</div>")
+    # THE EXPLAINER THAT USED TO LIVE HERE IS GONE, because as of 2026-09-14
+    # it is said twice. This card sits inside the extension disclosure, three
+    # elements under `_extension_guide_html`, and both were telling the same
+    # student the same thing in the same voice: one as a lead-in and three
+    # numbered steps, the other as a sentence beginning "Already signed in to
+    # Canvas in Chrome?". Side by side in a narrow column that reads as the
+    # screen repeating itself, which is what it was.
+    #
+    # It was also the WRONG question. "Already signed in to Canvas in Chrome?"
+    # has the answer yes for essentially every student alive, so as an opener
+    # it qualified nobody - the product owner's own correction, and the reason
+    # the disclosure title names the cost instead.
+    #
+    # The element stays, always, because this slot is the live state's home and
+    # Streamlit reconciles by position: a card that comes and goes hands the
+    # next element its DOM node. It simply has nothing to say until there is.
+    return "<div class='login-handoff'></div>"
 
 
 #: PATH B's failures, by cause. Every one is a LITERAL pair, looked up by a key
@@ -2230,8 +2515,8 @@ _HANDOFF_FAILURES: dict[str, tuple[str, str]] = {
         "Nothing came back from Chrome",
         "Two things cause this almost every time: the <b>Canvas Downloader</b> "
         "button is not in Chrome yet, or the Canvas tab you used is not signed "
-        "in. You can try again, or use <b>Sign in with Canvas</b> above, which "
-        "works without any extension."),
+        "in. You can try again, or use the blue <b>Sign in</b> button below, "
+        "which works without any extension."),
     'canvas_refused': (
         "Canvas did not accept that sign-in",
         "Open Canvas in Chrome, check that you are really signed in there, "
@@ -2243,11 +2528,11 @@ _HANDOFF_FAILURES: dict[str, tuple[str, str]] = {
     'no_port': (
         "Could not start the browser sign-in",
         "Close Canvas Downloader completely and open it again. If it keeps "
-        "happening, use <b>Sign in with Canvas</b> above instead."),
+        "happening, use the blue <b>Sign in</b> button below instead."),
     'adopt_error': (
         "That sign-in did not work",
-        "Nothing has changed. You can try again, or use <b>Sign in with "
-        "Canvas</b> above instead."),
+        "Nothing has changed. You can try again, or use the blue "
+        "<b>Sign in</b> button below instead."),
 }
 
 
@@ -2313,8 +2598,8 @@ def _browser_notice_html(state: str) -> str:
             "<b>puzzle-piece</b> icon in Chrome's toolbar first - that is "
             "where Chrome keeps new buttons. If it is not there either, you "
             "have not added the free Canvas Downloader extension to Chrome "
-            "yet: use <b>Sign in with Canvas</b> above instead, which needs "
-            "no extension at all.</div>"
+            "yet: use the blue <b>Sign in</b> button below instead, which "
+            "needs no extension at all.</div>"
             "<div class='kc-foot'><span class='kc-spin'></span>"
             "<span>Waiting for your browser</span></div>"
             "</div>")
@@ -2830,7 +3115,7 @@ def render_login_page(fetch_courses_fn):
         width: 100% !important;
     }
 
-    .github-link {
+    .login-headlink {
         display: inline-flex !important;
         align-items: center !important;
         gap: 6px !important;
@@ -2841,11 +3126,11 @@ def render_login_page(fetch_courses_fn):
         transition: color 0.2s ease-in-out !important;
     }
 
-    .github-link:hover {
+    .login-headlink:hover {
         color: #f1f5f9 !important;
     }
 
-    .github-icon {
+    .login-headlink-ico {
         opacity: 0.85 !important;
     }
 
@@ -2861,32 +3146,39 @@ def render_login_page(fetch_courses_fn):
        the card's body copy; and the slab gains enough contrast to read as a
        button. It stays a quiet button, not a second CTA - it competes with
        nothing above it, because there is nothing above it any more. */
+    /* A LINE OF TEXT that continues the written guide, not a chip. As a
+       bordered slab it was a second call to action inside a card that already
+       has one, and it sat BELOW the Log In button - after the action it
+       exists to explain. Left-aligned on the guide's own left edge so the two
+       read as one block; the red play mark is what makes it recognisable as a
+       video at all, so it keeps its colour while the words take the link
+       colour. */
     .youtube-link {
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center !important;
-        justify-content: center !important;
-        gap: 9px !important;
+        gap: 7px !important;
         color: #b8c5d6 !important;
         text-decoration: none !important;
-        font-size: 0.85rem !important;
+        font-size: 0.79rem !important;
         font-weight: 600 !important;
-        transition: all 0.2s ease-in-out !important;
-        margin: clamp(1vh, 2vh, 16px) auto 0 auto !important;
-        max-width: fit-content !important;
-        background-color: rgba(255, 255, 255, 0.06) !important;
-        border: 1px solid rgba(255, 255, 255, 0.14) !important;
-        border-radius: 8px !important;
-        padding: 8px 16px !important;
+        transition: color 0.2s ease-in-out !important;
+        margin: 6px 0 0 0 !important;
+        padding: 0 !important;
+        background: none !important;
+        border: none !important;
     }
 
     .youtube-link:hover {
         color: #ffffff !important;
-        background-color: rgba(255, 255, 255, 0.10) !important;
-        border-color: rgba(239, 68, 68, 0.45) !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
     }
 
     .youtube-icon {
         color: #ef4444 !important;
+        width: 15px !important;
+        height: 15px !important;
+        flex: 0 0 auto !important;
         transition: transform 0.2s ease-in-out !important;
     }
 
@@ -2969,14 +3261,13 @@ def render_login_page(fetch_courses_fn):
     }
 
     /* Scoped styling for help expanders */
-    div[class*="st-key-login_help_expanders"] {
-        max-width: 480px !important;
-        margin: 0 auto !important;
+    div[class*="st-key-login_card_wrapper_"] {
         width: 100% !important;
+        margin: 0 !important;
     }
 
     /* Remove borders, backgrounds, and shadows from expanders inside this container */
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] {
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
@@ -2985,13 +3276,13 @@ def render_login_page(fetch_courses_fn):
     }
 
     /* Target details and summary to remove all borders/backgrounds */
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] details {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] details {
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
     }
 
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary {
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
@@ -3004,7 +3295,7 @@ def render_login_page(fetch_courses_fn):
         width: 100% !important;
     }
 
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary > * {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary > * {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
@@ -3014,7 +3305,7 @@ def render_login_page(fetch_courses_fn):
         gap: 8px !important;
     }
 
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary > * > * {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary > * > * {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
@@ -3024,42 +3315,42 @@ def render_login_page(fetch_courses_fn):
     }
 
     /* Style the summary text inside modern Streamlit expander */
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary p {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary p {
         color: #94a3b8 !important; /* Elegant muted color */
         font-weight: 500 !important;
         transition: color 0.2s ease-in-out !important;
         text-align: center !important;
     }
 
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary:hover p {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary:hover p {
         color: #f1f5f9 !important; /* Brighter on hover */
     }
 
     /* Style the chevron arrow inside help expanders to match the grey text */
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary svg {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary svg {
         color: #94a3b8 !important;
         transition: color 0.1s ease-in-out !important;
     }
 
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] summary:hover svg {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary:hover svg {
         color: #f1f5f9 !important;
     }
 
     /* Turn header text & chevron white when help expanders are open/expanded */
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] details[open] summary p {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] details[open] summary p {
         color: #ffffff !important;
     }
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] details[open] summary svg {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] details[open] summary svg {
         color: #ffffff !important;
     }
 
     /* Reset Streamlit flex block gap inside the help expanders for precise spacing control */
-    div[class*="st-key-login_help_expanders"] div[data-testid="stExpander"] div[data-testid="stVerticalBlock"] {
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] div[data-testid="stVerticalBlock"] {
         gap: 0px !important;
     }
 
     /* Style inline code blocks to look like soft, non-nerdy badges/pills */
-    div[class*="st-key-login_help_expanders"] code {
+    div[class*="st-key-login_card_wrapper_"] code {
         color: #93c5fd !important;
         background-color: rgba(147, 197, 253, 0.1) !important;
         border: 1px solid rgba(147, 197, 253, 0.25) !important;
@@ -3703,27 +3994,34 @@ def render_login_page(fetch_courses_fn):
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 8px !important;
+        gap: 7px !important;
         width: 100% !important;
         height: 40px !important;
-        padding: 0 10px !important;
-        border-radius: 6px !important;
-        background-color: #1f77b4 !important;
-        color: #ffffff !important;
-        font-size: 0.86rem !important;
+        padding: 0 8px !important;
+        border-radius: 8px !important;
+        /* OUTLINE, in this route's colour. It was solid #1f77b4 - the same
+           fill as the one primary on the screen - which made a helper that
+           opens a Canvas settings page look like the way to sign in, inside
+           the card belonging to the other route entirely. Outlined and
+           unfilled it sits a clear step below the filled Log In under it,
+           while still reading as part of the token route. */
+        background-color: transparent !important;
+        border: 1px solid rgba(104, 212, 163, 0.38) !important;
+        color: #68d4a3 !important;
+        font-size: 0.84rem !important;
         font-weight: 600 !important;
         font-family: inherit !important;
         text-decoration: none !important;
         white-space: nowrap !important;
         overflow: hidden !important;
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
-        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+        box-shadow: none !important;
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out !important;
     }
     div[class*="st-key-login_card_wrapper"] .cd-tokenlink-btn:hover {
-        background-color: #2b8cbe !important;
-        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
-                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
-        color: #ffffff !important;
+        background-color: rgba(104, 212, 163, 0.14) !important;
+        border-color: rgba(104, 212, 163, 0.70) !important;
+        box-shadow: none !important;
+        color: #93e5c0 !important;
     }
     /* The app's ONE disabled paint. Nothing on top of it: no opacity (it
        multiplies), no second filter (it replaces), no flat grey repaint. */
@@ -3744,13 +4042,13 @@ def render_login_page(fetch_courses_fn):
        against the token row the way the URL status row is pulled up under the
        URL field - Streamlit's 1rem block flow would otherwise attach it to the
        Log In button below, which is the opposite of what it means. */
-    div[class*="st-key-login_card_wrapper"] .login-tokensteps {
-        margin: -0.55rem 0 0.6rem 0 !important;
+    div[class*="st-key-login_card_wrapper_"] .login-tokensteps {
+        margin: 10px 0 16px 0 !important;
         font-size: 0.79rem !important;
-        line-height: 1.5 !important;
+        line-height: 1.55 !important;
         color: #8a99ad !important;
     }
-    div[class*="st-key-login_card_wrapper"] .login-tokensteps b {
+    div[class*="st-key-login_card_wrapper_"] .login-tokensteps b {
         color: #b8c5d6 !important;
         font-weight: 600 !important;
     }
@@ -3805,34 +4103,47 @@ def render_login_page(fetch_courses_fn):
        style block shifts every later style host by one. */
     div[class*="st-key-browser_login_slot"] { gap: 0 !important; }
 
-    /* "Sign in with Canvas" - a form submit button, because a plain st.button
-       inside st.form cannot rerun. Painted as the quiet sibling of "Log In":
-       it starts a route, while "Log In" finishes one. Colours are ACCENT_BLUE
-       (#4da8da) written as rgba() of the token's own channels, never a
-       near-neighbour hex - Rule 8 fails the build on anything within 1.0
-       CIEDE2000 of a token, and a hand-picked neighbour is drift, not design.
-       No `help=` on this button: a tooltip there wraps the button element in
-       a stTooltipHoverTarget and silently drops Streamlit's own sizing, so it
-       would render short beside its sibling. The explanation is the caption
-       underneath instead - the `.cd-action-hint` rule this app already
-       follows for its four primary actions. */
+    /* THE ONE PRIMARY, and it used to be the opposite way round.
+       This button carried an outline treatment while `Log In` under the token
+       field was the only solid blue on the page - so the brightest thing on a
+       first-run login screen belonged to the one route a growing share of
+       students are not allowed to take. Measured on the real app 2026-09-14 at
+       both 1280x860 and the 1024x700 minimum.
+       It takes the app's OWN solid-primary look (BLUE_DEEP #1f77b4 plus the
+       inset highlight), the same as `login_submit_btn` and "Analyze, Review &
+       Sync", because the new primary is not a new KIND of control and a
+       bespoke style here would be one more primary look to keep in step. */
     div[class*="st-key-login_browser_btn"] button {
-        background: rgba(77, 168, 218, 0.10) !important;
-        border: 1px solid rgba(77, 168, 218, 0.45) !important;
-        color: #e2e8f0 !important;
+        background-color: #1f77b4 !important;
+        border: none !important;
+        border-radius: 6px !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        font-size: 1rem !important;
         font-weight: 600 !important;
+        height: 3.2em !important;
+        min-height: 3.2em !important;
+        width: 100% !important;
+        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
     }
     div[class*="st-key-login_browser_btn"] button:hover {
-        background: rgba(77, 168, 218, 0.18) !important;
-        border-color: rgba(77, 168, 218, 0.70) !important;
-        color: #f8fafc !important;
+        background-color: #2b8cbe !important;
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
     }
+    div[class*="st-key-login_browser_btn"] button p {
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+    }
+
     div[class*="st-key-login_card_wrapper"] .login-browser-hint {
         color: #94a3b8;
         font-size: 0.8rem;
         line-height: 1.45;
         text-align: center;
-        margin: 6px 0 0 0;
+        margin: 4px 0 16px 0;
     }
     /* The extension card, under the button that uses it. Same voice and the
        same measurements as the browser hint above it, because it is the same
@@ -3841,44 +4152,481 @@ def render_login_page(fetch_courses_fn):
        gets the accent, not amber: nothing is wrong, something is happening.
        An empty div is rendered when help text is off, so the element count
        never changes; it must therefore collapse to nothing. */
-    div[class*="st-key-login_card_wrapper"] .login-handoff {
+    div[class*="st-key-login_card_wrapper_"] .login-handoff {
         color: #94a3b8;
         font-size: 0.8rem;
         line-height: 1.45;
         text-align: center;
         margin: 6px 0 0 0;
     }
-    div[class*="st-key-login_card_wrapper"] .login-handoff:empty {
+    div[class*="st-key-login_card_wrapper_"] .login-handoff:empty {
         display: none;
     }
-    div[class*="st-key-login_card_wrapper"] .login-handoff b {
+    div[class*="st-key-login_card_wrapper_"] .login-handoff b {
         color: #cbd5e1;
         font-weight: 600;
     }
-    div[class*="st-key-login_card_wrapper"] .login-handoff-live {
+    div[class*="st-key-login_card_wrapper_"] .login-handoff-live {
         color: #4da8da;
     }
-    div[class*="st-key-login_card_wrapper"] .login-handoff-live b {
+    div[class*="st-key-login_card_wrapper_"] .login-handoff-live b {
         color: #4da8da;
     }
-    /* The divider between the two ways in. A rule either side of the words,
-       so neither route reads as a footnote to the other. */
-    div[class*="st-key-login_card_wrapper"] .login-authsep {
+
+    /* ── The two disclosures, and the glyph on each header ──────────────────
+       A Streamlit expander label is Markdown, so it takes no HTML and the icon
+       has to be a CSS `::before` carrying a URL-encoded data URI. The colours
+       track the skin's own three states (rest / hover / open) because the
+       glyph and the word are one control and a glyph that stays grey while its
+       label turns white reads as a rendering fault. */
+    /* ── The glyph on each header ───────────────────────────────────────
+       A Streamlit expander label takes no HTML, so the icon is a CSS
+       `::before` carrying a URL-encoded data URI - this repo's documented
+       recipe. Encoding is also what keeps the rule legal: one literal angle
+       bracket anywhere in a style block ends the element and silently kills
+       every rule after it.
+
+       The colours track the skin's three states, because the glyph and the
+       word are one control and a glyph that stays grey while its label turns
+       white reads as a rendering fault. */
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"]::before {
+        content: "";
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        margin-right: 9px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 16px 16px;
+        transition: background-image 0.2s ease-in-out;
+    }
+    /* THE ROUTE'S OWN COLOUR, on hover and while open. Resting grey, so a
+       closed pair reads as two equal alternatives; coloured the moment the
+       student engages with one, and the same colour is on that route's
+       action button below - which is the whole point. Three solid blue
+       buttons on one screen said nothing about which route each belonged
+       to. */
+    div[class*="st-key-login_card_wrapper_ext"] div[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"]::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns%3D'http://www.w3.org/2000/svg' viewBox%3D'0 0 24 24' fill%3D'%2394a3b8'%3E%3Cpath d%3D'M20.5 11H19V7a2 2 0 0 0-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4a2 2 0 0 0-2 2v3.8h1.5a2.6 2.6 0 0 1 0 5.2H2V20a2 2 0 0 0 2 2h3.8v-1.5a2.6 2.6 0 0 1 5.2 0V22H17a2 2 0 0 0 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z'/%3E%3C/svg%3E");
+    }
+    div[class*="st-key-login_card_wrapper_ext"] div[data-testid="stExpander"] summary:hover [data-testid="stMarkdownContainer"]::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns%3D'http://www.w3.org/2000/svg' viewBox%3D'0 0 24 24' fill%3D'%23b89dfe'%3E%3Cpath d%3D'M20.5 11H19V7a2 2 0 0 0-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4a2 2 0 0 0-2 2v3.8h1.5a2.6 2.6 0 0 1 0 5.2H2V20a2 2 0 0 0 2 2h3.8v-1.5a2.6 2.6 0 0 1 5.2 0V22H17a2 2 0 0 0 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z'/%3E%3C/svg%3E");
+    }
+    div[class*="st-key-login_card_wrapper_ext"] div[data-testid="stExpander"] details[open] summary [data-testid="stMarkdownContainer"]::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns%3D'http://www.w3.org/2000/svg' viewBox%3D'0 0 24 24' fill%3D'%23b89dfe'%3E%3Cpath d%3D'M20.5 11H19V7a2 2 0 0 0-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4a2 2 0 0 0-2 2v3.8h1.5a2.6 2.6 0 0 1 0 5.2H2V20a2 2 0 0 0 2 2h3.8v-1.5a2.6 2.6 0 0 1 5.2 0V22H17a2 2 0 0 0 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z'/%3E%3C/svg%3E");
+    }
+    div[class*="st-key-login_card_wrapper_token"] div[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"]::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns%3D'http://www.w3.org/2000/svg' viewBox%3D'0 0 24 24' fill%3D'none' stroke%3D'%2394a3b8' stroke-width%3D'2.5' stroke-linecap%3D'round' stroke-linejoin%3D'round'%3E%3Ccircle cx%3D'8.5' cy%3D'12' r%3D'5'/%3E%3Cpath d%3D'M13.5 12H22'/%3E%3Cpath d%3D'M18.5 12v4'/%3E%3C/svg%3E");
+    }
+    div[class*="st-key-login_card_wrapper_token"] div[data-testid="stExpander"] summary:hover [data-testid="stMarkdownContainer"]::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns%3D'http://www.w3.org/2000/svg' viewBox%3D'0 0 24 24' fill%3D'none' stroke%3D'%2368d4a3' stroke-width%3D'2.5' stroke-linecap%3D'round' stroke-linejoin%3D'round'%3E%3Ccircle cx%3D'8.5' cy%3D'12' r%3D'5'/%3E%3Cpath d%3D'M13.5 12H22'/%3E%3Cpath d%3D'M18.5 12v4'/%3E%3C/svg%3E");
+    }
+    div[class*="st-key-login_card_wrapper_token"] div[data-testid="stExpander"] details[open] summary [data-testid="stMarkdownContainer"]::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns%3D'http://www.w3.org/2000/svg' viewBox%3D'0 0 24 24' fill%3D'none' stroke%3D'%2368d4a3' stroke-width%3D'2.5' stroke-linecap%3D'round' stroke-linejoin%3D'round'%3E%3Ccircle cx%3D'8.5' cy%3D'12' r%3D'5'/%3E%3Cpath d%3D'M13.5 12H22'/%3E%3Cpath d%3D'M18.5 12v4'/%3E%3C/svg%3E");
+    }
+
+    /* Measured in the real app: the div between `summary` and the markdown
+       container computes `justify-content: center`, which pushed each title
+       24px off its own chevron. Every descendant, because the wrapper carries
+       no testid of its own to aim at. */
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary * {
+        justify-content: flex-start !important;
+    }
+
+    /* The pair sits directly under the primary and its caption, with enough
+       air that they read as a separate tier rather than as more of the button
+       stack. The skin zeroes the inner block gap, so every child inside a
+       disclosure states its own spacing. */
+    div[class*="st-key-login_card_wrapper_ext"] {
+        margin-top: 14px !important;
+    }
+    div[class*="st-key-login_card_wrapper_token"] {
+        margin-top: 2px !important;
+    }
+
+
+    /* ── The two disclosures as CARDS, side by side ─────────────────────────
+       They inherit the old help-expander skin (border: none, transparent,
+       centred, inner gap 0), which was right for a block of prose below the
+       card and wrong for two widget-bearing cards inside it. Everything below
+       overrides that, and sits AFTER it in the same stylesheet so equal
+       specificity resolves in this block's favour. */
+    /* GREY CARDS, no border. The pale 1px outline read as a stray white
+       frame against the page - the product owner's words, and he is right:
+       every other card in this app separates itself with a FILL, and an
+       outline on top of a fill states the boundary twice. BG_CARD is the
+       app's own card surface, so these read as the same kind of object as
+       every other card in the product rather than as a new one. */
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] {
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 0 !important;
+    }
+
+    /* THE CARD'S OWN PADDING IS THE ONLY PADDING. The expander and its details
+       each added their own on top of it, and three layers of inset is why a
+       394px card had 286px of usable width and a one-line title stood 82px
+       tall. 24px horizontally because that is the login card's inset too, so
+       the left card's content sits on the same vertical as the URL label
+       above it. */
+    div[class*="st-key-login_card_wrapper_ext"],
+    div[class*="st-key-login_card_wrapper_token"] {
+        padding: 16px 24px !important;
+    }
+    /* 10px ABOVE the rule and 10px below it. The rule is
+       `stExpanderDetails`' own border-top, so the space above it has to come
+       from the summary - measured flush at y=630 against 8px of clearance
+       underneath, which read as a line drawn on the title rather than a
+       separator between two things. Only while open: closed, the summary is
+       the whole card and the padding would push its title off centre. */
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpanderDetails"] {
+        padding: 10px 0 0 0 !important;
+    }
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] details[open] summary {
+        padding-bottom: 10px !important;
+    }
+
+    /* EQUAL HEIGHT, because a matched pair that steps down on one side reads
+       as a mistake rather than as a choice. The column already stretches; the
+       keyed block inside it stopped at its content, so the fill - which is on
+       that block - stopped there too. */
+    div[class*="st-key-login_card_wrapper_ext"],
+    div[class*="st-key-login_card_wrapper_token"] {
+        box-sizing: border-box !important;
+    }
+    /* OPEN cards only. Stretching a shut one to match an open one turns a
+       one-line title bar into a 300px empty slab, which is what it did the
+       first time this was tried. Note the single `:has` with a descendant
+       inside it - `:has` cannot be nested in `:has`. */
+    div[data-testid="stLayoutWrapper"]:has(div[class*="st-key-login_card_wrapper_ext"] details[open]),
+    div[data-testid="stLayoutWrapper"]:has(div[class*="st-key-login_card_wrapper_token"] details[open]),
+    div[class*="st-key-login_card_wrapper_ext"]:has(details[open]),
+    div[class*="st-key-login_card_wrapper_token"]:has(details[open]) {
+        height: 100% !important;
+    }
+
+    /* LEFT-ALIGNED, chevron beside its title. Centred, the two chevrons landed
+       at different x positions because the titles are different lengths, and a
+       matched pair that does not line up reads as an accident. */
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary {
+        justify-content: flex-start !important;
+        gap: 7px !important;
+        min-height: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary > * {
+        justify-content: flex-start !important;
+    }
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary p,
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"] {
+        text-align: left !important;
+    }
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"] {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* THE OVERLAP FIX. The inherited skin zeroes this, which is why the token
+       path's "In Canvas: Account, Settings..." line rendered on top of the Log
+       In button. A disclosure holding widgets needs real spacing between them. */
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] div[data-testid="stVerticalBlock"] {
+        gap: 8px !important;
+    }
+
+    /* 6px above the pair and 6px between them, so the card behind shows
+       through by the same amount in both places and the two read as one band.
+       The column gap is set on the row that CONTAINS a disclosure rather than
+       on every horizontal block, because the URL row and the token row are
+       columns too and they are tuned to Streamlit's own spacing. */
+    div[class*="st-key-login_card_wrapper_"] {
+        margin-top: 0 !important;
+    }
+    /* 6px between the login card and the pair, matching the 6px between the
+       two of them, so the page shows through by the same amount in both
+       places and the three read as one stack. */
+    /* NEGATIVE, and that is the whole mechanism. The form's vertical block
+       already puts 16px between the login card and this row, so a positive
+       `margin-top: 6px` stacked ON it and produced 22px - against the 6px the
+       two cards have between them. -10px cancels the block gap and leaves the
+       6px the pair is tuned to, measured both ways.
+
+       Scoped to the keyed row. Unscoped, the same `:has` also matched the
+       three-column block that centres the whole page. */
+    div[class*="st-key-login_disc_row"] {
+        margin-top: -10px !important;
+    }
+    div[class*="st-key-login_disc_row"]
+        [data-testid="stHorizontalBlock"]:has(div[class*="st-key-login_card_wrapper_"]) {
+        gap: 6px !important;
+    }
+
+    /* ── Inside the extension disclosure ───────────────────────────────── */
+    div[class*="st-key-login_card_wrapper_"] .login-ext-steps {
+        margin: 4px 0 12px 0;
+    }
+    div[class*="st-key-login_card_wrapper_"] .lxs-lead {
+        color: #94a3b8;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        margin-bottom: 10px;
+    }
+    /* Numbered ROWS, not a bulleted list. The browser's own list counter
+       hangs outside the text block, so every wrapped line indented under empty
+       space and the three steps read as one grey paragraph with digits in it.
+       A badge and a text column put each step on its own baseline grid and let
+       the number carry this route's colour. */
+    div[class*="st-key-login_card_wrapper_"] .lxs-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        color: #cbd5e1;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+    div[class*="st-key-login_card_wrapper_"] .lxs-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        margin: 0;
+    }
+    div[class*="st-key-login_card_wrapper_"] .lxs-n {
+        flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        border-radius: 50%;
+        background: rgba(184, 157, 254, 0.16);
+        color: #b89dfe;
+        font-size: 0.68rem;
+        font-weight: 700;
+        line-height: 18px;
+        text-align: center;
+    }
+    div[class*="st-key-login_card_wrapper_"] .lxs-t {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    div[class*="st-key-login_card_wrapper_"] .lxs-list b {
+        color: #f1f5f9;
+        font-weight: 600;
+    }
+
+    /* The store button. Solid, icon-led and full width, so it reads as the
+       thing to press rather than as a link buried in a paragraph - the shape
+       the product owner asked for. Same BLUE_DEEP and the same inset highlight
+       as every other solid button in the app, chosen deliberately over a
+       distinct colour: it IS a primary action, just the primary action of this
+       section rather than of the screen. */
+    div[class*="st-key-login_card_wrapper_"] .login-ext-cta {
+        margin: 0 0 22px 0;
+    }
+    div[class*="st-key-login_card_wrapper_"] .login-ext-btn {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin: 18px 0 4px 0;
-        color: #8a99ad;
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
+        justify-content: center;
+        gap: 9px;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 18px;
+        border-radius: 8px;
+        background-color: #b89dfe;
+        color: #151c24 !important;
+        text-decoration: none !important;
+        font-size: 0.92rem;
+        font-weight: 600;
+        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    div[class*="st-key-login_card_wrapper"] .login-authsep::before,
-    div[class*="st-key-login_card_wrapper"] .login-authsep::after {
-        content: "";
-        flex: 1 1 auto;
-        height: 1px;
-        background: rgba(148, 163, 184, 0.22);
+    div[class*="st-key-login_card_wrapper"] .login-ext-btn:hover {
+        background-color: #cbb6ff;
+        box-shadow: 0 4px 15px rgba(184, 157, 254, 0.22);
+    }
+    div[class*="st-key-login_card_wrapper_"] .login-cta-ico {
+        flex-shrink: 0;
+    }
+    /* The honest empty state. Quiet on purpose: it is telling somebody that a
+       thing they cannot have yet is not needed, so it must not look like a
+       warning about something being broken. */
+    div[class*="st-key-login_card_wrapper_"] .login-ext-cta-soon {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        padding: 10px 12px;
+        border: 1px dashed rgba(148, 163, 184, 0.30);
+        border-radius: 8px;
+    }
+    div[class*="st-key-login_card_wrapper_"] .login-ext-cta-soon b {
+        color: #cbd5e1;
+        font-weight: 600;
+    }
+
+    /* EACH ROUTE'S OWN ACTION BUTTON.
+       Tinted rather than solid, and the tint is the point rather than a
+       compromise. Solid is this app's PRIMARY tier and the screen has exactly
+       one primary - "Sign in to [your university]". With both disclosures
+       open it carried THREE solid #1f77b4 buttons of equal weight, so the two
+       alternatives shouted exactly as loudly as the route almost every
+       student should take. A tint plus a 1px edge still reads as pressable
+       and reads as second, and the hue is the one that route's header glyph
+       takes on hover, which is what ties the button to the route.
+
+       Both are sized alike. "Use the Canvas tab in my browser" was
+       Streamlit's untouched secondary - 0.8px of 20%-white on the page
+       background - beside a styled solid blue Log In, so the two routes'
+       actions did not look like the same kind of control. */
+    div.st-key-login_handoff_btn button,
+    div.st-key-login_submit_btn button {
+        border-radius: 8px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        width: 100% !important;
+        font-weight: 600 !important;
+        box-shadow: none !important;
+        transition: background-color 0.2s ease-in-out,
+                    border-color 0.2s ease-in-out,
+                    color 0.2s ease-in-out !important;
+    }
+    div.st-key-login_handoff_btn button p,
+    div.st-key-login_submit_btn button p {
+        color: inherit !important;
+        font-size: 0.92rem !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+    }
+    div.st-key-login_handoff_btn button {
+        background-color: rgba(184, 157, 254, 0.14) !important;
+        border: 1px solid rgba(184, 157, 254, 0.45) !important;
+        color: #b89dfe !important;
+    }
+    div.st-key-login_handoff_btn button:hover {
+        background-color: rgba(184, 157, 254, 0.24) !important;
+        border-color: rgba(184, 157, 254, 0.70) !important;
+        color: #cbb6ff !important;
+    }
+    div.st-key-login_submit_btn button {
+        background-color: rgba(104, 212, 163, 0.14) !important;
+        border: 1px solid rgba(104, 212, 163, 0.45) !important;
+        color: #68d4a3 !important;
+    }
+    div.st-key-login_submit_btn button:hover {
+        background-color: rgba(104, 212, 163, 0.24) !important;
+        border-color: rgba(104, 212, 163, 0.70) !important;
+        color: #93e5c0 !important;
+    }
+
+    /* THE TWO ACTION BUTTONS SIT ON ONE LINE, at the bottom of both cards.
+       Equal-height cards make an unequal button row MORE obvious, not less:
+       measured 910 against 875 with the cards both at 328. The expander does
+       not fill the card it lives in, so the chain down to the content block
+       is given a height and the action container is pushed to the end of it.
+
+       `details` becomes a flex column because its content pane has to take
+       the leftover height BELOW the summary - at `display: block` a 100%
+       child is 100% of the whole element, summary included, and overflows by
+       exactly the header's height. */
+    div[class*="st-key-login_card_wrapper_"] > div[data-testid="stLayoutWrapper"],
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] {
+        height: 100% !important;
+    }
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] > details {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+    }
+    /* `::details-content` IS THE FLEX ITEM, and finding that out cost the
+       first attempt. Chromium wraps everything after `summary` in that
+       generated box, so `stExpanderDetails` is its CHILD and not a child of
+       `details` - which is why `flex-grow: 1` on it did nothing at all and
+       the token card's content stopped 29px short of the card it had just
+       been stretched to fill. Measured, not reasoned: the rule was injected
+       live and the pane went from 243px to 272px.
+
+       Where the pseudo-element is not supported the whole stretch is skipped
+       and the two buttons simply sit at their content height, which is what
+       they did before. Nothing else depends on it. */
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpander"] > details::details-content {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpanderDetails"] {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+    div[class*="st-key-login_card_wrapper_"] div[data-testid="stExpanderDetails"]
+        > div[data-testid="stVerticalBlock"] {
+        height: 100% !important;
+    }
+    div.st-key-login_handoff_btn,
+    div.st-key-login_submit_btn {
+        margin-top: auto !important;
+    }
+
+    /* The live-state slot renders an EMPTY div when nothing is in flight, and
+       an empty flex child still pays the block's 8px gap - which would leave
+       the extension's button 8px short of the token's. Hidden while empty,
+       shown the moment it has something to say. */
+    div[class*="st-key-login_card_wrapper_"]
+        div[data-testid="stElementContainer"]:has(.login-handoff:empty) {
+        display: none !important;
+    }
+
+    /* STACKED BELOW 1330px, and the number is measured, not chosen.
+       `start.py` ships min_size=(1024, 700), so 1024 is a window a user can
+       actually produce, and at 1000 every card failed at once: three-line
+       titles, "Get a token" truncated to "G..", the URL field clipping its
+       own value.
+
+       Swept with the token row on [1.2, 1], reading
+       `scrollWidth > clientWidth` on the shortcut's own label:
+
+           viewport   token card   button   label
+           1160       271          94       cut
+           1280       305          109      fits exactly, no slack
+           1366       330          121      fits, 12px spare
+
+       1330 is the first width with real slack. Above it the pair sits side by
+       side; at or below it they become one column at the full width of the
+       card above, where the same content has room to spare.
+
+       The breakpoint is on the CARDS, not on the page: the login card holds
+       one field and one button and is fine at any width this app can reach. */
+    @media (max-width: 1330px) {
+        div[class*="st-key-login_disc_row"]
+            [data-testid="stHorizontalBlock"]:has(div[class*="st-key-login_card_wrapper_"]) {
+            flex-direction: column !important;
+            /* NOWRAP IS LOAD-BEARING. Streamlit's row carries `flex-wrap:
+               wrap`, and once the direction is `column` a basis of 100% is
+               100% of the HEIGHT - so both cards claimed the full height and
+               wrapped into a second column beside the first, back to side by
+               side and now overflowing the page. Measured: the row computed
+               `column` and 121px tall while the second card sat at x=749,
+               outside it. */
+            flex-wrap: nowrap !important;
+        }
+        div[class*="st-key-login_disc_row"]
+            [data-testid="stHorizontalBlock"]:has(div[class*="st-key-login_card_wrapper_"])
+            > div[data-testid="stColumn"] {
+            width: 100% !important;
+            flex: 0 0 auto !important;
+            min-width: 0 !important;
+        }
+        /* One above the other, so matching heights only pads the shorter one. */
+        div[class*="st-key-login_card_wrapper_ext"]:has(details[open]),
+        div[class*="st-key-login_card_wrapper_token"]:has(details[open]) {
+            height: auto !important;
+        }
+    }
+
+    /* The two header links. The website one used to render the GitHub octocat,
+       so both said "GitHub" and neither said which was which. */
+    .login-headlink-ico {
+        flex-shrink: 0;
     }
 
     .kc-notice {
@@ -3924,7 +4672,16 @@ def render_login_page(fetch_courses_fn):
     @keyframes kc-spin { to { transform: rotate(360deg); } }
     </style>""")
 
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # 2.6 rather than 2, which is +13% of the page: the login card used to
+    # hold one field and one button and now carries a two-column split
+    # under it, where every pixel is divided in half before any text sees
+    # it. Measured at 1800px wide: 811 -> 920, so each disclosure card
+    # goes from 402 to 457 and its content from 354 to 409.
+    #
+    # A RATIO, deliberately, not a max-width: it stays a proportion of
+    # whatever the window is, so the screen narrows with the window
+    # instead of overflowing it at the small sizes this app ships with.
+    col1, col2, col3 = st.columns([1, 2.6, 1])
     with col2:
         # Portal container
         st.markdown(f"""
@@ -3935,13 +4692,13 @@ def render_login_page(fetch_courses_fn):
                 <div class="login-brand-subtitle">Your Canvas courses.<br/>Downloaded. Up to date. Optimized for AI.</div>
                 <div class="login-brand-header-separator"></div>
                 <div class="login-github-header-tag">
-                    <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" class="github-link">
-                        <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-                        View Source Code on GitHub
+                    <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" class="login-headlink">
+                        <svg class="login-headlink-ico" viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                        Source code
                     </a>
-                    <a href="https://canvasdownloader.app/" target="_blank" class="github-link">
-                        <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-                        Go to website
+                    <a href="https://canvasdownloader.app/" target="_blank" class="login-headlink">
+                        <svg class="login-headlink-ico" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z"/></svg>
+                        Website
                     </a>
                 </div>
             </div>
@@ -3977,120 +4734,136 @@ def render_login_page(fetch_courses_fn):
         # never created by hand.
         _browser_mode = browser_session_active() or _token_was_minted()
 
-        with st.container(key="login_card_wrapper"):
-            # macOS only: says why the Keychain dialog is on screen and which
-            # button to press. Above everything else in the card, because it is
-            # the answer to "why am I looking at a login screen at all".
-            render_keychain_unlock_notice()
+        with st.form("auth_form", clear_on_submit=False, border=False):
+            with st.container(key="login_card_wrapper"):
+                # macOS only: says why the Keychain dialog is on screen and which
+                # button to press. Above everything else in the card, because it is
+                # the answer to "why am I looking at a login screen at all".
+                render_keychain_unlock_notice()
 
-            # A saved browser session that could not be confirmed during init.
-            # Try to renew it HIDDEN before showing anything: when the
-            # institution's SSO session is still alive - which for a typical
-            # Entra tenant outlives Canvas' own session by weeks - the redirect
-            # chain completes with no interaction and the user never sees a
-            # login screen at all. Started here rather than in
-            # restore_saved_session because that runs on the script thread
-            # during init, where a browser window is the blocking-init failure
-            # `.claude/rules/macos.md` documents.
-            if st.session_state.pop('browser_restore_pending', False):
-                if _saved_url and not st.session_state.get('browser_login_pending'):
-                    # INTERACTIVE, even though the point is to be silent. Both
-                    # modes start the window HIDDEN and give it the same short
-                    # clock, so the silent attempt is identical either way -
-                    # the only difference is what happens when it does not
-                    # work. A non-interactive job gives up and reports "Your
-                    # Canvas session could not be renewed", which lands the
-                    # user on a login form holding a live SSO session that one
-                    # click would have spent. Interactive shows the window it
-                    # already has open instead, which is what a browser does
-                    # when you visit Canvas signed out.
-                    begin_browser_signin(_saved_url, interactive=True)
+                # A saved browser session that could not be confirmed during init.
+                # Try to renew it HIDDEN before showing anything: when the
+                # institution's SSO session is still alive - which for a typical
+                # Entra tenant outlives Canvas' own session by weeks - the redirect
+                # chain completes with no interaction and the user never sees a
+                # login screen at all. Started here rather than in
+                # restore_saved_session because that runs on the script thread
+                # during init, where a browser window is the blocking-init failure
+                # `.claude/rules/macos.md` documents.
+                if st.session_state.pop('browser_restore_pending', False):
+                    if _saved_url and not st.session_state.get('browser_login_pending'):
+                        # INTERACTIVE, even though the point is to be silent. Both
+                        # modes start the window HIDDEN and give it the same short
+                        # clock, so the silent attempt is identical either way -
+                        # the only difference is what happens when it does not
+                        # work. A non-interactive job gives up and reports "Your
+                        # Canvas session could not be renewed", which lands the
+                        # user on a login form holding a live SSO session that one
+                        # click would have spent. Interactive shows the window it
+                        # already has open instead, which is what a browser does
+                        # when you visit Canvas signed out.
+                        begin_browser_signin(_saved_url, interactive=True)
 
-            # Why a Canvas window is open, or why the last one did not finish.
-            # Directly under the Keychain notice, for the same reason: it is
-            # the answer to "what is this page waiting for".
-            render_browser_login_notice()
+                # Why a Canvas window is open, or why the last one did not finish.
+                # Directly under the Keychain notice, for the same reason: it is
+                # the answer to "what is this page waiting for".
+                render_browser_login_notice()
 
-            if _reauth_mode:
-                # Prominent, self-contained reconnect header (replaces the title
-                # + form heading). Both interpolations are HTML-escaped via _he.
+                if _reauth_mode:
+                    # Prominent, self-contained reconnect header (replaces the title
+                    # + form heading). Both interpolations are HTML-escaped via _he.
+                    st.markdown(
+                        "<div class='lra-title'>Reconnect to Canvas</div>"
+                        "<div class='lra-reason'>"
+                        "<svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='#f97316' "
+                        "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+                        "<path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
+                        "<line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
+                        f"<span>{_he(str(_reauth_reason))}</span></div>"  # audit-ignore: escaped via _he
+                        "<div class='lra-url'>Your Canvas address is saved:"
+                        f"<span class='lra-url-chip'>{_he(_saved_url)}</span></div>"  # audit-ignore: escaped via _he
+                        # The instruction has to match how this user signs in. A
+                        # browser-session user may be at a school that has turned
+                        # access-token creation off entirely, so "generate a fresh
+                        # token" is not merely the wrong route - it is one they
+                        # cannot take. Both strings are literals from this file.
+                        + ("<div class='lra-hint'>Press the blue <b>Sign in</b> button below - "
+                           "your school will usually sign you straight back in.</div>"
+                           if _browser_mode else
+                           "<div class='lra-hint'>Generate a fresh access token (guide below) and paste it here "
+                           "- that's the only thing that changed.</div>"),
+                        unsafe_allow_html=True,
+                    )
+                elif _reauth_reason:
+                    # Reason set but no saved URL to run reauth mode - keep the
+                    # compact banner above the full login form.
+                    st.markdown(
+                        "<div style='display:flex; align-items:flex-start; gap:10px; "
+                        "background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.35); "
+                        "border-radius:8px; padding:12px 14px; margin-bottom:16px;'>"
+                        "<svg viewBox='0 0 24 24' width='18' height='18' style='flex-shrink:0; margin-top:1px;' "
+                        "fill='none' stroke='#f97316' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+                        "<path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
+                        "<line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
+                        f"<span style='color:#fcd9b6; font-size:0.9rem; line-height:1.5;'>{_he(str(_reauth_reason))}</span>"  # audit-ignore: already html-escaped via _he
+                        "</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                # Title + (first-run only) a compact "getting started" strip, in ONE
+                # markdown call so the element count is identical whether or not the
+                # strip shows, and so there is no Streamlit block gap between them
+                # (the gap is controlled purely by CSS - same reason the dialog
+                # title/subtitle are combined). Content is Markdown-safe raw HTML.
+                # In reauth mode both are empty (the reconnect header above stands in),
+                # but the st.markdown still renders so the element count never shifts.
+                # TWO LINES, and the length is the point. This strip used to carry
+                # three numbered steps and measured 262px - the largest element on
+                # the page - which at the app's MINIMUM window (1024x700, i.e. 636px
+                # of usable viewport) pushed the token field to y=715 and the Log In
+                # button to y=799: a first-time user saw a wall of instructions and
+                # neither input nor the button. It also said everything the two
+                # guides below said, so the page explained itself three times.
+                #
+                # What survives is the only thing that is not written anywhere else
+                # above the fold: an orienting sentence, and the answer to "is this
+                # safe?". The steps live where they are needed - the school picker
+                # and "Get a token" are beside the fields they fill, and the token
+                # walkthrough sits under the token field.
+                #
+                # BOTH LINES REWRITTEN 2026-09-14, and the old ones were actively
+                # wrong rather than merely dated. The head said "New here? Find
+                # your school, get a token, log in - about 2 minutes", which is
+                # the FIRST thing a brand-new user reads on this page - and at a
+                # school that has turned personal access token creation off, step
+                # two of that three-step instruction cannot be carried out at all.
+                # That is the population this whole sign-in feature exists for, so
+                # the page's one orienting sentence was pointing them at the one
+                # route they are locked out of. It predates "Sign in with Canvas"
+                # and nothing revisited it when that landed.
+                #
+                # The safety line said "Your token is stored only on this device",
+                # which is now true of only one of the three credentials this page
+                # can produce. Named for what it actually is instead, so it stays
+                # true however the user signs in.
+                _getstarted_html = (
+                    "<div class='login-getstarted'>"
+                    "<div class='lgs-head'>New here? Find your school, then press "
+                    "the blue button - about a minute.</div>"
+                    "<div class='lgs-safe'>"
+                    "<svg viewBox='0 0 24 24' width='14' height='14' fill='none' "
+                    "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+                    "stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' "
+                    "rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>"
+                    "<span>Your sign-in is stored only on this device, in your "
+                    "operating system - nothing is ever uploaded.</span></div></div>"
+                ) if (_first_run and not _reauth_mode) else ""
+                _title_html = "" if _reauth_mode else '<div class="login-form-title">Log in to Canvas Downloader</div>'
                 st.markdown(
-                    "<div class='lra-title'>Reconnect to Canvas</div>"
-                    "<div class='lra-reason'>"
-                    "<svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='#f97316' "
-                    "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
-                    "<path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
-                    "<line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
-                    f"<span>{_he(str(_reauth_reason))}</span></div>"  # audit-ignore: escaped via _he
-                    "<div class='lra-url'>Your Canvas address is saved:"
-                    f"<span class='lra-url-chip'>{_he(_saved_url)}</span></div>"  # audit-ignore: escaped via _he
-                    # The instruction has to match how this user signs in. A
-                    # browser-session user may be at a school that has turned
-                    # access-token creation off entirely, so "generate a fresh
-                    # token" is not merely the wrong route - it is one they
-                    # cannot take. Both strings are literals from this file.
-                    + ("<div class='lra-hint'>Press <b>Sign in with Canvas</b> below - "
-                       "your school will usually sign you straight back in.</div>"
-                       if _browser_mode else
-                       "<div class='lra-hint'>Generate a fresh access token (guide below) and paste it here "
-                       "- that's the only thing that changed.</div>"),
+                    _title_html + _getstarted_html,
                     unsafe_allow_html=True,
                 )
-            elif _reauth_reason:
-                # Reason set but no saved URL to run reauth mode - keep the
-                # compact banner above the full login form.
-                st.markdown(
-                    "<div style='display:flex; align-items:flex-start; gap:10px; "
-                    "background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.35); "
-                    "border-radius:8px; padding:12px 14px; margin-bottom:16px;'>"
-                    "<svg viewBox='0 0 24 24' width='18' height='18' style='flex-shrink:0; margin-top:1px;' "
-                    "fill='none' stroke='#f97316' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
-                    "<path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
-                    "<line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
-                    f"<span style='color:#fcd9b6; font-size:0.9rem; line-height:1.5;'>{_he(str(_reauth_reason))}</span>"  # audit-ignore: already html-escaped via _he
-                    "</div>",
-                    unsafe_allow_html=True,
-                )
 
-            # Title + (first-run only) a compact "getting started" strip, in ONE
-            # markdown call so the element count is identical whether or not the
-            # strip shows, and so there is no Streamlit block gap between them
-            # (the gap is controlled purely by CSS - same reason the dialog
-            # title/subtitle are combined). Content is Markdown-safe raw HTML.
-            # In reauth mode both are empty (the reconnect header above stands in),
-            # but the st.markdown still renders so the element count never shifts.
-            # TWO LINES, and the length is the point. This strip used to carry
-            # three numbered steps and measured 262px - the largest element on
-            # the page - which at the app's MINIMUM window (1024x700, i.e. 636px
-            # of usable viewport) pushed the token field to y=715 and the Log In
-            # button to y=799: a first-time user saw a wall of instructions and
-            # neither input nor the button. It also said everything the two
-            # guides below said, so the page explained itself three times.
-            #
-            # What survives is the only thing that is not written anywhere else
-            # above the fold: an orienting sentence, and the answer to "is this
-            # safe?". The steps live where they are needed - the school picker
-            # and "Get a token" are beside the fields they fill, and the token
-            # walkthrough sits under the token field.
-            _getstarted_html = (
-                "<div class='login-getstarted'>"
-                "<div class='lgs-head'>New here? Find your school, get a token, "
-                "log in - about 2 minutes.</div>"
-                "<div class='lgs-safe'>"
-                "<svg viewBox='0 0 24 24' width='14' height='14' fill='none' "
-                "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
-                "stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' "
-                "rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>"
-                "<span>Your token is stored only on this device, in your operating "
-                "system - nothing is ever uploaded.</span></div></div>"
-            ) if (_first_run and not _reauth_mode) else ""
-            _title_html = "" if _reauth_mode else '<div class="login-form-title">Log in to Canvas Downloader</div>'
-            st.markdown(
-                _title_html + _getstarted_html,
-                unsafe_allow_html=True,
-            )
-
-            with st.form("auth_form", clear_on_submit=False, border=False):
                 # In reauth mode the URL is already known and shown as a saved
                 # chip above - only the token needs re-entering. The full form
                 # renders the URL field.
@@ -4106,7 +4879,32 @@ def render_login_page(fetch_courses_fn):
                         st.text_input(
                             'Your Canvas URL',
                             key="url_input",
-                            placeholder="https://schoolname.instructure.com"
+                            placeholder="https://schoolname.instructure.com",
+                            # The "How to find your Canvas URL?" expander used
+                            # to carry this, below the card. It is a tooltip
+                            # now, on the field it is about.
+                            #
+                            # TRIMMED ON PURPOSE, and the trim is the point.
+                            # The expander held three numbered steps plus a
+                            # troubleshooting footnote, and a hover tooltip
+                            # DISMISSES the moment the pointer moves toward the
+                            # field - which is fatal for content whose whole
+                            # job is "what do I type in this box". A student
+                            # who has to go to their browser and come back
+                            # returns to an empty screen. So this carries the
+                            # ANSWER, readable in one glance, not the
+                            # procedure. The "if a sign-in fails, use the
+                            # .instructure.com one" note is troubleshooting and
+                            # already arrives just in time from its own submit
+                            # error, where somebody is actually reading.
+                            help=(
+                                "The web address you see when you are inside "
+                                "Canvas, for example "
+                                "`schoolname.instructure.com` or "
+                                "`canvas.schoolname.edu`.\n\n"
+                                "Do not know it? Use **Find your institution** "
+                                "beside this field."
+                            ),
                         )
                     with _c_pick:
                         st.markdown(institution_picker.picker_html(),
@@ -4141,134 +4939,197 @@ def render_login_page(fetch_courses_fn):
                 # single best moment for it, since a reauth means the previous
                 # credential died. Streamlit reconciles by position, so a row
                 # that comes and goes hands the next element its DOM node.
+                # ── THE ONE PRIMARY ACTION ──────────────────────
+                # There is exactly one solid button on this screen now, and it
+                # is this one. The reason is not visual taste: "Sign in with
+                # Canvas" produces the CORRECT credential in BOTH populations,
+                # so the student never has to answer the question they cannot
+                # answer. At an institution that permits access tokens the
+                # auto-mint silently trades this sign-in for a 120-day token;
+                # at one that has switched them off it produces the best thing
+                # available. Same gesture, two outcomes, no choice to make.
+                #
+                # Before this, the only bright element on the page was `Log In`
+                # under the token field - so a first-time student's eye landed
+                # on the one route that is a dead end for exactly the people
+                # these features were built for.
+                #
+                # The label NAMES THEIR UNIVERSITY where we already know it,
+                # which is the strongest trust signal available here, and falls
+                # back to the generic form otherwise - see
+                # `_signin_button_label`. Resolved server-side from the
+                # pre-filled field or the saved address, so it only ever
+                # changes under a genuinely new user at the moment they pick a
+                # school, where a changing label is feedback rather than jank.
+                #
+                # A form_submit_button, not an st.button: inside st.form a
+                # plain button cannot rerun, which this file records at three
+                # other call sites. Emitted UNCONDITIONALLY, reauth included -
+                # Streamlit reconciles by position, so a row that comes and
+                # goes hands the next element its DOM node.
                 _browser_clicked = st.form_submit_button(
-                    'Sign in with Canvas',
+                    _signin_button_label(
+                        _saved_url if _reauth_mode
+                        else (st.session_state.get('url_input') or '')),
+                    type="primary",
                     use_container_width=True, key="login_browser_btn")
 
-                # Help text by this repo's own test - a power user who knows
-                # the app does not need it - so it is gated on the setting,
-                # with the ELEMENT unconditional and only the CONTENT gated.
+                # The caption answers the one fear that sends people looking
+                # for the token: typing a university password into a window
+                # that is not their browser. Say where it goes, in one line.
+                # Element unconditional, CONTENT gated on the help setting.
                 st.markdown(
-                    "<div class='login-browser-hint'>Opens Canvas in a window. "
-                    "No access token needed.</div>"
+                    "<div class='login-browser-hint'>Opens your university's "
+                    "own login page in a window. Your password goes to them, "
+                    "never to this app.</div>"
                     if help_text_enabled() else "",
                     unsafe_allow_html=True)
 
-                # ── Use the browser the student already uses ─────────────
-                # THE ONLY ROUTE THAT ASKS FOR NOTHING AT ALL. Every other one
-                # needs at least the Canvas address; this one gets the host
-                # from the tab the extension read, so no institution is
-                # picked, no URL typed and no password entered - all three
-                # already happened, in Chrome, for Canvas itself.
-                #
-                # Supplementary by the product owner's ruling (2026-09-12):
-                # the in-app sign-in stays the straight path and nobody has to
-                # install anything. So this sits BELOW it, and its copy says
-                # what it needs rather than selling it.
-                #
-                # A form_submit_button for the same reason as its neighbour: a
-                # plain st.button inside st.form cannot rerun. Unlike its
-                # neighbour it reads no field, because there is nothing to
-                # read - which is the point.
-                _handoff_clicked = st.form_submit_button(
-                    'Use the Canvas tab in my browser',
-                    use_container_width=True, key="login_handoff_btn")
+            # ── The two secondary routes, as a MATCHED PAIR ─────────────
+            # Both titles open the same way on purpose. They are siblings
+            # doing the same job in the hierarchy, and they are meant to
+            # sit side by side in a two-column split later, where matched
+            # openings read as two equal choices and mismatched ones read
+            # as a primary with an afterthought.
+            #
+            # The wording is the product owner's, and both corrections were
+            # right. "Already signed in to Canvas in Chrome?" has the
+            # answer YES for essentially every student alive, so it was not
+            # a qualifier, it was a recruiter into the highest-friction
+            # route. And "I already have an access token" described almost
+            # nobody: Canvas shows a token once, at generation, and
+            # students are not meant to keep one lying around - so the
+            # title has to catch somebody who WANTS that route and can
+            # create one, not somebody who has one in a drawer.
+            #
+            # Keyed containers because `st.expander` takes no key, and the
+            # SVG glyph on each header is a CSS `::before` that needs a
+            # scoped ancestor to hang off.
+            # TWO CARDS, SIDE BY SIDE. `gap="small"` because the
+            # column gap and the margin above the row are tuned to the
+            # SAME value in CSS - the pair has to read as one band with
+            # the card behind it showing through evenly, not as two
+            # blocks that happen to be near each other.
+            # Keyed so the stylesheet can name THIS row and no other - see
+            # the gap rules, and the two ways they have already gone wrong.
+            _disc_row = st.container(key="login_disc_row")
+            with _disc_row:
+                _col_ext, _col_tok = st.columns(2, gap="small")
+            with _col_ext:
+                with st.container(border=False, key="login_card_wrapper_ext"):
+                    with st.expander("Use the browser extension instead",
+                                     expanded=False):
+                        st.markdown(_extension_guide_html(),
+                                    unsafe_allow_html=True)
+                        # The link, or an honest line saying there is not one
+                        # yet. Never a dead href - see `_extension_cta_html`.
+                        st.markdown(_extension_cta_html(),
+                                    unsafe_allow_html=True)
+                        _handoff_clicked = st.form_submit_button(
+                            'Use the Canvas tab in my browser',
+                            use_container_width=True, key="login_handoff_btn")
+                        # ONE element, CONTENT varying by state - never a
+                        # conditional element.
+                        st.markdown(_handoff_card_html(),
+                                    unsafe_allow_html=True)
 
-                # ONE element, CONTENT varying by state - never a conditional
-                # element. Streamlit reconciles by position and a row that
-                # comes and goes hands the next element its DOM node, which on
-                # this page is the access-token separator.
-                st.markdown(_handoff_card_html(), unsafe_allow_html=True)
+            with _col_tok:
+                with st.container(border=False, key="login_card_wrapper_token"):
+                    with st.expander("Use an access token instead",
+                                     expanded=False):
+                        _c_tok, _c_link = st.columns([1.2, 1], vertical_alignment="bottom")  # see test_the_token_row_gives_the_shortcut_more_room_than_the_url_row
+                        with _c_tok:
+                            st.text_input(
+                                'Your Canvas Access Token',
+                                type="password",
+                                key="token_input",
+                                help=(
+                                    "**Why is this needed?**  \n"
+                                    "This token acts as a private key that allows the app to fetch your course files directly from your school's Canvas instance, which it connects to.\n\n"
+                                    "**Is it safe?**  \n"
+                                    "Yes! Your token is stored securely on your device, in your operating system."
+                                )
+                            )
+                        with _c_link:
+                            # What to point at when the FIELD says nothing. Two cases,
+                            # and both hold a URL this machine has already logged in
+                            # with: reauth mode renders no field, and a returning login
+                            # renders an empty one (the address lives in config, not in
+                            # the widget). Only ever a verified URL - the same rule the
+                            # guide's copy of this button uses, so the two cannot sit
+                            # on one page disagreeing about whether we know the school.
+                            _link_fallback = _saved_url if (
+                                _reauth_mode or st.session_state.get('url_verified')) else ''
+                            st.markdown(institution_picker.token_link_html(_link_fallback),
+                                        unsafe_allow_html=True)
 
-                # Structural, never gated: it names the relationship between
-                # the two routes, so hiding it would leave a button and a field
-                # with nothing saying they are alternatives.
-                st.markdown(
-                    "<div class='login-authsep'><span>or use an access token"
-                    "</span></div>", unsafe_allow_html=True)
-
-                # Same two-column shape as the URL row above, so the token
-                # shortcut lines up under the institution picker: one column
-                # of controls that fill the field beside them. The link's
-                # target is derived from the URL field by the picker's bridge
-                # (a form widget's value never reaches Python before submit),
-                # and `fallback` covers reauth mode, which renders no URL
-                # field because the address is already known and verified.
-                _c_tok, _c_link = st.columns([1.6, 1], vertical_alignment="bottom")
-                with _c_tok:
-                    st.text_input(
-                        'Your Canvas Access Token',
-                        type="password",
-                        key="token_input",
-                        help=(
-                            "**Why is this needed?**  \n"
-                            "This token acts as a private key that allows the app to fetch your course files directly from your school's Canvas instance, which it connects to.\n\n"
-                            "**Is it safe?**  \n"
-                            "Yes! Your token is stored securely on your device, in your operating system."
-                        )
-                    )
-                with _c_link:
-                    # What to point at when the FIELD says nothing. Two cases,
-                    # and both hold a URL this machine has already logged in
-                    # with: reauth mode renders no field, and a returning login
-                    # renders an empty one (the address lives in config, not in
-                    # the widget). Only ever a verified URL - the same rule the
-                    # guide's copy of this button uses, so the two cannot sit
-                    # on one page disagreeing about whether we know the school.
-                    _link_fallback = _saved_url if (
-                        _reauth_mode or st.session_state.get('url_verified')) else ''
-                    st.markdown(institution_picker.token_link_html(_link_fallback),
-                                unsafe_allow_html=True)
-
-                # The walkthrough, AT THE POINT OF NEED. It used to live in an
-                # expander at the bottom of the page - which is the one place
-                # it cannot be read from, because the work happens in ANOTHER
-                # APP: the user clicks "Get a token", lands in Canvas, and the
-                # instructions are on a screen they can no longer see. Two
-                # lines they can carry beat four they have to scroll back for.
-                #
-                # Kept to the two facts that are not self-evident once you are
-                # on Canvas's settings page: WHERE the control is, and that the
-                # token is shown exactly once.
-                #
-                # Emitted unconditionally with the CONTENT gated, never the
-                # element: Streamlit reconciles by position, and a row that
-                # comes and goes hands the next element its DOM node.
-                # THE PATH STARTS AT ACCOUNT, not at Approved Integrations.
-                # "Get a token" lands the user directly on /profile/settings,
-                # so the first two hops are ones the button walks for them -
-                # which is exactly why they have to be written down. The button
-                # is the only thing that can fail here (a wrong address, a
-                # blocked pop-up, an unusual Canvas), and when it does, the
-                # instructions that assume it worked are worth nothing.
-                #
-                # ONE flowing line, not two rows. The "copy it now" half used
-                # to be a second row in amber - which is this app's colour for
-                # something being WRONG, and nothing is wrong; it was reaching
-                # for emphasis and borrowing a meaning. Bold carries it, the
-                # clipboard glyph marks it, and the sentence simply continues
-                # on the same line, wrapping only when the card is too narrow.
-                st.markdown(
-                    "<div class='login-tokensteps'>"
-                    "<span class='lts-path'>In Canvas: <b>Account</b> "
-                    "&rarr; <b>Settings</b> &rarr; <b>Approved Integrations</b> "
-                    "&rarr; <b>+ New Access Token</b>.</span> "
-                    "<span class='lts-note'>"
-                    "Once you have your token, copy it straight away and paste it here."
-                    "</span></div>"
-                    if help_text_enabled() else "",
-                    unsafe_allow_html=True)
-
-                # Live feedback on what was pasted, mirroring the URL field's
-                # status row. It speaks ONLY when it knows something is wrong -
-                # see the bridge for the three cases and why silence is the
-                # default everywhere else.
-                st.markdown(institution_picker.token_status_html(),
+                        # The walkthrough, AT THE POINT OF NEED. It used to live in an
+                        # expander at the bottom of the page - which is the one place
+                        # it cannot be read from, because the work happens in ANOTHER
+                        # APP: the user clicks "Get a token", lands in Canvas, and the
+                        # instructions are on a screen they can no longer see. Two
+                        # lines they can carry beat four they have to scroll back for.
+                        #
+                        # Kept to the two facts that are not self-evident once you are
+                        # on Canvas's settings page: WHERE the control is, and that the
+                        # token is shown exactly once.
+                        #
+                        # Emitted unconditionally with the CONTENT gated, never the
+                        # element: Streamlit reconciles by position, and a row that
+                        # comes and goes hands the next element its DOM node.
+                        # THE PATH STARTS AT ACCOUNT, not at Approved Integrations.
+                        # "Get a token" lands the user directly on /profile/settings,
+                        # so the first two hops are ones the button walks for them -
+                        # which is exactly why they have to be written down. The button
+                        # is the only thing that can fail here (a wrong address, a
+                        # blocked pop-up, an unusual Canvas), and when it does, the
+                        # instructions that assume it worked are worth nothing.
+                        #
+                        # ONE flowing line, not two rows. The "copy it now" half used
+                        # to be a second row in amber - which is this app's colour for
+                        # something being WRONG, and nothing is wrong; it was reaching
+                        # for emphasis and borrowing a meaning. Bold carries it, the
+                        # clipboard glyph marks it, and the sentence simply continues
+                        # on the same line, wrapping only when the card is too narrow.
+                        st.markdown(
+                            "<div class='login-tokensteps'>"
+                            "<span class='lts-path'>In Canvas: <b>Account</b> "
+                            "&rarr; <b>Settings</b> &rarr; <b>Approved Integrations</b> "
+                            "&rarr; <b>+ New Access Token</b>.</span> "
+                            "<span class='lts-note'>"
+                            "Once you have your token, copy it straight away and paste it here."
+                            "</span></div>"
+                            if help_text_enabled() else "",
                             unsafe_allow_html=True)
 
-                submitted = st.form_submit_button(
-                    'Reconnect' if _reauth_mode else 'Log In',
-                    type="primary", use_container_width=True, key="login_submit_btn")
+                        # Live feedback on what was pasted, mirroring the URL field's
+                        # status row. It speaks ONLY when it knows something is wrong -
+                        # see the bridge for the three cases and why silence is the
+                        # default everywhere else.
+                        st.markdown(institution_picker.token_status_html(),
+                                    unsafe_allow_html=True)
+
+                        # The walkthrough video, as a LINE OF TEXT that
+                        # continues the guide above it, directly under the
+                        # written steps and ABOVE the button. It was a bordered
+                        # chip below Log In, which put the explanation after
+                        # the action it explains and gave a link the visual
+                        # weight of a second CTA. The red play mark stays: it
+                        # is what makes the link recognisable as a video, and
+                        # is the only glyph on this screen that must not take
+                        # `currentColor`.
+                        st.markdown(
+                            '<a href="https://youtu.be/VadvcIvrrhU" '
+                            'target="_blank" rel="noopener noreferrer" '
+                            'class="youtube-link">'
+                            + _ICO_YOUTUBE +
+                            '<span>Watch: how to create one</span></a>',
+                            unsafe_allow_html=True)
+
+                        submitted = st.form_submit_button(
+                            'Reconnect' if _reauth_mode else 'Log In',
+                            type="primary", use_container_width=True, key="login_submit_btn")
+
 
             if _handoff_clicked:
                 # The extension reports the host it read, so the address is
@@ -4330,12 +5191,13 @@ def render_login_page(fetch_courses_fn):
                 _input_error = None
                 if not raw_url and not input_token:
                     _input_error = ("Enter your details",
-                                    "Add your Canvas URL and access token above, then press Log In. "
-                                    "The guides below walk you through finding each one.")
+                                    "Add your Canvas web address above, then open Use an access "
+                                    "token instead and paste your token in there.")
                 elif not raw_url:
                     _input_error = ("Canvas URL needed",
-                                    "Add your Canvas web address (e.g. https://schoolname.instructure.com). "
-                                    "See 'How to find your Canvas URL' below.")
+                                    "Add your Canvas web address (e.g. https://schoolname.instructure.com), "
+                                    "or pick your school with Find your institution beside "
+                                    "the field.")
                 elif not input_token:
                     _input_error = ("Access token needed",
                                     "Paste your Canvas access token above. See 'How to get a Canvas "
@@ -4523,7 +5385,7 @@ def render_login_page(fetch_courses_fn):
                     elif any(kw in err_text_lower for kw in ["expecting value", "jsondecodeerror", "json decoder"]):
                         render_amber_notice(
                             "Invalid Canvas URL",
-                            detail="Your Canvas URL points to a login portal instead of the actual Canvas server. Please ensure you are using the true base Canvas URL (typically ending in .instructure.com). Follow the 'How to find your Canvas URL' guide below."
+                            detail="Your Canvas URL points to a login portal instead of the actual Canvas server. Please ensure you are using the true base Canvas URL (typically ending in .instructure.com). The ? beside the address field says where to find it."
                         )
                     elif any(kw in err_text_lower for kw in ["500", "502", "503", "504", "server error"]):
                         render_amber_notice(
@@ -4550,57 +5412,25 @@ def render_login_page(fetch_courses_fn):
 
         # Standardized expandable help vertically below the card
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-        with st.container(key="login_help_expanders"):
-            # URL guide is hidden in reauth mode - the address is already saved
-            # and shown as a chip, so "how to find your URL" is just noise there.
-            if not _reauth_mode:
-                # COLLAPSED even on a first run. It used to open automatically,
-                # which put "open Canvas, copy the address bar" above the token
-                # guide - the harder of the two - for every new user. The
-                # institution picker answers this question for 4,750 schools in
-                # one click, so the guide is now the fallback it describes
-                # itself as, one click away for the schools it is not.
-                with st.expander('How to find your Canvas URL?', expanded=False):
-                    st.markdown(
-                        # Kept deliberately lean: normalize_canvas_url + CanvasManager's
-                        # redirect resolution already add https://, strip paths and follow
-                        # a vanity domain to its .instructure.com target, so the old
-                        # "include https / use .instructure.com" caveats were explaining
-                        # friction the code already removes. The one real edge case (a
-                        # vanity domain that lands on an SSO portal) is covered just-in-time
-                        # by its own submit error, so here it is only a quiet footnote.
-                        "1. Open Canvas in your web browser.\n"
-                        "2. Copy the address from your browser's address bar - for example "
-                        "`schoolname.instructure.com` or `canvas.schoolname.edu`.\n"
-                        "3. Paste it here - the exact format doesn't matter.\n\n"
-                        "If a login attempt fails, use the address ending in `.instructure.com` "
-                        "(you'll see it in the address bar once you're inside Canvas) - that's the most reliable one.\n"
-                    )
+        # THE URL GUIDE AND THE TOKEN VIDEO BOTH LIVED HERE, and both moved
+        # INTO the card on 2026-09-14.
+        #
+        # The guide is the URL field's own tooltip now. It was three numbered
+        # steps in an expander below the card, and the picker answers the same
+        # question in one click for 4,750 schools, so what survives is the
+        # one-line ANSWER rather than the procedure - see the `help=` on that
+        # field for why a tooltip must not carry steps.
+        #
+        # The video is inside the access-token disclosure, with everything else
+        # about tokens. Below the card it was a red chip, which measured as the
+        # most salient thing on the entire screen: the brightest element on a
+        # first-run login page was an advertisement for the one route a growing
+        # share of students are not allowed to take.
+        #
+        # Nothing replaces them here. An empty container would still be an
+        # element, and a page whose last section exists only to hold a comment
+        # is how the next person concludes something is missing.
 
-            # THE TOKEN GUIDE IS GONE FROM HERE ON PURPOSE - it now sits under
-            # the token field, where the user is standing (see the
-            # `.login-tokensteps` block above). What used to be here was a
-            # second copy of the "Get a token" button plus the same four steps,
-            # i.e. the page explaining tokens twice, ~200px below the fold, in
-            # the one place a user who has just clicked through to Canvas
-            # cannot read them.
-            #
-            # Deleted with it: the click-time reachability check that button
-            # ran (`_canvas_url_reachable`), and its `_token_link_ready` /
-            # `_token_link_error` state. It cannot survive the move - the field
-            # -side button lives inside st.form, where a click cannot rerun -
-            # and what it bought was one dead browser tab avoided for a user
-            # who typed a bad address. The cost of losing it is bounded: the
-            # login attempt itself still names a bad URL, and the status row
-            # under the field flags an address that looks wrong before then.
-
-        st.markdown(
-            '<a href="https://youtu.be/VadvcIvrrhU" target="_blank" class="youtube-link">'
-            '<svg class="youtube-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
-            'Watch tutorial: How to get your Canvas Access Token'
-            '</a>',
-            unsafe_allow_html=True
-        )
 
         # Reauth-mode escape hatch: drop the cut-to-the-bone reconnect screen for
         # the full sign-in form (to change the Canvas URL or use a different

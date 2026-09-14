@@ -719,7 +719,39 @@ def test_the_signin_button_is_a_form_submit_above_the_token_field():
     token_field = _AUTH_SRC.index('key="token_input"', form_start)
     submit = _AUTH_SRC.index('key="login_submit_btn"', form_start)
     assert form_start < button < token_field < submit
-    assert "st.form_submit_button(" in _AUTH_SRC[button - 200:button]
+
+    # WHICH CALL this key belongs to is an AST question, not a text-window one.
+    # This was `"st.form_submit_button(" in _AUTH_SRC[button - 200:button]`,
+    # and it broke on 2026-09-14 when the label became a multi-line expression
+    # (`_signin_button_label(...)` resolving the school name) and pushed the
+    # call name past 200 characters. The guard then failed against code that
+    # satisfies it perfectly, which reads exactly like the property being gone.
+    # Widening the window only moves the next break; asking the tree cannot
+    # break at all. Same rule this repo already records as "assert the
+    # expression, not the token".
+    calls = [
+        node for node in ast.walk(ast.parse(_AUTH_SRC))
+        if isinstance(node, ast.Call)
+        and any(kw.arg == "key"
+                and isinstance(kw.value, ast.Constant)
+                and kw.value.value == "login_browser_btn"
+                for kw in node.keywords)
+    ]
+    assert len(calls) == 1, (
+        f"expected exactly one widget keyed login_browser_btn, found {len(calls)}")
+    assert ast.unparse(calls[0].func) == "st.form_submit_button", (
+        "the sign-in control is no longer a form submit button; inside st.form "
+        "a plain st.button cannot rerun, so it would do nothing at all"
+    )
+    # It is the screen's one primary now. Before 2026-09-14 the only solid
+    # button on the page was `Log In` under the token field, so the brightest
+    # thing on a first-run login screen belonged to the one route a growing
+    # share of students are not permitted to take.
+    assert any(kw.arg == "type" and getattr(kw.value, "value", None) == "primary"
+               for kw in calls[0].keywords), (
+        "the sign-in button is not the primary any more - check that the "
+        "weight inversion has not come back"
+    )
 
 
 def test_the_signin_notice_emits_exactly_one_element_in_every_state():
@@ -1807,11 +1839,35 @@ def test_the_reconnect_screen_speaks_the_users_own_credential():
     assert "_browser_mode = browser_session_active()" in _AUTH_SRC
     i = _AUTH_SRC.index("Your Canvas address is saved:")
     block = _AUTH_SRC[i:i + 1200]
-    assert "Sign in with Canvas</b> below" in block, (
+    # By SIGHT, not by label: the button says "Sign in to <the student's own
+    # university>" now, so no literal can name it. See the census below.
+    assert "<b>Sign in</b> button below" in block, (
         "the reconnect screen has no browser-session instruction")
     assert "Generate a fresh access token" in block, (
         "the token instruction disappeared - it is still right for token users")
     assert "_browser_mode" in block, "the two instructions are not selected by mode"
+
+
+def test_no_copy_names_the_primary_button_by_a_LITERAL_LABEL():
+    """The button's label is the student's own university now.
+
+    `_signin_button_label()` returns "Sign in to " + the institution the picker
+    resolved, and "Sign in to Canvas" when it resolved nothing. So "Sign in
+    with Canvas" - the label this screen shipped with - is a button that exists
+    on NOBODY's screen, including the fallback's, which says "to", not "with".
+
+    A CENSUS, not a check that five known strings were fixed: the five were
+    written months apart in three different structures (a failure table, a
+    notice builder, an inline reconnect header), and the next one will be too.
+    Bolding a label is the tell - it presents that text as the button's name -
+    so the rule is that no user-facing string in this module may bold anything
+    but the sight-description the copy actually uses.
+    """
+    bolded = set(re.findall(r"<b>Sign in[^<]*</b>", _AUTH_SRC))
+    assert bolded <= {"<b>Sign in</b>"}, (
+        "copy names the primary button by a hardcoded label, which no longer "
+        "matches what the button says: %s" % sorted(bolded - {"<b>Sign in</b>"})
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -2308,10 +2364,21 @@ def test_it_covers_EVERY_host_not_just_canvas(monkeypatch):
     fn = next(f for f in ast.walk(ast.parse(src))
               if isinstance(f, ast.FunctionDef)
               and f.name == 'persist_session_cookies')
+    # THE CALL, not the source text. This read `'GetCookiesAsync(None)' in
+    # ast.unparse(fn)` and could not fail: the function's own docstring
+    # explains why the argument is None, so the prose satisfied the assertion
+    # while the real call was filtered to 'canvas'. It survived a mutation
+    # pass in exactly that state.
+    calls = [n for n in ast.walk(fn) if isinstance(n, ast.Call)
+             and getattr(n.func, 'attr', '') == 'GetCookiesAsync']
+    assert len(calls) == 1, f"expected one enumeration, found {len(calls)}"
+    arg = calls[0].args[0] if calls[0].args else None
+    assert isinstance(arg, ast.Constant) and arg.value is None, (
+        "the enumeration is filtered to "
+        f"{ast.unparse(arg) if arg is not None else 'nothing'}, so the "
+        "identity provider's cookie - the only one that matters here - is "
+        "invisible and the daily login stays")
     body = ast.unparse(fn)
-    assert 'GetCookiesAsync(None)' in body, (
-        "the enumeration is filtered, so the identity provider's cookie - the "
-        "only one that matters here - is invisible")
     assert 'canvas_host' not in body and 'SESSION_COOKIE_NAMES' not in body, (
         "the conversion is restricted to Canvas, which leaves the IdP session "
         "to expire and the daily login in place")
@@ -2352,6 +2419,33 @@ def test_a_cookie_list_that_never_ARRIVES_is_reported(monkeypatch, caplog):
     assert any('cookies' in r.message.lower() for r in caplog.records)
 
 
+def test_no_GUI_is_NOT_A_FAILURE_and_says_nothing(monkeypatch, caplog):
+    """Development runs in a browser with no pywebview window, so there is no
+    profile holding a session either. Nothing to clear is not a failed clear.
+
+    This guards the LOG, not the return value. Removing the explicit no-GUI
+    branch still returns False - `windows[0]` raises IndexError and both arms
+    below catch it - which is why this mutant was carried as EQUIVALENT for a
+    whole pass. It is not: it warns "Could not clear saved passwords on
+    logout: list index out of range" at a user whose logout worked perfectly,
+    and a warning about a failure that did not happen is the same problem as a
+    failure that reports nothing, pointing the other way.
+    """
+    import logging
+    from core import browser_login as bl
+
+    class _NoWindows:
+        windows = []
+
+    monkeypatch.setitem(__import__('sys').modules, 'webview', _NoWindows())
+    with caplog.at_level(logging.WARNING, logger=bl.logger.name):
+        assert bl.clear_session() is False
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING], (
+        "a logout with no web view to clear warns about a failure that did "
+        "not happen: %s" % [r.message for r in caplog.records]
+    )
+
+
 def test_persisting_is_a_no_op_off_windows(monkeypatch):
     count, control = _persist_with(monkeypatch, [_FakeCookie('x')],
                                    platform='darwin')
@@ -2376,6 +2470,55 @@ def test_the_sign_in_keeps_itself_BEFORE_the_window_is_destroyed():
     assert persist < destroy < finish_ok, (
         "the window is destroyed before its cookies are kept, so there is "
         "nothing left to read them from")
+
+    # REACHABLE, and reachable behind the user's own flag. Presence alone said
+    # nothing: `if False:` above the call leaves it exactly where it is, and
+    # this test passed against a worker that could never keep a sign-in.
+    guards = [n for n in ast.walk(worker) if isinstance(n, ast.If)
+              and any(isinstance(c, ast.Call)
+                      and getattr(c.func, 'id', '') == 'persist_session_cookies'
+                      for c in ast.walk(n))]
+    assert guards, "the keep is not conditional on anything at all"
+    innermost = guards[-1]
+    assert (isinstance(innermost.test, ast.Attribute)
+            and innermost.test.attr == 'keep_signed_in'), (
+        "the keep is guarded by "
+        f"`{ast.unparse(innermost.test)}` rather than by the user's choice - "
+        "a constant here makes the whole retention feature dead code that "
+        "every presence check still passes")
+
+
+def test_a_job_KEEPS_the_answer_it_was_given(monkeypatch):
+    """Driven, not grepped.
+
+    The source checks below cannot see a `keep_signed_in = True` pasted into
+    `_Job.__init__`: every string they look for is still there, and the flag
+    is simply overwritten a line later. A mutant doing exactly that survived
+    the 2026-09-14 pass, which means nothing in the suite could tell the
+    setting from a constant.
+    """
+    from core import browser_login as bl
+
+    assert bl._Job("https://cbscanvas.instructure.com", True,
+                   keep_signed_in=False).keep_signed_in is False, (
+        "the job overrides the answer it was constructed with, so turning the "
+        "setting off does nothing")
+    assert bl._Job("https://cbscanvas.instructure.com", True).keep_signed_in \
+        is True, "the default stopped being on"
+
+    # And the whole way through `begin_login`, which is what the UI calls.
+    monkeypatch.setattr(bl, 'is_available', lambda: (True, ''))
+    started = []
+    monkeypatch.setattr(bl.threading, 'Thread',
+                        lambda **kw: type('T', (), {
+                            'start': lambda self: started.append(kw)})())
+    monkeypatch.setattr(bl, '_job', None, raising=False)
+    bl.begin_login("https://cbscanvas.instructure.com", interactive=False,
+                   keep_signed_in=False)
+    assert started, "no worker was started"
+    assert bl._job.keep_signed_in is False, (
+        "begin_login dropped the choice on its way into the job")
+    bl.reset()
 
 
 def test_the_choice_is_made_by_the_UI_LAYER_and_threaded_through():

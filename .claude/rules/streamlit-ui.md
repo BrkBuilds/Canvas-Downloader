@@ -436,3 +436,58 @@ When pure CSS/Python can't express an interaction (Shift-click range select, liv
 - **Escape EVERY piece of a split value, not just the one that looks like text.** A Canvas filename split by `os.path.splitext` is two halves of the same untrusted string. `ui/sync_review.py` escaped `esc(_name)` and interpolated the extension raw on the **same line** for months: a file called `notes.<img src=x onerror=…>` put a live tag on the review screen. Found 2026-07-27 by the architecture audit, once Rule 4 stopped drowning in false positives.
 - **`.upper()` / `.lower()` are not sanitisers.** HTML tag and attribute names are case-insensitive, so `"<img src=x onerror=y>".upper()` is still a working tag. A case transform can only *preserve* safety, never create it - which is exactly why `_SAFE_STR_METHODS` in the audit script accepts them only on an already-safe receiver.
 - **`scripts/verify_architecture.py` Rule 4 is a real gate again** (0 unsuppressed violations, `tests/test_architecture_audit.py` guards both directions). It tracks assignment provenance, so `x = esc(v)` then `{x}` is understood; it is per-function and uses a pessimistic fixpoint. Treat a new hit as a real finding rather than reaching for `# audit-ignore`.
+
+### `::details-content` is the flex item, not `stExpanderDetails`
+
+To make an expander's content pane fill a card taller than itself, the
+obvious move is `details { display: flex; flex-direction: column }` plus
+`flex: 1 1 auto` on `stExpanderDetails`. It does nothing, silently.
+Chromium wraps everything after `summary` in a generated `::details-content`
+box, so `stExpanderDetails` is that box's child and never a flex item of
+`details`. Measured 2026-09-14: the pane stayed 243px inside a 298px
+`details` with `flex-grow: 1` computed and 29px of free space going unused.
+Adding
+
+```css
+div[data-testid="stExpander"] > details::details-content {
+    display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
+}
+```
+
+took it to 272px on the spot. Chromium 131+ and Safari 18.4+; where it is
+not supported the stretch is simply skipped, so it degrades to content
+height rather than breaking.
+
+### A `:has()` path is too specific and a `:has()` descendant is too loose
+
+Both failures happened to the same pair of rules within one session, and
+neither is visible in the file.
+
+* `:has(> div > div > div[class*="st-key-X"])` stopped matching the day an
+  extra `stLayoutWrapper` appeared in the chain. The rules had no effect for
+  two passes and read exactly like rules nobody had written.
+* Rewriting it as `:has(div[class*="st-key-X"])` then matched the page's own
+  three-column centring block as well - the keyed element is a descendant of
+  its middle column - so `gap: 6px` and `margin-top: -10px` landed on the
+  whole page. Invisible, because both outer columns are empty spacers.
+  Caught by a Playwright strict-mode violation reporting two matches.
+
+**Give the row a name instead.** A keyed `st.container` around the columns is
+something the app owns, and `:has` scoped inside it distinguishes that row
+from any nested one without an opinion about how deep Streamlit nests its
+wrappers this release.
+
+### Encoding an SVG data URI: the `safe` set must exclude `<`, `>` and `#`
+
+`quote(svg, safe="/:=<>'?#")` leaves all three literal. Either one is fatal
+on its own: a literal `<` inside a `<style>` block ends the element and kills
+every rule after it (the whole login screen rendered unstyled), and a literal
+`#` starts a URL fragment, truncating the SVG at its first colour. Use
+`safe="/:' "` and assert both directions - no `<`, `>` or `#` in the output,
+and `unquote(enc) == svg`. The opposite mistake costs the same: passing an
+already-encoded `%23rrggbb` through `quote` again yields `%2523`, and the
+glyph computes to `none`.
+
+**The same literal-`<` rule applies to CSS COMMENTS.** `"Sign in to <your
+university>"` written inside a `/* */` in a style block took the entire
+stylesheet with it.

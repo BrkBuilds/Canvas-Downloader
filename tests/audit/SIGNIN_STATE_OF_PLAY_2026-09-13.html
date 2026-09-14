@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Two New Ways In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  /* The house values from SIGNIN_AUDIT_2026-09-11.html. This is the fifth
+     document in the audit register and they read as one set. Two components
+     are new here and nowhere else: .finding (a severity-striped block) and
+     .probe (a terminal transcript), because this is the first register
+     document whose body is a ranked defect list rather than a narrative. */
+  :root {
+    --ink:        #f7f8fa;
+    --surface:    #ffffff;
+    --surface-2:  #f0f2f6;
+    --line:       #d7dce5;
+    --line-soft:  #e5e9f0;
+    --text:       #1b2230;
+    --text-dim:   #4d596b;
+    --text-faint: #7d8899;
+    --accent:     #1f6f9e;
+    --accent-dim: rgba(31,111,158,0.10);
+    --crit:       #c0392b;
+    --major:      #a8690d;
+    --good:       #1f7a5c;
+    --crit-dim:   rgba(192,57,43,0.12);
+    --major-dim:  rgba(168,105,13,0.13);
+    --good-dim:   rgba(31,122,92,0.13);
+    --bg:         var(--ink);
+    --card:       var(--surface);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:        #0e1117;
+      --surface:    #171b24;
+      --surface-2:  #1e2430;
+      --line:       #2b3341;
+      --line-soft:  #222936;
+      --text:       #dfe5ee;
+      --text-dim:   #98a4b6;
+      --text-faint: #6d788a;
+      --accent:     #4da8da;
+      --accent-dim: rgba(77,168,218,0.12);
+      --crit:       #f0655a;
+      --major:      #f0a23c;
+      --good:       #57b894;
+      --crit-dim:   rgba(240,101,90,0.14);
+      --major-dim:  rgba(240,162,60,0.14);
+      --good-dim:   rgba(87,184,148,0.14);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink:        #0e1117;
+    --surface:    #171b24;
+    --surface-2:  #1e2430;
+    --line:       #2b3341;
+    --line-soft:  #222936;
+    --text:       #dfe5ee;
+    --text-dim:   #98a4b6;
+    --text-faint: #6d788a;
+    --accent:     #4da8da;
+    --accent-dim: rgba(77,168,218,0.12);
+    --crit:       #f0655a;
+    --major:      #f0a23c;
+    --good:       #57b894;
+    --crit-dim:   rgba(240,101,90,0.14);
+    --major-dim:  rgba(240,162,60,0.14);
+    --good-dim:   rgba(87,184,148,0.14);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 400 16px/1.62 "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    padding: 40px 24px 90px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  header { margin: 0 0 34px; }
+  h1 {
+    font-family: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+    font-weight: 700; font-size: 34px; line-height: 1.14;
+    margin: 0 0 10px; letter-spacing: -0.015em; text-wrap: balance;
+  }
+  .sub { color: var(--text-dim); font-size: 16.5px; margin: 0; max-width: 62ch; }
+  .stamp {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    color: var(--text-faint); letter-spacing: .04em; text-transform: uppercase;
+    margin: 0 0 14px;
+  }
+
+  h2 {
+    font-family: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+    font-weight: 600; font-size: 21px; margin: 44px 0 12px;
+    letter-spacing: -0.008em;
+  }
+  h3 { font-size: 16.5px; font-weight: 600; margin: 24px 0 6px; }
+  p { margin: 0 0 13px; max-width: 70ch; }
+  ul { margin: 0 0 13px; padding-left: 20px; max-width: 70ch; }
+  li { margin: 0 0 7px; }
+  code, .mono {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.88em;
+    background: var(--surface-2); padding: 1px 5px; border-radius: 4px;
+  }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px;
+  }
+
+  .banner {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 15px 18px; margin: 0 0 30px;
+  }
+  .banner p:last-child { margin: 0; }
+
+  /* Findings. The stripe is the severity and the number is the ORDER to work
+     in, so both structural devices carry something true. */
+  .findings { display: grid; gap: 14px; margin: 0 0 8px; }
+  .finding {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 3px solid var(--line);
+    border-radius: 9px; padding: 16px 18px 14px;
+  }
+  .finding.crit  { border-left-color: var(--crit); }
+  .finding.major { border-left-color: var(--major); }
+  .finding.minor { border-left-color: var(--text-faint); }
+  .fhead {
+    display: flex; align-items: baseline; gap: 10px;
+    flex-wrap: wrap; margin: 0 0 6px;
+  }
+  .fnum {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+    font-weight: 600; color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .fhead h3 { margin: 0; flex: 1 1 320px; font-size: 17px; line-height: 1.3; }
+  .tag {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .tag.crit  { background: var(--crit-dim);  color: var(--crit); }
+  .tag.major { background: var(--major-dim); color: var(--major); }
+  .tag.minor { background: var(--surface-2); color: var(--text-dim); }
+  .tag.ok    { background: var(--good-dim);  color: var(--good); }
+  .finding p { color: var(--text-dim); font-size: 15.2px; }
+  .finding p:last-child { margin-bottom: 0; }
+  .where {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+    color: var(--text-faint); margin: 8px 0 0;
+    padding-top: 8px; border-top: 1px solid var(--line-soft);
+    overflow-wrap: anywhere;
+  }
+  .where b { color: var(--text-dim); font-weight: 600; }
+
+  .probe {
+    background: var(--surface-2); border: 1px solid var(--line-soft);
+    border-radius: 8px; padding: 13px 15px; margin: 0 0 16px;
+    overflow-x: auto;
+  }
+  .probe pre {
+    margin: 0; font-family: "IBM Plex Mono", monospace;
+    font-size: 12.8px; line-height: 1.7; color: var(--text-dim);
+  }
+  .probe .hit { color: var(--crit); font-weight: 600; }
+  .probe .ctl { color: var(--good); }
+
+  .tablewrap { overflow-x: auto; margin: 0 0 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.6px; }
+  th, td {
+    text-align: left; vertical-align: top; padding: 10px 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  th {
+    font-family: "IBM Plex Sans Condensed", sans-serif; font-weight: 600;
+    font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--text-faint); border-bottom: 1px solid var(--line);
+  }
+  td:first-child { font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+  tr:last-child td { border-bottom: 0; }
+
+  .good-list { display: grid; gap: 10px; margin: 0 0 8px; }
+  .good-item {
+    display: grid; grid-template-columns: auto 1fr; gap: 3px 13px;
+    align-items: baseline;
+  }
+  .good-item .body { grid-column: 2; color: var(--text-dim); font-size: 15px; }
+  .good-item .body p:last-child { margin: 0; }
+  .good-item h3 { margin: 0; font-size: 16px; }
+
+  footer {
+    margin: 46px 0 0; padding-top: 18px; border-top: 1px solid var(--line);
+    color: var(--text-faint); font-size: 13.5px;
+  }
+  footer p { max-width: 70ch; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="stamp">Audit register &middot; 13 September 2026</p>
+  <h1>The two new ways in</h1>
+  <p class="sub">A critical review of &ldquo;Sign in with Canvas&rdquo; and the
+  browser-extension handoff, one commit after they shipped: what is genuinely
+  right, what is broken, and what a student meets that you have not met
+  because you only tested the first five minutes.</p>
+</header>
+
+<div class="banner">
+  <p><strong>Baseline, measured tonight.</strong> Full suite
+  <strong>4,844 passed, 45 skipped</strong> in 6m21s. Architecture audit
+  <strong>0 violations</strong> across 72 Python and 8 CSS files. The
+  <code>browser_login</code> mutation pass is still running as this is
+  written; the commit notes it had not been re-run since the last round of
+  fixes, and that gap is now being closed.</p>
+  <p>Everything below is either read out of the source with a file and line,
+  or driven against the real thing. Where something is reasoned rather than
+  measured it says so, and names the measurement that would settle it.</p>
+</div>
+
+<h2>The short answer</h2>
+
+<p>The engineering underneath is the best work in this repository. The
+credential-as-a-value decision is correct and is the reason a change this
+large did not fracture the app: thirteen <code>CanvasManager</code>
+construction sites are untouched because the value carries the answer, and
+<code>core/canvas_auth.py</code> is the only place a bearer header is written.
+That is the fix for this codebase&rsquo;s most expensive recurring defect,
+applied before the defect happened rather than after.</p>
+
+<p>What is not finished is everything <em>around</em> the credential: the
+route you ship that nobody can install, the copy that still sends a new
+student to a page their school has closed, a privacy policy that now
+contradicts itself and the app, and a logout that leaves more behind than it
+did before this sprint. None of that is visible from a successful sign-in,
+which is exactly why five minutes of testing did not find it.</p>
+
+<p>The single most important sentence in this document: <strong>your
+credential lifetime went from about 120 days to about 1 day, and several
+decisions elsewhere in the app were tuned for the 120.</strong> That is where
+long-term use will hurt, and it is finding 6.</p>
+
+<h2>What is genuinely right, stated once so it is not re-litigated</h2>
+
+<div class="good-list">
+  <div class="good-item">
+    <span class="tag ok">Keep</span>
+    <h3>The credential is a value, not a code path</h3>
+    <div class="body"><p>A distinct frozen type rather than a <code>str</code>
+    subclass, so a misuse fails loudly at one site instead of silently
+    degrading to an unauthenticated request that reports as &ldquo;your token
+    was revoked&rdquo;. The <code>hash=False</code> on <code>cookies</code> is
+    load-bearing and correctly reasoned.</p></div>
+  </div>
+  <div class="good-item">
+    <span class="tag ok">Keep</span>
+    <h3>Cookie scoping is structural, not remembered</h3>
+    <div class="body"><p>Both client builders install cookies into a jar
+    scoped to the Canvas host, so the redirect onto the content CDN drops them
+    by construction. A bare <code>cookies={&hellip;}</code> dict would have
+    forwarded a complete login to <code>inst-fs</code>. This is the difference
+    between a rule and a habit.</p></div>
+  </div>
+  <div class="good-item">
+    <span class="tag ok">Keep</span>
+    <h3><code>is_login_redirect</code> reads the chain, not the response</h3>
+    <div class="body"><p>The best catch of the sprint. Outside the API an
+    expired session is a 302 to <code>/login</code> that ends 200 with 45 KB
+    of identity-provider HTML, and the download engine would have written that
+    into <code>lecture.pdf</code>. Two holes in the old Content-Type guard
+    (Canvas reporting no size, and files that legitimately are HTML) let it
+    reach disk. One definition, matched on path alone, deliberately
+    host-blind.</p></div>
+  </div>
+  <div class="good-item">
+    <span class="tag ok">Keep</span>
+    <h3>The synthetic-module runtime for the listener</h3>
+    <div class="body"><p>A module the file watcher cannot unload is the right
+    answer to an orphaned socket, and the write-up of why three independent
+    &ldquo;it worked&rdquo; signals all agreed with a broken product is worth
+    more than the fix.</p></div>
+  </div>
+</div>
+
+<h2>Findings, in the order they should be worked</h2>
+
+<p>The number is the priority, not a catalogue index. The stripe is how a
+student meets it: red is met by everyone, amber by some, grey by few.</p>
+
+<div class="findings">
+
+<div class="finding crit">
+  <div class="fhead"><span class="fnum">01</span>
+    <h3>The extension route is advertised in the app and cannot be obtained</h3>
+    <span class="tag crit">Ships broken</span></div>
+  <p>&ldquo;Use the Canvas tab in my browser&rdquo; renders unconditionally on
+  the login page, and the card under it reads <em>&ldquo;Install the free
+  Canvas Downloader Connector extension&rdquo;</em>. There is no store
+  listing, no link anywhere in the app or on the site, and the
+  <code>extension/</code> folder is referenced by <strong>neither</strong>
+  build spec nor the Inno script &mdash; so it is not in the installer either.
+  A user who installs the <code>.exe</code> has no path to that folder at all.</p>
+  <p>What they get instead: the button opens their Canvas in a tab, arms a
+  three-minute listener, and after 180 seconds shows <em>&ldquo;Nothing came
+  back from Chrome&rdquo;</em>. The failure card is well written and blames
+  the right things, which makes it worse &mdash; it reads as the student&rsquo;s
+  fault.</p>
+  <p>Three ways out, in descending order of work: publish to the Chrome Web
+  Store; ship <code>extension/</code> inside the installer with an in-app page
+  that explains the unpacked load; or hide the button until one of those
+  exists. Note that the manifest asks for <code>cookies</code> plus
+  <code>optional_host_permissions: ["*://*/*"]</code>, which is the
+  combination Web Store review scrutinises hardest &mdash; budget for a
+  justification, not a rubber stamp.</p>
+  <p class="where"><b>Where:</b> ui/auth.py:4174 (the button), ui/auth.py:2210
+  (the copy), extension/README.md (&ldquo;the store listings are not set up
+  yet&rdquo;), Canvas_Downloader.spec &amp; Canvas_Downloader_Setup.iss (no
+  reference)</p>
+</div>
+
+<div class="finding crit">
+  <div class="fhead"><span class="fnum">02</span>
+    <h3>The first thing a new student reads still tells them to get a token</h3>
+    <span class="tag crit">Ships broken</span></div>
+  <p>On a fresh install the login page&rsquo;s only orienting line, above the
+  fold, is: <em>&ldquo;New here? Find your school, get a token, log in - about
+  2 minutes.&rdquo;</em> followed by <em>&ldquo;Your token is stored only on
+  this device&hellip;&rdquo;</em>. It renders when
+  <code>_first_run = not os.path.exists(CONFIG_FILE)</code>.</p>
+  <p>For the population this entire sprint exists for, step two of that
+  three-step instruction is impossible. The strip predates the new routes and
+  was not revisited when they landed. Everything below it is correct &mdash;
+  the button is above the token field, the divider names the relationship
+  &mdash; but the headline still describes the old app.</p>
+  <p class="where"><b>Where:</b> ui/auth.py:4079-4090</p>
+</div>
+
+<div class="finding crit">
+  <div class="fhead"><span class="fnum">03</span>
+    <h3>The published privacy policy contradicts itself, and the app</h3>
+    <span class="tag crit">Live on the site</span></div>
+  <p><code>docs/privacy.html</code> line 601 still says: <em>&ldquo;We do not
+  modify, submit, or upload anything to your Canvas account. The app only
+  reads and downloads.&rdquo;</em> Ninety lines above it, added in this same
+  commit, the page describes the app creating an access token in the
+  user&rsquo;s Canvas account. That is a <code>POST</code> to
+  <code>/api/v1/users/self/tokens</code>, and <code>extend()</code> is a
+  <code>PUT</code>. Both are writes to the student&rsquo;s account.</p>
+  <p>The commit message repeats the claim too (&ldquo;Still read-only&rdquo;).
+  It is no longer true, and the honest framing is easy and still
+  flattering: the app reads your course data and writes exactly one thing
+  &mdash; a key in your own name that you can see and delete. Say that.</p>
+  <p>The same file mentions the browser extension and the loopback listener
+  <strong>zero times</strong>. That is the disclosure gap that matters for the
+  Store, which links this page.</p>
+  <p class="where"><b>Where:</b> docs/privacy.html:601 vs docs/privacy.html:515-523</p>
+</div>
+
+<div class="finding major">
+  <div class="fhead"><span class="fnum">04</span>
+    <h3>Logout does not revoke the token it minted, or clear its bookkeeping</h3>
+    <span class="tag major">Shared machines</span></div>
+  <p><code>core/token_mint.py</code> exposes <code>mint</code>,
+  <code>extend</code>, <code>days_left</code>,
+  <code>renewal_threshold_days</code> and <code>due_for_renewal</code>. There
+  is <strong>no revoke</strong>. So signing out of the app leaves a live
+  access token, valid for up to 120 days, sitting in the student&rsquo;s
+  Canvas account under the name <em>Canvas Downloader</em>. The app holds both
+  its id and its value; <code>DELETE /api/v1/users/self/tokens/:id</code> is
+  one documented call.</p>
+  <p>This contradicts the feature&rsquo;s own stated justification &mdash;
+  that a token is better than a cookie because it is
+  &ldquo;revocable&rdquo; &mdash; and the rule file&rsquo;s own section titled
+  <em>Logging out means logging out</em>.</p>
+  <p>Second half, and it is the repo&rsquo;s first standing rule broken
+  between two sites written in the same sprint: the paste-a-token path clears
+  <code>minted_token_id</code>, <code>minted_token_expires_at</code>,
+  <code>minted_token_days</code>, <code>minted_token_capped</code> and
+  <code>token_source</code>, with a comment explaining precisely why leaving
+  them is wrong. <strong>Logout clears none of them.</strong> After a logout
+  <code>_token_was_minted()</code> still answers true, so the next expiry arms
+  a hidden browser renewal for a credential the user deliberately signed out
+  of.</p>
+  <p class="where"><b>Where:</b> ui/auth.py:6173-6230 (logout) vs
+  ui/auth.py:4400-4407 (the paste path that gets it right)</p>
+</div>
+
+<div class="finding major">
+  <div class="fhead"><span class="fnum">05</span>
+    <h3>Uninstalling leaves a complete login, and possibly a university password, on disk</h3>
+    <span class="tag major">Shared machines</span></div>
+  <p><code>[UninstallDelete]</code> in the Inno script removes only
+  <code>{app}</code>. The web view profile lives in
+  <code>%APPDATA%\CanvasDownloader\webview\</code>, and since this sprint that
+  folder holds the live Canvas and identity-provider session cookies
+  <em>and</em>, because <code>enable_password_manager</code> now switches
+  <code>IsPasswordAutosaveEnabled</code> on, any institution password WebView2
+  was allowed to save.</p>
+  <p>Before this sprint that directory held settings and history and the
+  uninstaller was right to leave it. Its contents changed class and nothing
+  revisited the uninstaller. MSIX is unaffected &mdash; the package container
+  goes with the app &mdash; so this is the <code>.exe</code> track only, which
+  is the smaller share of installs but the one a student is most likely to run
+  on a shared laptop.</p>
+  <p class="where"><b>Where:</b> Canvas_Downloader_Setup.iss:117-119;
+  core/browser_login.py:179 (<code>enable_password_manager</code>)</p>
+</div>
+
+<div class="finding major">
+  <div class="fhead"><span class="fnum">06</span>
+    <h3>The optimistic restore was tuned for a 120-day token and now runs a 1-day session</h3>
+    <span class="tag major">Long-term use</span></div>
+  <p>This is the answer to your actual question, and it is the one you cannot
+  see by testing right after a sign-in.</p>
+  <p><code>_adopt_restored_credential</code> validates the stored credential
+  at launch. On a genuine auth rejection it routes to the login page; on
+  anything else &mdash; offline, captive portal, a slow launch, a TLS
+  intercept &mdash; it restores <strong>optimistically</strong>, setting
+  <code>is_authenticated = True</code>. That is correct, well argued, and was
+  correct when the stored credential was a token that lasts months: the
+  premise is &ldquo;it validated on a prior launch, so it is probably still
+  good&rdquo;.</p>
+  <p>For a browser session that premise inverts. A Canvas session is a rolling
+  <strong>day</strong>, and the rolled cookie is only written back to the
+  store inside <code>_adopt_restored_credential</code> itself &mdash; i.e.
+  once per app launch. So for a student who opens the app weekly, the stored
+  session is <em>usually dead</em> by the next launch, and the optimistic
+  branch is usually wrong.</p>
+  <p>The consequence compounds. <code>_restore_browser_session</code> arms the
+  silent renewal with <code>if not st.session_state.get('is_authenticated')</code>
+  &mdash; so the optimistic branch <strong>suppresses the very renewal that
+  would have fixed it</strong>. The app then runs on a dead session until the
+  first Canvas call fails, which is a noisy recovery where a silent one was
+  available. And the daily auto-sync hook sits downstream of that same flag
+  (<code>app.py:1043</code> stops unauthenticated sessions, <code>:1060</code>
+  fires the sync), which is the open report from 2026-09-07 about Today&rsquo;s
+  files running on an unconfirmed session &mdash; previously rare, now the
+  ordinary weekly case.</p>
+  <p><strong>Read from source, not measured.</strong> To settle it: store a
+  browser credential, point the app at a host that times out rather than
+  refuses (a listening socket that never answers), launch, and read whether
+  <code>browser_restore_pending</code> was ever armed. The narrow fix is that
+  browser mode should treat a non-auth failure as &ldquo;arm the renewal and
+  keep checking&rdquo; rather than &ldquo;declare signed in&rdquo;, because
+  unlike a token it has a live, local input to the renewal: the profile&rsquo;s
+  identity-provider session.</p>
+  <p>A second, cheaper improvement in the same area: the rolled cookie is
+  written back only at launch, so the rule file&rsquo;s claim that the session
+  now lasts &ldquo;a day after you last <em>used</em> it&rdquo; is really
+  &ldquo;a day after you last <em>launched</em> it&rdquo;. A download run holds
+  a live jar for hours and throws it away. Writing it back when a run finishes
+  closes that for free.</p>
+  <p class="where"><b>Where:</b> ui/auth.py:1371-1456
+  (<code>_adopt_restored_credential</code>), ui/auth.py:1329-1358
+  (<code>_restore_browser_session</code>), core/canvas_logic.py:1312
+  (<code>refreshed_credential</code>), app.py:1053-1063</p>
+</div>
+
+<div class="finding major">
+  <div class="fhead"><span class="fnum">07</span>
+    <h3>The listener outlives its window, and a caller that sends no Origin is accepted</h3>
+    <span class="tag major">Measured tonight</span></div>
+  <p>Driven against the real <code>core.handoff</code>, with controls that had
+  to fail and did:</p>
+  <div class="probe"><pre>control, before start(): bound = False          <span class="ctl">&lt;- port free, as it must be</span>
+start() -&gt; 53127 | bound = True | waiting = True
+after deadline: waiting = False | socket bound = <span class="hit">True</span>
+ping after timeout -&gt; {'app': 'canvas-downloader', 'waiting': False}
+POST with NO Origin -&gt; <span class="hit">200 b'{"ok": true}'</span>
+payload the app would adopt: {'host': '<span class="hit">evil.example.com</span>', 'cookies': {...}}
+control, page Origin -&gt; 403 (refused, as designed)   <span class="ctl">&lt;- the control works</span>
+after stop(): bound = False</pre></div>
+  <p><strong>Two facts.</strong> First, when the three-minute window expires
+  the acceptance flag flips but <code>stop()</code> is never called, so the
+  socket stays bound and answering for the life of the process. The module
+  docstring and <code>extension/README.md</code> both say it &ldquo;times out
+  after three minutes&rdquo;; the <em>window</em> does, the <em>socket</em>
+  does not. It does close correctly on a successful handoff.</p>
+  <p>Second, <code>_is_extension_origin</code> accepts an absent
+  <code>Origin</code> header. Item 3 of the module&rsquo;s own threat model
+  says &ldquo;Extension origins only&rdquo;; the code is &ldquo;extension
+  origins, <em>or anything that sends no Origin at all</em>&rdquo;. A web page
+  cannot exploit this &mdash; browsers always set <code>Origin</code> on a
+  POST, and the page-origin control above confirms pages are refused &mdash;
+  but any other program running as the user can, and
+  <code>adopt_pending_handoff</code> then takes <code>api_url</code>
+  <em>from that payload</em> and signs the app into whatever host it names.</p>
+  <p>Severity is bounded: it needs local code execution, and a local process
+  running as the user could already read the credential store. But the
+  <em>direction</em> is unusual &mdash; not &ldquo;steal the credential&rdquo;
+  but &ldquo;point the downloader at an account somebody else controls&rdquo;
+  &mdash; and the fix is small: keep the permissive rule on
+  <code>GET /ping</code>, require a real extension origin on
+  <code>POST /canvas-session</code>. <strong>Measure before tightening</strong>
+  &mdash; confirm with the real extension in real Chrome that its POST carries
+  <code>Origin</code>, because if it does not, this change kills the feature.</p>
+  <p class="where"><b>Where:</b> core/handoff.py:147
+  (<code>_is_extension_origin</code>), :302 (<code>do_POST</code>),
+  :405 (<code>waiting</code>), ui/auth.py:1806 (the host is adopted
+  verbatim)</p>
+</div>
+
+<div class="finding major">
+  <div class="fhead"><span class="fnum">08</span>
+    <h3>The card written to end the &ldquo;extension says done, app says waiting&rdquo; contradiction never renders</h3>
+    <span class="tag major">Dead code</span></div>
+  <p><code>_browser_notice_html('handoff_arrived')</code> &mdash; <em>&ldquo;Got
+  it. Chrome sent your Canvas sign-in over. Signing you in now.&rdquo;</em>
+  &mdash; is defined at <code>ui/auth.py:2321</code> and asserted by three
+  lines of <code>tests/test_handoff.py</code>. <strong>No production caller
+  ever passes that string.</strong> The tests call the formatter directly, so
+  they pass against a state the app cannot reach. Exactly the trap the memory
+  register calls &ldquo;assert the expression, not the token&rdquo;.</p>
+  <p>It matters because of a mechanism this repo already has written down:
+  <code>st.rerun()</code> takes effect only on <code>FINISHED_SUCCESSFULLY</code>,
+  so the previous screen stays painted through the next <em>blocking</em> run.
+  The arrival tick calls <code>st.rerun</code> immediately, and the run that
+  follows does <code>validate_token()</code> plus a mint attempt on the script
+  thread. For those seconds the student is still looking at <em>&ldquo;One more
+  click, over in Chrome &mdash; Waiting for your browser&rdquo;</em> while the
+  extension shows green. That is the reported bug, in a narrower window.</p>
+  <p>The fix is the repo&rsquo;s own pattern: paint <code>handoff_arrived</code>
+  on the tick that sees the payload, fire the rerun on the next one. Arm the
+  action, fire it a run later.</p>
+  <p class="where"><b>Where:</b> ui/auth.py:2321 (defined), ui/auth.py:2392-2399
+  (the branch that should reach it), tests/test_handoff.py:1569,1593,1714</p>
+</div>
+
+<div class="finding minor">
+  <div class="fhead"><span class="fnum">09</span>
+    <h3>Two settings that govern consent have no user interface</h3>
+    <span class="tag minor">Consent</span></div>
+  <p><code>keep_signed_in</code> (default on) makes the app re-date session
+  cookies inside WebView2 so a sign-in survives closing the app for 30 days.
+  <code>token_upgrade_enabled</code> (default on) makes the app write an
+  access token into the student&rsquo;s Canvas account. Both are read from the
+  settings file; <strong>nothing anywhere writes either one</strong>. There is
+  no toggle in Settings, so neither can be declined.</p>
+  <p>Related: <code>token_upgrade_blocked</code> is a single global key, not
+  per-institution, and is never cleared. A student who first signs in at a
+  school that blocks tokens never gets the upgrade at a later school that
+  allows it, and never gets it at their own school if the policy is reversed.</p>
+  <p>The disclosure that <em>does</em> exist is a single
+  <code>st.toast</code>, once, four seconds, fired on the busiest run of the
+  session. Nothing in Settings or the sidebar ever says which credential you
+  are on, when it expires, or that a key named <em>Canvas Downloader</em> now
+  exists in your account.</p>
+  <p class="where"><b>Where:</b> ui/auth.py:1975 / :2003 (readers with no
+  writers), ui/auth.py:2162-2169 (the toast)</p>
+</div>
+
+<div class="finding minor">
+  <div class="fhead"><span class="fnum">10</span>
+    <h3>The extension takes a cookie it does not need, for a reason that is not true</h3>
+    <span class="tag minor">Privacy posture</span></div>
+  <p><code>_csrf_token</code> is in both <code>ACCEPTED_COOKIES</code> and the
+  extension&rsquo;s <code>WANTED</code>, and
+  <code>extension/README.md</code> justifies it as &ldquo;so the app can create
+  a long-lived key without another round trip to Canvas&rdquo;. But
+  <code>mint()</code> always performs that round trip &mdash; one
+  <code>GET /profile/settings</code> &mdash; and reads the CSRF token from
+  <em>that</em> jar, deliberately, because a restored credential never carries
+  one. The handed-over copy is never used.</p>
+  <p>It is dropped at rest (<code>to_storable</code> keeps only session
+  cookies) so nothing leaks. But an extension whose whole pitch is
+  &ldquo;here is precisely what it reads&rdquo; should not read a third thing
+  for a stated reason that is false, and Web Store review asks about exactly
+  this. Drop it from both lists, or correct the README.</p>
+  <p class="where"><b>Where:</b> core/handoff.py:90, extension/background.js:43,
+  core/token_mint.py:279-295</p>
+</div>
+
+<div class="finding minor">
+  <div class="fhead"><span class="fnum">11</span>
+    <h3>A first sign-in waits up to 15 seconds behind a hidden window that cannot succeed</h3>
+    <span class="tag minor">Friction</span></div>
+  <p>Already measured in the rule file against real CBS SSO: notice at 1.3s,
+  the hidden window already sitting on the Entra login page at 3.3s, the
+  window finally shown at <strong>17.0s</strong>. The settle rule (four polls
+  of an unchanged URL) is supposed to show it sooner and did not, because a
+  real identity provider keeps rewriting the URL.</p>
+  <p>The silent phase exists to let a live SSO session renew Canvas&rsquo;
+  day without a window. On a <em>first</em> sign-in there is nothing to renew
+  &mdash; the profile is empty &mdash; so it is pure dead time, paid by
+  exactly the people who have never used the app. <code>SILENT_TIMEOUT</code>
+  is a constant, so a faster laptop makes the dead time longer, not shorter.</p>
+  <p>The discriminator already exists: the renewal path arrives through
+  <code>browser_restore_pending</code>, the button through a click. Give the
+  button a short clock (or none) and keep the long silent phase for the
+  renewal.</p>
+  <p class="where"><b>Where:</b> core/browser_login.py:84
+  (<code>SILENT_TIMEOUT</code>), :1017-1024, ui/auth.py:1503</p>
+</div>
+
+<div class="finding minor">
+  <div class="fhead"><span class="fnum">12</span>
+    <h3>With help text off, the extension button explains nothing at all</h3>
+    <span class="tag minor">Friction</span></div>
+  <p><code>_handoff_card_html</code> returns an empty div when
+  <code>help_text_enabled()</code> is false. Help text defaults on, so this is
+  a returning power user &mdash; but it is the user most likely to have turned
+  it off and least likely to know an extension exists. They press a button
+  with no caption, their Canvas opens in a browser for no stated reason, and
+  three minutes later it fails.</p>
+  <p class="where"><b>Where:</b> ui/auth.py:2202-2206</p>
+</div>
+
+</div>
+
+<h2>Open from before this sprint, and made routine by it</h2>
+
+<p>Neither of these is an auth defect. Both are in the register already, both
+are still open, and the one-day credential moves them from rare to
+ordinary.</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Report</th><th>State</th><th>Why it matters more now</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>2026-09-12<br>double-run</td>
+      <td>Open. No process-global run identity exists &mdash;
+          <code>download_status</code> is still session state only, and
+          <code>core/state_registry.py</code> has nothing to adopt.</td>
+      <td>A dropped websocket restarted a whole download three times from one
+          click. The mechanism is a side effect re-triggered by state that does
+          not know it already happened. Unchanged by this sprint, and it
+          needs its own reproduce, fix, test and mutation pass &mdash;
+          explicitly <em>not</em> to be bolted onto anything else.</td>
+    </tr>
+    <tr>
+      <td>2026-09-07<br>Today on an unconfirmed session</td>
+      <td>Open. <code>should_auto_sync()</code> gates on three things, none of
+          which is &ldquo;was the credential confirmed this launch&rdquo;.</td>
+      <td>It fires behind the optimistic restore in finding 6. With a
+          120-day token an unconfirmed restore was usually still a good
+          credential; with a one-day session it usually is not, so the
+          headless daily sync now meets a dead credential on the ordinary
+          weekly launch and emits one amber notice per course.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Documentation: every surface is stale except one</h2>
+
+<p>You suspected this and you were right. The only user-facing page updated in
+the commit was <code>docs/privacy.html</code>, and it is the one that now
+contradicts itself.</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Surface</th><th>What it says today</th><th>Work</th></tr></thead>
+  <tbody>
+    <tr><td>docs/privacy.html</td>
+      <td>Covers the in-app sign-in and the minted token well. Still claims the
+          app writes nothing to Canvas. Never mentions the extension or the
+          loopback listener.</td>
+      <td>Fix the contradiction; add the extension section. Highest priority
+          &mdash; the Store links it.</td></tr>
+    <tr><td>docs/win-setup.html</td>
+      <td>&ldquo;a token you create yourself. Two minutes, once.&rdquo; then
+          four lines of Approved Integrations.</td>
+      <td>Lead with &ldquo;Sign in with Canvas&rdquo;, keep the token as the
+          alternative.</td></tr>
+    <tr><td>docs/mac-setup.html</td>
+      <td>Same, plus an embedded video titled <em>How to create a Canvas access
+          token</em>.</td>
+      <td>Same. The video needs a companion or a caveat, not deletion.</td></tr>
+    <tr><td>docs/guide.html</td>
+      <td>A whole section, <code>#api-token</code>, presenting the token as the
+          mechanism. Zero mentions of either new route.</td>
+      <td>New section above it.</td></tr>
+    <tr><td>docs/index.html</td>
+      <td>The &ldquo;is it safe&rdquo; panel and the FAQ are token-only.</td>
+      <td>Extend the safety panel to all three routes.</td></tr>
+    <tr><td>docs/canvas-access-token-explained.html</td>
+      <td>Premised throughout on tokens being obtainable.</td>
+      <td>Needs one honest paragraph about schools switching it off &mdash;
+          which is also a real search term nobody is answering yet.</td></tr>
+    <tr><td>README.md</td>
+      <td>14 mentions of access tokens, zero of &ldquo;Sign in with
+          Canvas&rdquo; or the extension.</td>
+      <td>Setup section rewrite.</td></tr>
+    <tr><td>In-app</td>
+      <td>Finding 2 (first-run strip); the token walkthrough is still the only
+          walkthrough on the page.</td>
+      <td>Copy, not code.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>What is verified, and what is not</h2>
+
+<p>Stated separately because the difference is the whole point of the register.</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Claim</th><th>Standing</th></tr></thead>
+  <tbody>
+    <tr><td>Test suite</td><td><strong>Green.</strong> 4,844 passed, 45 skipped, 381s, tonight.</td></tr>
+    <tr><td>Architecture audit</td><td><strong>0 violations</strong>, 72 Python + 8 CSS, tonight.</td></tr>
+    <tr><td>Handoff listener behaviour</td><td><strong>Driven</strong> tonight against the real module, with a control that failed correctly. See finding 7.</td></tr>
+    <tr><td>Sign-in works end to end</td><td><strong>Yours</strong>, against real CBS Canvas, both routes, including Panopto.</td></tr>
+    <tr><td>Sign-in <em>persists</em> across launches</td><td><strong>Not verified.</strong> This is the half you named, and the one findings 4 and 6 live in.</td></tr>
+    <tr><td>The access-token mint against live Canvas</td><td><strong>Never run</strong> per the rule file, and there is no local evidence it has been: neither settings file on this machine carries <code>auth_method</code>, <code>token_source</code>, <code>minted_token_*</code> or <code>token_upgrade_blocked</code>. Your testing went to a different config directory, so this proves nothing about the sign-in &mdash; but it does mean the receiver-side oracle has never been read.</td></tr>
+    <tr><td>macOS, either new route</td><td><strong>Nothing has run on a Mac.</strong> The extension route has no platform branch and should be at parity; the in-app window is behind in three named places.</td></tr>
+    <tr><td>The extension in a Chrome that is not yours</td><td><strong>Not verified.</strong> One machine, one profile, developer mode.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>The cheapest test you can run, and it answers your actual question</h3>
+
+<ol class="steps">
+  <li>Sign in with Canvas. Then open the settings file and confirm
+  <code>auth_method</code> is <code>browser</code>, and read what happened to
+  the mint: <code>token_source: minted</code> means CBS allowed it,
+  <code>token_upgrade_blocked: true</code> means it refused, and
+  <strong>neither key present means the upgrade never completed</strong> and is
+  being retried on every sign-in forever.</li>
+  <li>Close the app completely. Reopen it. It should sign in silently.
+  Time it.</li>
+  <li>Leave it for three days. Reopen. This is the launch that exercises the
+  hidden renewal, and the one nobody has driven.</li>
+  <li>Sign out, and then look in Canvas under Account &rarr; Settings &rarr;
+  Approved Integrations. If <em>Canvas Downloader</em> is still listed, that is
+  finding 4 in front of you.</li>
+</ol>
+
+<footer>
+  <p>Fifth document in the audit register. Siblings:
+  <code>SIGNIN_AUDIT_2026-09-11</code>,
+  <code>AUTH_BACKEND_STATE_2026-09-12</code>,
+  <code>SIGNIN_REVIEW_2026-09-12</code>,
+  <code>MACOS_PARITY_2026-09-13</code>.</p>
+  <p>Nothing in this document was changed in the code. The
+  <code>browser_login</code> mutation pass was running while it was written,
+  which is why no source file was touched.</p>
+</footer>
+</div>
+
+</body>
+</html>

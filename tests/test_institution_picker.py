@@ -454,6 +454,40 @@ def test_previous_listeners_are_removed_before_rebinding():
     assert "_cdInstReg" in _JS, "handler refs must persist on window.parent to be removable"
 
 
+def test_every_SHORT_ALIAS_the_bridge_uses_is_actually_declared():
+    """An undeclared alias does not break one feature - it kills the mount.
+
+    Shipped 2026-09-14 and found in the browser console, not by any test:
+    the MutationObserver block was written against `W` for the parent window,
+    which this bridge has never had (it is `P`, from
+    `var P = window.parent, D = P.document;`). The block sits near the END of
+    the IIFE, so the ReferenceError took `settleMount(0)` with it and NOTHING
+    the bridge paints ever ran - the institution trigger kept its placeholder
+    label beside a recognised school, the "Recognised: ..." status row stayed
+    empty, and the "Get a token" button stayed disabled with the school's own
+    URL already in the field. Three separate symptoms, one dead script, and
+    4,847 passing tests.
+
+    A census over the one-letter aliases, which is the form this bridge uses
+    for everything it reaches out of its own scope, and therefore the form the
+    mistake takes. Anything used as `X.something` must be declared as `var X`
+    in the same source.
+    """
+    used = set(re.findall(r"(?<![\w.$])([A-Z])\.", _JS))
+    declared = set(re.findall(r"\bvar\s+([A-Z])\b", _JS))
+    for m in re.finditer(r"\bvar\s+([^;]+);", _JS):
+        for part in m.group(1).split(","):
+            name = part.split("=")[0].strip()
+            if len(name) == 1 and name.isupper():
+                declared.add(name)
+    undeclared = sorted(used - declared)
+    assert not undeclared, (
+        "the bridge reaches for %s, which nothing declares - a ReferenceError "
+        "here does not degrade the feature, it ends the script and everything "
+        "after it never runs" % undeclared
+    )
+
+
 def test_no_one_time_bind_guard():
     """`if (bound) return;` is what makes a bridge die permanently after the
     first teardown - it works on load and never recovers."""

@@ -77,6 +77,21 @@ every one of the 13 `CanvasManager` construction sites is unchanged because the
 VALUE carries the answer. See `.claude/rules/browser-login.md` before touching
 any of it - several of its entries are bugs that shipped.
 
+**THREE routes, TWO populations, and the split is not a preference.** It is one
+setting on the student's own institution, which they did not choose and cannot
+see. Where student access tokens are **allowed**, the token is the right
+credential and must stay the straight path: 120 days against a session's one,
+revocable, and the only one with Panopto and exported-page parity. The app mints
+it for them automatically after a Canvas sign-in, so they pay no friction for
+it. Where the institution has **turned tokens off** - an increasing share since
+Instructure shipped the switches in September 2025, CBS among them - the token
+field is not higher-friction, it is a dead end, and the two new routes are the
+only way the app works at all. That is a selling point, not a fallback. The app
+only learns which column a user is in on their first sign-in
+(`token_upgrade_blocked`), **nothing in the UI reads that yet**, and the auth
+screen's job is to serve both columns without guessing. Full statement, and the
+handling that is still missing, in `.claude/rules/browser-login.md`.
+
 **Runtime data files** (all gitignored - they hold real user data):
 `sync_library.json` (saved pairs, groups, daily set), `canvas_sync_pairs.json`,
 `canvas_sync_history.json`, `canvas_downloader_settings.json`, and a per-folder

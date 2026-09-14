@@ -17,39 +17,57 @@
     */
     :root {
       color-scheme: light dark;
-      --bg:        #ffffff;
-      --surface:   #f4f6fa;
-      --line:      #dde3ec;
-      --text:      #16202e;
-      --text-dim:  #55627a;
-      --text-faint:#7d8899;
-      --brand:     #0072CE;
-      --brand-ink: #ffffff;
-      --brand-dim: rgba(0,114,206,0.10);
-      --good:      #177a55;
-      --good-dim:  rgba(23,122,85,0.12);
-      --warn:      #9a6207;
-      --warn-dim:  rgba(154,98,7,0.12);
-      --bad:       #b3352a;
-      --step-off:  #c3cbd8;
+      --bg:             #ffffff;
+      --surface:        #f5f5f7;
+      --surface-elevated: #ffffff;
+      --line:           #e5e5ea;
+      --line-subtle:    #ebebf0;
+      --text:           #1d1d1f;
+      --text-dim:       #6e6e73;
+      --text-faint:     #86868b;
+      --brand:          #0071e3;
+      --brand-hover:    #0077ed;
+      --brand-ink:      #ffffff;
+      --brand-dim:      rgba(0, 113, 227, 0.10);
+      --good:           #1b8738;
+      --good-dim:       rgba(27, 135, 56, 0.12);
+      --good-border:    rgba(27, 135, 56, 0.30);
+      --warn:           #b36200;
+      --warn-dim:       rgba(179, 98, 0, 0.10);
+      --warn-border:    rgba(179, 98, 0, 0.28);
+      --bad:            #d7261e;
+      --bad-dim:        rgba(215, 38, 30, 0.10);
+      --bad-border:     rgba(215, 38, 30, 0.28);
+      --step-off:       #d2d2d7;
+      --card-shadow:    0 1px 3px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02);
+      --btn-shadow:     0 2px 8px rgba(0, 113, 227, 0.25);
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg:        #161b23;
-        --surface:   #1e242f;
-        --line:      #2c3440;
-        --text:      #e6ebf3;
-        --text-dim:  #a3b0c2;
-        --text-faint:#7b8697;
-        --brand:     #3f9ae0;
-        --brand-ink: #06121d;
-        --brand-dim: rgba(63,154,224,0.16);
-        --good:      #56c79a;
-        --good-dim:  rgba(86,199,154,0.16);
-        --warn:      #e0a850;
-        --warn-dim:  rgba(224,168,80,0.16);
-        --bad:       #ef7f74;
-        --step-off:  #3a4250;
+        --bg:             #16171a;
+        --surface:        #1f2126;
+        --surface-elevated: #26282e;
+        --line:           #30333b;
+        --line-subtle:    #26282f;
+        --text:           #f5f5f7;
+        --text-dim:       #a1a1a6;
+        --text-faint:     #6e6e73;
+        --brand:          #0a84ff;
+        --brand-hover:    #409cff;
+        --brand-ink:      #ffffff;
+        --brand-dim:      rgba(10, 132, 255, 0.16);
+        --good:           #32d74b;
+        --good-dim:       rgba(50, 215, 75, 0.15);
+        --good-border:    rgba(50, 215, 75, 0.32);
+        --warn:           #ff9f0a;
+        --warn-dim:       rgba(255, 159, 10, 0.15);
+        --warn-border:    rgba(255, 159, 10, 0.32);
+        --bad:            #ff453a;
+        --bad-dim:        rgba(255, 69, 58, 0.15);
+        --bad-border:     rgba(255, 69, 58, 0.32);
+        --step-off:       #3a3b40;
+        --card-shadow:    0 2px 8px rgba(0, 0, 0, 0.28);
+        --btn-shadow:     0 3px 12px rgba(10, 132, 255, 0.35);
       }
     }
 
@@ -60,149 +78,411 @@
       padding: 16px 16px 14px;
       background: var(--bg);
       color: var(--text);
-      font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      font-size: 13.5px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     .brand {
-      display: flex; align-items: center; gap: 8px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
       margin: 0 0 14px;
     }
-    .brand img { width: 20px; height: 20px; display: block; }
-    .brand span { font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+    .brand img {
+      width: 22px;
+      height: 22px;
+      display: block;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
+    }
+    .brand span {
+      font-size: 14.5px;
+      font-weight: 650;
+      letter-spacing: -0.015em;
+      color: var(--text);
+    }
 
     /* ── the three steps, which are the guide ───────────────────────── */
-    .steps { display: flex; flex-direction: column; gap: 0; margin: 0 0 14px; }
-    .step {
-      display: grid; grid-template-columns: 22px 1fr; gap: 10px;
-      align-items: start; padding: 0 0 12px;
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 0 0 14px;
       position: relative;
     }
-    .step:last-child { padding-bottom: 0; }
+    .step {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 11px;
+      align-items: start;
+      padding: 0 0 12px;
+      position: relative;
+    }
+    .step:last-child {
+      padding-bottom: 0;
+    }
     /* the rail between the numbers */
     .step:not(:last-child)::before {
-      content: ""; position: absolute; left: 10px; top: 22px; bottom: 2px;
-      width: 2px; background: var(--line); border-radius: 2px;
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 22px;
+      bottom: 0;
+      width: 2px;
+      background: var(--line);
+      border-radius: 1px;
+      transition: background 0.25s ease;
+    }
+    .step.done:not(:last-child)::before {
+      background: var(--good);
     }
     .dot {
-      width: 22px; height: 22px; border-radius: 50%;
-      display: grid; place-items: center;
-      font-size: 11.5px; font-weight: 700;
-      background: var(--surface); color: var(--text-faint);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 11.5px;
+      font-weight: 650;
+      background: var(--surface);
+      color: var(--text-faint);
       border: 1.5px solid var(--step-off);
-      position: relative; z-index: 1;
+      position: relative;
+      z-index: 1;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .step .label { font-size: 13px; color: var(--text-faint); padding-top: 2px; }
+    .step .label {
+      font-size: 12.8px;
+      line-height: 1.42;
+      color: var(--text-faint);
+      padding-top: 1.5px;
+      transition: color 0.2s ease;
+    }
 
-    .step.done .dot { background: var(--good-dim); border-color: var(--good);
-                      color: var(--good); }
-    .step.done .label { color: var(--text-dim); }
-    .step.now .dot { background: var(--brand); border-color: var(--brand);
-                     color: var(--brand-ink); }
-    .step.now .label { color: var(--text); font-weight: 600; }
+    .step.done .dot {
+      background: var(--good);
+      border-color: var(--good);
+      color: #ffffff;
+      box-shadow: 0 0 0 2px var(--good-dim);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .step.done .label {
+      color: var(--text-dim);
+    }
+    .step.now .dot {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: var(--brand-ink);
+      box-shadow: 0 0 0 3px var(--brand-dim);
+      font-weight: 700;
+      transform: scale(1.05);
+    }
+    .step.now .label {
+      color: var(--text);
+      font-weight: 600;
+    }
 
     /* ── the status card ────────────────────────────────────────────── */
     .card {
-      background: var(--surface); border: 1px solid var(--line);
-      border-radius: 9px; padding: 12px 13px; margin: 0 0 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: 0 0 13px;
+      box-shadow: var(--card-shadow);
+      transition: border-color 0.2s ease, background 0.2s ease;
     }
     .card .title {
-      font-size: 13.5px; font-weight: 650; margin: 0 0 3px;
-      display: flex; align-items: center; gap: 7px;
+      font-size: 13.5px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .card .body { font-size: 12.8px; color: var(--text-dim); margin: 0; }
-    .card.good .title { color: var(--good); }
-    .card.warn .title { color: var(--warn); }
-    .card.bad  .title { color: var(--bad); }
+    .card .body {
+      font-size: 12.8px;
+      line-height: 1.45;
+      color: var(--text-dim);
+      margin: 0;
+    }
+    .card.good {
+      border-color: var(--good-border);
+      background: linear-gradient(180deg, var(--good-dim) 0%, var(--surface) 100%);
+    }
+    .card.good .title {
+      color: var(--good);
+    }
+    .card.warn {
+      border-color: var(--warn-border);
+      background: linear-gradient(180deg, var(--warn-dim) 0%, var(--surface) 100%);
+    }
+    .card.warn .title {
+      color: var(--warn);
+    }
+    .card.bad {
+      border-color: var(--bad-border);
+      background: linear-gradient(180deg, var(--bad-dim) 0%, var(--surface) 100%);
+    }
+    .card.bad .title {
+      color: var(--bad);
+    }
 
     .site {
-      display: block; margin: 8px 0 0;
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-size: 11.5px; color: var(--text-dim);
-      background: var(--bg); border: 1px solid var(--line);
-      border-radius: 5px; padding: 5px 7px; overflow-wrap: anywhere;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11.5px;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 4px 8px;
+      overflow-wrap: anywhere;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    .site::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      flex: 0 0 12px;
+      background-color: var(--text-dim);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='2' y1='12' x2='22' y2='12'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E") no-repeat center / contain;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='2' y1='12' x2='22' y2='12'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E") no-repeat center / contain;
     }
 
     /* ── the one action ─────────────────────────────────────────────── */
-    button {
-      width: 100%; padding: 11px 12px; font: inherit; font-weight: 650;
-      color: var(--brand-ink); background: var(--brand);
-      border: 0; border-radius: 8px; cursor: pointer;
+    button#go {
+      width: 100%;
+      padding: 11px 16px;
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--brand-ink);
+      background: var(--brand);
+      border: 0;
+      border-radius: 9px;
+      box-shadow: var(--btn-shadow);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
     }
-    button:hover:not(:disabled) { filter: brightness(1.08); }
-    button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-    button:disabled {
-      background: var(--surface); color: var(--text-faint);
-      border: 1px solid var(--line); cursor: default;
+    button#go:hover:not(:disabled) {
+      background: var(--brand-hover);
+      box-shadow: 0 4px 14px rgba(10, 132, 255, 0.4);
+      transform: translateY(-0.5px);
     }
-    button.ghost {
-      background: transparent; color: var(--brand);
-      border: 1px solid var(--line); font-weight: 600;
+    button#go:active:not(:disabled) {
+      transform: scale(0.98);
+      box-shadow: 0 1px 4px rgba(10, 132, 255, 0.2);
+    }
+    button#go:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+    button#go:disabled {
+      background: var(--surface);
+      color: var(--text-faint);
+      border: 1px solid var(--line);
+      box-shadow: none;
+      cursor: default;
+      transform: none;
+    }
+    button#go.ghost {
+      background: var(--brand-dim);
+      color: var(--brand);
+      border: 1.5px solid var(--brand);
+      box-shadow: none;
+    }
+    button#go.ghost:hover:not(:disabled) {
+      background: var(--brand);
+      color: var(--brand-ink);
     }
 
+    /* ── the trust & privacy badge ──────────────────────────────────── */
     .foot {
-      margin: 12px 0 0; font-size: 11.5px; color: var(--text-faint);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 14px 0 0;
+      padding: 9px 11px;
+      font-size: 11px;
       line-height: 1.45;
+      color: var(--text-dim);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .foot::before {
+      content: "";
+      display: block;
+      width: 13px;
+      height: 13px;
+      flex: 0 0 13px;
+      margin-top: 2px;
+      background-color: var(--good);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E") no-repeat center / contain;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E") no-repeat center / contain;
     }
 
     /* ── app on/off, always on screen ───────────────────────────────── */
     .appstate {
-      display: flex; align-items: center; gap: 8px;
-      margin: 0 0 13px; padding: 8px 10px;
-      border: 1px solid var(--line); border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 14px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
       background: var(--surface);
-      font-size: 12.8px; font-weight: 600; color: var(--text-dim);
+      font-size: 12.5px;
+      font-weight: 550;
+      color: var(--text-dim);
+      transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     }
     .appstate .ind {
-      width: 9px; height: 9px; border-radius: 50%;
-      background: var(--step-off); flex: 0 0 auto;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--step-off);
+      flex: 0 0 auto;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
     }
-    .appstate.on  { color: var(--good); border-color: var(--good); }
-    .appstate.on .ind { background: var(--good); }
-    .appstate.off { color: var(--text-dim); }
-    .appstate.off .ind { background: var(--step-off); }
+    .appstate.on {
+      color: var(--good);
+      border-color: var(--good-border);
+      background: linear-gradient(180deg, var(--good-dim) 0%, var(--surface) 100%);
+    }
+    .appstate.on .ind {
+      background: var(--good);
+      box-shadow: 0 0 0 3px var(--good-dim);
+    }
+    .appstate.off {
+      color: var(--text-dim);
+    }
+    .appstate.off .ind {
+      background: var(--step-off);
+    }
     .appstate .recheck {
-      margin-left: auto; width: auto; flex: 0 0 auto;
-      padding: 3px 9px; font-size: 11.5px; font-weight: 600;
-      color: var(--text-dim); background: transparent;
-      border: 1px solid var(--line); border-radius: 6px;
+      margin-left: auto;
+      width: auto;
+      flex: 0 0 auto;
+      padding: 3px 9px;
+      font-size: 11.5px;
+      font-weight: 550;
+      color: var(--text-dim);
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      transition: all 0.15s ease;
+      cursor: pointer;
     }
     .appstate .recheck:hover:not(:disabled) {
-      color: var(--text); border-color: var(--text-faint); filter: none;
+      color: var(--text);
+      border-color: var(--text-faint);
+      background: var(--surface-elevated);
+      transform: translateY(-0.5px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .appstate .recheck:active:not(:disabled) {
+      transform: scale(0.96);
     }
     .appstate .recheck:disabled {
-      opacity: .55; background: transparent; color: var(--text-faint);
+      opacity: 0.55;
+      cursor: default;
+      transform: none;
     }
 
     /* ── the countdown out of the finished screen ───────────────────── */
     .countdown {
-      margin: 9px 0 0; text-align: center;
-      font-size: 12px; color: var(--text-faint);
+      margin: 10px auto 0;
+      padding: 4px 12px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-dim);
       font-variant-numeric: tabular-nums;
+      display: inline-block;
+      width: 100%;
     }
-    .countdown b { color: var(--text-dim); font-weight: 700; }
+    .countdown b {
+      color: var(--brand);
+      font-weight: 700;
+    }
 
     /* ── the resting screen: nothing to do, so nothing to do it with ── */
-    .rest { text-align: center; padding: 4px 0 2px; }
+    .rest {
+      text-align: center;
+      padding: 6px 0 4px;
+    }
     .rest .mark {
-      width: 42px; height: 42px; border-radius: 50%; margin: 2px auto 12px;
-      display: grid; place-items: center;
-      background: var(--good-dim); color: var(--good);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      margin: 4px auto 14px;
+      display: grid;
+      place-items: center;
+      background: var(--good-dim);
+      color: var(--good);
       border: 1.5px solid var(--good);
-      font-size: 19px; font-weight: 700; line-height: 1;
+      box-shadow: 0 0 0 4px var(--good-dim);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .rest .mark svg {
+      display: block;
     }
     .rest .resttitle {
-      margin: 0 0 5px; font-size: 14px; font-weight: 650; color: var(--text);
+      margin: 0 0 6px;
+      font-size: 14.5px;
+      font-weight: 650;
+      letter-spacing: -0.015em;
+      color: var(--text);
       text-wrap: balance;
     }
     .rest .restbody {
-      margin: 0 0 15px; font-size: 12.8px; color: var(--text-dim);
+      margin: 0 0 16px;
+      font-size: 12.8px;
+      line-height: 1.45;
+      color: var(--text-dim);
     }
     .again {
-      width: auto; padding: 0; background: transparent; border: 0;
-      font-size: 12px; font-weight: 600; color: var(--brand);
-      text-decoration: underline; text-underline-offset: 2px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      max-width: 100%;
+      padding: 8px 14px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 550;
+      color: var(--text-dim);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      cursor: pointer;
+      transition: all 0.15s ease;
     }
-    .again:hover:not(:disabled) { filter: none; text-decoration-thickness: 2px; }
+    .again:hover:not(:disabled) {
+      color: var(--text);
+      background: var(--surface-elevated);
+      border-color: var(--text-faint);
+      transform: translateY(-0.5px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    .again:active:not(:disabled) {
+      transform: scale(0.97);
+    }
 
     /*
       ONE class hides the whole guide, and every part of it is named here, so a
@@ -218,9 +498,14 @@
     body:not(.resting) .rest { display: none; }
 
     .spin {
-      width: 13px; height: 13px; border-radius: 50%;
-      border: 2px solid var(--brand-dim); border-top-color: var(--brand);
-      animation: sp .7s linear infinite; display: inline-block;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 2px solid var(--brand-dim);
+      border-top-color: var(--brand);
+      animation: sp .7s linear infinite;
+      display: inline-block;
+      vertical-align: -1px;
     }
     @keyframes sp { to { transform: rotate(360deg); } }
     /*
@@ -230,6 +515,11 @@
     */
     @media (prefers-reduced-motion: reduce) {
       .spin { display: none; }
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
@@ -291,7 +581,11 @@
     dot" - and reachable back the other way by the one link below it.
   -->
   <div class="rest" id="rest">
-    <div class="mark" aria-hidden="true">&#10003;</div>
+    <div class="mark" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
     <p class="resttitle" id="restTitle">Canvas Downloader is signed in</p>
     <p class="restbody" id="restBody">Nothing to do here.</p>
     <button class="again" id="again" type="button">Something not right? Go

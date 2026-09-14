@@ -417,3 +417,34 @@ the `logger.debug` calls a LATER test file asserts on.
   touches**, and only the ones you can name will be undone. Prefer to snapshot
   the module's public surface before the call rather than reason about which
   globals it reaches.
+
+### Three survivors, one cause: the assertion was satisfied off the code path
+
+`_mutate_browser_login.py` came back 67/71 on 2026-09-14. Every one of the
+three real survivors passed because its assertion could be satisfied by
+something that was not the running code.
+
+| Mutant | Why the test could not fail |
+|---|---|
+| `GetCookiesAsync(None)` filtered to `'canvas'` | The test read `'GetCookiesAsync(None)' in ast.unparse(fn)`. That function's own DOCSTRING explains why the argument is `None`. The prose kept it green. |
+| `if job.keep_signed_in:` becomes `if False:` | The test asserted `persist_session_cookies` was PRESENT in `_worker`. `if False:` leaves the call exactly where it is, unreachable. |
+| `keep_signed_in = True` pasted into `_Job.__init__` | The test grepped for the string `keep_signed_in`, which the override does not remove. |
+
+The third is the sharpest: a mutant hard-wiring "always keep the sign-in"
+survived 4,850 tests, so nothing in the app could tell that setting from a
+constant. **Presence is not reachability, a docstring is source text, and a
+string match is not a behaviour.** Assert the CALL's argument by AST, assert
+the GUARD around a call rather than the call, and drive the object.
+
+### "EQUIVALENT" is a claim that needs reading, not a label
+
+The fourth survivor was carried as EQUIVALENT for a whole pass: dropping
+`clear_session`'s no-GUI branch still returns `False`, because `windows[0]`
+raises `IndexError` into the handler below. True of the RETURN VALUE and
+false of everything else - it also logs `Could not clear saved passwords on
+logout: list index out of range` at a user whose logout worked. A warning
+about a failure that did not happen is the same defect as a failure that
+reports nothing, pointing the other way. Relabelled, tested, and killed.
+
+**Planting ONE mutant by hand is the same evidence as re-running the pass**
+when only one mutant's fate is in question, at 1/71th of the 33 minutes.

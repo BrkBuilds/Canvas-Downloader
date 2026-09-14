@@ -506,8 +506,16 @@ def _fn(name):
                 if isinstance(f, ast.FunctionDef) and f.name == name)
 
 
-def _upgrade_with(monkeypatch, result, *, store_ok=True):
-    """Drive `_upgrade_to_access_token` with a fixed mint outcome."""
+def _upgrade_with(monkeypatch, result, *, store_ok=True, config=None):
+    """Drive `_upgrade_to_access_token` with a fixed mint outcome.
+
+    *config* is what the settings file ALREADY holds. It defaults to empty,
+    and a test about a key being CLEARED has to pass one - an empty config has
+    nothing to clear, so the assertion passes just as happily with the fix
+    deleted. That is what happened to
+    `test_a_freshly_minted_token_is_not_born_ALREADY_CAPPED`: it was written
+    against the empty default, SURVIVED its mutant, and proved nothing.
+    """
     import ui.auth as auth
 
     class _SS(dict):
@@ -516,10 +524,11 @@ def _upgrade_with(monkeypatch, result, *, store_ok=True):
     ss = _SS({'api_url': 'https://x.instructure.com'})
     written = {}
     deleted = []
+    stored = dict(config or {})
     monkeypatch.setattr(auth, 'st', types.SimpleNamespace(
         session_state=ss, toast=lambda *a, **k: None))
-    monkeypatch.setattr(auth, '_token_upgrade_enabled', lambda: True)
-    monkeypatch.setattr(auth, 'read_config_for_update', lambda: ({}, True))
+    monkeypatch.setattr(auth, '_token_upgrade_enabled', lambda *a, **k: True)
+    monkeypatch.setattr(auth, 'read_config_for_update', lambda: (dict(stored), True))
     monkeypatch.setattr(auth, 'write_config_atomically',
                         lambda cfg: written.update(cfg) or True)
     monkeypatch.setattr(auth, 'store_token', lambda _u, _t: store_ok)
@@ -566,7 +575,96 @@ def test_a_permanent_refusal_is_remembered(monkeypatch):
     ok, _ss, written, _deleted = _upgrade_with(monkeypatch, token_mint.MintResult(
         reason=token_mint.BLOCKED, detail='HTTP 401'))
     assert ok is False
-    assert written.get('token_upgrade_blocked') is True
+    assert written.get('token_upgrade_blocked_hosts') == ['x.instructure.com'], (
+        "the refusal was not recorded against the institution that made it"
+    )
+    assert 'token_upgrade_blocked' not in written, (
+        "the retired global flag is being written again"
+    )
+
+
+def test_the_refusal_is_recorded_against_the_INSTITUTION_not_the_install(monkeypatch):
+    """A single global flag states a fact about whichever school it was learned
+    at and then states it about every school afterwards.
+
+    Reachable without anything unusual: a joint programme, an exchange, or a
+    graduate who keeps an alumni account. The student gets no access token at
+    the school that allows them, because a DIFFERENT school refused - and the
+    symptom is silence, since the whole point of the flag is that nothing asks
+    again. It is also what an adaptive login screen would read, so a screen
+    built on the global form would tell a student their school blocks tokens
+    when it is some other school that does.
+    """
+    import ui.auth as auth
+
+    stored = {'token_upgrade_blocked_hosts': ['blocked.instructure.com']}
+    written = {}
+    monkeypatch.setattr(auth, 'read_config_for_update',
+                        lambda: (dict(stored), True))
+    monkeypatch.setattr(auth, 'write_config_atomically',
+                        lambda cfg: written.update(cfg) or True)
+
+    assert auth._token_upgrade_enabled('https://blocked.instructure.com') is False
+    assert auth._token_upgrade_enabled('https://allows.instructure.com') is True, (
+        "one school's refusal is denying a token at another school"
+    )
+
+    # A second refusal ADDS rather than replaces.
+    auth._record_token_upgrade_blocked('https://allows.instructure.com')
+    assert written.get('token_upgrade_blocked_hosts') == [
+        'allows.instructure.com', 'blocked.instructure.com']
+
+
+def test_the_RETIRED_global_flag_still_means_no_at_the_school_it_was_learned_at(monkeypatch):
+    """An upgrade from an older version must not cost one more refusal.
+
+    The legacy bool is attributed to the config's own `api_url`, which is right
+    by construction: `_upgrade_to_access_token` writes the flag and the address
+    in the same function, against the one school a config describes at a time.
+
+    The control is the second assertion - without it this passes just as well
+    against code that treats the legacy flag as blocking EVERYWHERE, which is
+    the bug being migrated away from.
+    """
+    import ui.auth as auth
+
+    legacy = {'api_url': 'https://old.instructure.com',
+              'token_upgrade_blocked': True}
+    monkeypatch.setattr(auth, 'read_config_for_update',
+                        lambda: (dict(legacy), True))
+
+    assert auth._token_upgrade_enabled('https://old.instructure.com') is False, (
+        "an upgrading user is being asked again at the school that refused"
+    )
+    assert auth._token_upgrade_enabled('https://new.instructure.com') is True, (
+        "the legacy flag is still being read as a fact about every institution"
+    )
+
+
+def test_a_freshly_minted_token_is_not_born_ALREADY_CAPPED(monkeypatch):
+    """`minted_token_capped` describes the token being REPLACED.
+
+    Carried onto a new one it silences the renewal before it has ever been
+    tried, so the token quietly stops extending and expires months later. That
+    reads as the feature not working rather than as a stale flag, which is why
+    the paste-a-token path already clears the same family of keys.
+    """
+    ok, _ss, written, _deleted = _upgrade_with(
+        monkeypatch,
+        token_mint.MintResult(token='NEW', token_id='9', expires_at='2027-01-01T00:00:00Z',
+                              reason=token_mint.OK),
+        # The PREVIOUS token's cap, which is the only thing that can be
+        # inherited. Without it in the stored config this test cannot fail.
+        config={'minted_token_capped': True, 'minted_token_id': '8'})
+    assert ok is True
+    assert 'minted_token_capped' not in written, (
+        "the new token inherited the previous one's cap, so its renewal is "
+        "silenced before it has ever been tried"
+    )
+    assert written.get('minted_token_id') == '9', (
+        "control: the new token's own bookkeeping was not written at all, so "
+        "the assertion above is about a write that never happened"
+    )
 
 
 @pytest.mark.parametrize("reason", [
@@ -711,7 +809,7 @@ def test_the_upgrade_ARMS_the_notice_instead_of_emitting_it(monkeypatch):
     ss = _SS({'api_url': 'https://x.instructure.com'})
     monkeypatch.setattr(auth, 'st', types.SimpleNamespace(
         session_state=ss, toast=lambda *a, **k: toasts.append(a)))
-    monkeypatch.setattr(auth, '_token_upgrade_enabled', lambda: True)
+    monkeypatch.setattr(auth, '_token_upgrade_enabled', lambda *a, **k: True)
     monkeypatch.setattr(auth, 'read_config_for_update', lambda: ({}, True))
     monkeypatch.setattr(auth, 'write_config_atomically', lambda cfg: True)
     monkeypatch.setattr(auth, 'store_token', lambda _u, _t: True)

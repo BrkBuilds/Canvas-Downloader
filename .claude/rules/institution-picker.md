@@ -128,3 +128,30 @@ The login `<title>` is useless - it is always "Canvas Login | Instructure". **Ro
 - **`SEARCH_ALIASES` is what students CALL their school**, search-only, keyed by domain, and deliberately NOT in the builder's `ALIASES` - a probe there feeds the name MATCHER, so adding "KU" would let the University of Copenhagen lay claim to any host with a `ku` label. Measured before it existed: a Dane typing `ku` got the University of Kansas and not one Danish row, because KU's Canvas is called `absalon` and its name contains no `ku` at all.
 
 **Covered by `tests/test_institution_picker.py` (163) and `tests/test_institution_gate.py` (52); all 18 mutations of the real code are caught, so re-run the mutation pass and not just the suite.** Two hazards cost time here and will again: these two files are **CRLF**, so a multi-line anchor written with `\n` never matches and reads as a missing guard; and a heredoc through this shell mangles backslashes, so write test source with the file tools, not `python - <<EOF`.
+
+### An undeclared alias does not break a feature - it ends the script
+
+Shipped 2026-09-14 and found in the browser console, by nothing in the suite.
+A MutationObserver block added near the END of the IIFE was written against
+`W` for the parent window. This bridge has only ever had `P`
+(`var P = window.parent, D = P.document;`). `ReferenceError: W is not defined`
+took every statement after it, INCLUDING `settleMount(0)` - the call that
+paints everything derived from the URL field - so the failure presented as
+three unrelated UI bugs:
+
+* the trigger read `Find your institution` beside a recognised school;
+* the `Recognised: <name>` status row never appeared;
+* `Get a token` stayed disabled with the school's own URL in the field.
+
+All three are painted by `paintStatus()`, and `paintStatus` is only reached
+from `settleMount`, a pick, or a keystroke. **A bridge that dies at mount
+looks exactly like three features that were never wired up.** 4,847 tests
+passed against it; one look at the console named it in seconds.
+
+`test_every_SHORT_ALIAS_the_bridge_uses_is_actually_declared` is the census:
+anything used as `X.` must be declared as `var X` in the same source. It was
+mutation-checked by putting `W` back.
+
+**Open the console before believing anything about this bridge.** Its whole
+contract is side effects on a DOM it does not own, so every failure mode
+reads as "that element was never implemented".

@@ -484,7 +484,7 @@
     <div class="container">
       <div class="label">Privacy</div>
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 31 July 2026</p>
+      <p class="updated">Last updated: 14 September 2026</p>
 
       <div class="tldr">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -598,9 +598,15 @@
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          <span>We do not modify, submit, or upload anything to your Canvas account. The app only reads and downloads.</span>
+          <span>We do not upload your files, submit assignments, post messages, or change anything in your courses.</span>
         </li>
       </ul>
+
+      <p><strong>One exception, and it is the only one.</strong> If you choose <em>Sign in with Canvas</em>, the app asks
+        Canvas to create an access key in your own name, called <em>Canvas Downloader</em>, so that you do not have to
+        sign in again every day. That is the single thing the app ever writes to your Canvas account, it happens only on
+        that sign-in route, and many universities switch it off for students, in which case nothing is created at all.
+        You can see it and delete it yourself at any time under <em>Account, Settings, Approved Integrations</em>.</p>
 
       <h2>Third parties</h2>
       <ul>
@@ -626,6 +632,30 @@
           <a class="link" href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">Microsoft
             Privacy Statement</a>. The app itself sends Microsoft nothing.
         </li>
+      </ul>
+
+      <h2>The browser extension (optional)</h2>
+      <p>
+        There is a small companion extension, <strong>Canvas Downloader Connector</strong>, for people who would rather
+        not sign in a second time. It is entirely optional: the app signs in perfectly well on its own, and nobody has
+        to install anything. All it does is hand your existing Canvas sign-in from the browser tab you already have
+        open to the app on the same computer.
+      </p>
+      <ul>
+        <li><strong>What it reads, and when.</strong> Only when you click it, and only on the tab you clicked it on: the
+          sign-in your browser is already holding for that Canvas site. Nothing else on the page, and nothing on any
+          other page.</li>
+        <li><strong>It cannot see your browsing.</strong> It has no access to your tabs, no history permission and no
+          script running on any page. Chrome does not tell it which sites you visit, and it holds no access to any site
+          until you grant it for your own sign-in.</li>
+        <li><strong>Where it sends it.</strong> To <code>127.0.0.1</code>, which is your own computer and nowhere else.
+          The request cannot leave the machine. Nothing is sent to the developer, and there is no server involved.</li>
+        <li><strong>The app only listens when you ask.</strong> The connection opens when you press <em>Use the Canvas
+          tab in my browser</em> in the app, it accepts one sign-in and then stops accepting, and it stops accepting on
+          its own after a few minutes if nothing arrives. It answers only a browser extension, never a web page, and it
+          never sends anything back.</li>
+        <li><strong>You are shown whose account it is.</strong> The app checks the sign-in with Canvas and then puts the
+          name on screen, so a sign-in that is not yours is visible rather than silent.</li>
       </ul>
 
       <h2>This website</h2>

@@ -38,6 +38,268 @@ field is not merely higher-friction for a growing share of users: it is a
   consults the token-creation policy. It is also, literally, the mechanism every
   Canvas downloader extension in the Chrome Web Store already uses.
 
+## THE SEGMENTATION: three routes, two populations, and one rule (2026-09-14)
+
+**Stated by the product owner, and it governs every decision on the auth screen.
+Read this before changing anything about how the three routes are presented.**
+
+The population split is not a preference, a skill level or a platform. It is a
+single setting on the student's own institution, which they did not choose and
+cannot see:
+
+| | Institution allows student access tokens | Institution has turned them OFF |
+|---|---|---|
+| **Best credential available** | an access token, up to 120 days, renewing off its own value | a Canvas session, **one day**, rolling |
+| **What they should use** | **the token, always** | Sign in with Canvas, or the browser extension |
+| **What the token field is for them** | the straight path | **a dead end they cannot take** |
+| **Why the new routes exist** | convenience | **the only way the app works at all** |
+
+- **A user who CAN mint a token SHOULD, and that is not negotiable.** It is the
+  longest-lived credential by nature - 120 days against one day - it is
+  revocable and visible to them in Canvas, and it is the only one with full
+  parity (Panopto's `sessionless_launch` and the `verifier=` on file URLs inside
+  exported pages both need a token). Nothing in the UI may steer that user away
+  from it.
+- **The auto-mint is what removes the friction from that**, and it stays exactly
+  as it is. A student who signs in with Canvas at a permitting institution is
+  upgraded to a token without being asked, so they get the best credential
+  without ever visiting Canvas' settings page. That is the correct shape: the
+  ROUTE is a choice, the CREDENTIAL is not.
+- **The two new routes exist for the OTHER column**, and that is the whole
+  reason they were built. For those students the token field is not
+  higher-friction, it is impossible, and no amount of better copy fixes it.
+  Instructure shipped the switches in September 2025 and the April 2026 breach
+  made every administrator want them on; CBS turned them on in September 2026.
+  **This is also a selling point rather than a fallback** - it is the thing this
+  app can do that a token-only downloader cannot.
+
+### The handling this REQUIRES, and what is missing today
+The app learns which column a user is in on their **first sign-in**, and only
+then: `token_mint.mint` answers `blocked_by_institution` on a 403 and
+`_upgrade_to_access_token` records `token_upgrade_blocked` so nothing asks
+again. Measured against real CBS Canvas 2026-09-12: `HTTP 403`, classified
+permanent, session kept.
+
+**That flag is read by exactly one function** (`_token_upgrade_enabled`), which
+decides whether to spend a request. **Nothing in the UI reads it at all.** So a
+student whose institution has switched tokens off is still shown a token field,
+a "Get a token" shortcut, and a walkthrough for a button that does not exist in
+their Canvas - on every launch, for ever, and the app already knows better.
+
+- **The screen must be able to be in three states**, not one: *unknown* (first
+  run, nothing has asked Canvas yet - offer everything, lead with the route that
+  works everywhere), *token institution* (lead with the token, the new routes
+  stay available), *token-blocked institution* (the token field stops being
+  offered as the answer and says why, in the student's words, without blaming
+  them).
+- **Unknown must not be guessed at.** The answer requires a credential, so a
+  first run genuinely cannot know it. Defaulting to "blocked" hides a working
+  route from the majority; defaulting to "allowed" is today's behaviour and is
+  what strands the minority. The honest first-run screen leads with the route
+  that works in BOTH columns and keeps the token beside it.
+- **`token_upgrade_blocked` was a single GLOBAL config key. FIXED 2026-09-14,
+  deliberately BEFORE any UI reads it**, because a screen built on the global
+  form would tell a student their school blocks tokens when it is a different
+  school that does. It is now `token_upgrade_blocked_hosts`, a list of hosts,
+  read through `_blocked_hosts(config)` and written by
+  `_record_token_upgrade_blocked(api_url)`; `_token_upgrade_enabled(api_url)`
+  takes the address it is asking about. An unknown host answers True, which is
+  the safe direction - the cost of asking is one refusal, the cost of guessing
+  "blocked" is a student who never gets the credential their school allows.
+  - **A NEW KEY, not a changed type.** A bool and a list at one name means
+    every reader has to know which version wrote it, and the reader that gets
+    it wrong fails by answering "not blocked" - a wasted request and a 401 in
+    the log at exactly the institutions this feature exists for. The legacy
+    bool is still READ, attributed to the config's own `api_url`, which is
+    right by construction (the flag and the address are written by the same
+    function, and a config describes one school at a time), so an upgrading
+    user keeps their "do not ask again" instead of paying one more refusal.
+  - **`minted_token_capped` had the same shape, one size down, and is fixed in
+    the same pass.** It describes the token being REPLACED, so a user who mints
+    at a second school inherited "this institution will not extend it" onto a
+    brand-new token - the renewal is silenced before it has ever been tried and
+    the token quietly expires months later. The paste-a-token path already
+    cleared that family for the same reason; the mint path did not.
+  - **STILL NOT DECIDED**: a host that refused is never re-asked, for the life
+    of the install. An administrator can reverse the setting between semesters
+    and nothing would notice. Re-asking on a clock is about five lines and a
+    behaviour change, so it is recorded rather than guessed at.
+  - Coverage: `tests/test_token_mint.py`, three new properties, all three
+    mutation-checked. **One of them SURVIVED first and was worthless**: the
+    `_upgrade_with` fixture starts from an EMPTY config, and a test about a key
+    being CLEARED cannot fail there because there is nothing to clear. The
+    fixture takes a `config=` now and the test seeds the previous token's cap.
+    Same family as "a fix keyed on its own new data protects nobody".
+  - **The mutation ANCHOR for a neighbouring mutant broke in the same commit**,
+    because it reached forward to `_token_upgrade_enabled`'s `def` line for
+    uniqueness and something was declared in between. `tests/test_mutation_anchors.py`
+    caught it. It is re-anchored INSIDE `_keep_signed_in_enabled` now: an
+    anchor that cannot be separated from its target is the durable fix, not
+    re-pointing it at the new neighbour.
+
+### THE EXTENSION IS NOT THE LONG-LASTING ROUTE - it is currently the SHORTEST
+
+Asked directly by the product owner, 2026-09-14: *"Sign in with the browser
+extension is supposed to be the 'long lasting' method (i dont know if it
+actually is)"*. **It is not, and the reason is structural rather than a tuning
+problem.** Read out of the call sites, not driven - see the measurement below.
+
+Both browser routes produce the **same credential**: a Canvas session, one day,
+rolling. What decides how long a route lasts is therefore not the credential at
+all, it is **what the route leaves behind that can renew it**.
+
+| | Route B, the app's own window | Route C, the extension |
+|---|---|---|
+| credential produced | `canvas_session`, 1 day | `canvas_session`, 1 day |
+| identity-provider session left in the app's web view profile | **yes** | **no** |
+| `persist_session_cookies` (the 30-day re-dating) | **runs** | **never runs** |
+| what happens when the stored session lapses | the hidden renewal navigates to `/login`, the IdP session carries it back, **signed in with no interaction** | the web view profile has never been signed in, so the chain lands on the login FORM and the window is shown - **a full manual password entry** |
+
+- **`persist_session_cookies` has exactly ONE call site**, inside
+  `core/browser_login._worker`. That worker is route B. Route C never touches
+  the web view at all - the credential arrives over loopback from Chrome - so
+  there is nothing in the profile for a renewal to spend.
+- **The two routes are INDISTINGUISHABLE in the config.** Both
+  `adopt_pending_handoff` and `adopt_pending_browser_login` call
+  `_persist_browser_login`, which writes `auth_method = BROWSER`. So the
+  renewal cannot know which way the user signed in, and it picks route B
+  unconditionally - the one route an extension user has never used.
+- **So the extension buys a frictionless FIRST sign-in and then costs more than
+  the route it replaced.** Its user is sent to type an institutional password
+  into the app's own window, which is the exact friction the extension exists to
+  remove, and the app does not even point them back at the extension: it opens
+  its own window rather than re-arming the handoff.
+- **Unless the mint succeeds.** At a permitting institution the session is
+  traded for a 120-day token on the spot and none of this applies - which is
+  another reason the two columns must not be reasoned about together.
+
+**The fix is to record the ROUTE, not just the credential kind**, and to renew
+the way the user signed in: re-arm the handoff for an extension user (the
+extension's own `signedIn` memory already survives in `chrome.storage.session`,
+so the popup is ready for it), and keep route B's hidden window for route B.
+That is the same "distinguish the users by how they sign in" the segmentation
+above demands, one level down.
+
+**MEASURE IT BEFORE BUILDING THE FIX**, because the whole table above is read
+rather than driven: sign in through the extension, delete the stored credential
+(or wait out the day), relaunch, and see whether the app's window asks for a
+password. If it signs in silently, something is carrying the session that this
+census did not find, and the fix is aimed at the wrong thing.
+
+### The layout argument that falls out of this, and the owner's steer
+**"Sign in with Canvas" is the correct primary for BOTH columns, and that is
+what collapses the two-population problem into one screen.** At a blocked
+institution it is the only route that works; at a permitting one the auto-mint
+upgrades it to a token anyway, so that student lands on the best credential
+without ever opening Canvas' settings page. **The screen therefore never has to
+ask which column the student is in - which is essential, because the student
+does not know.**
+
+Direction, 2026-09-14: the product owner likes that shape (Canvas primary, the
+extension beside it, the token behind a quiet *"I already have an access
+token"* disclosure) and is **supplying a visual reference before it is built**.
+Do not build it before that arrives.
+
+### The screen re-measured on the real app, 2026-09-14
+Driven with `CANVAS_DL_CONFIG_DIR` pointed at an empty directory, i.e. a genuine
+first run, at 1280x860 and at the app's 1024x700 minimum. The whole card now
+fits above the fold at the minimum, so the 2026-09-12 overflow is fixed. The
+weight inversion is not:
+
+**The only bright, solid, coloured element on the entire screen is `Log In`**,
+which belongs to the token route. Both routes that serve the blocked column are
+dark outline buttons above it, and below the card the most salient thing is a
+red YouTube chip reading *"Watch tutorial: How to get your Canvas Access
+Token"*. So a first-time student's eye lands on the one path that is a dead end
+for exactly the population these features were built for, and the two
+supporting affordances under the card both point the same way.
+
+Two smaller things from the same capture, worth fixing whenever the screen is
+rebuilt: the extension explainer is three full-width lines of wrapping prose
+that read as a paragraph rather than as an option, and `Get a token` renders
+greyed beside the empty token field, which reads as unavailable rather than as
+waiting for a URL.
+
+### BUILT 2026-09-14, to the owner's direction - the shape and why
+No visual reference in the end; he ruled that image generators either invent
+detail or ignore the brief, and directed it in words instead.
+
+**One primary, two disclosures.** `Sign in to <school>` is the only solid
+button on the screen and takes the app's OWN solid-primary look (`#1f77b4`
+plus the inset highlight, the same as `Analyze, Review & Sync`), because the
+new primary is not a new KIND of control. `Log In` keeps primary styling
+INSIDE its disclosure - his call, and defensible: the section is collapsed by
+default, so the two solid blues are never on screen together unopened.
+
+**The label names the university.** `_signin_button_label` resolves it
+server-side through `shared.institutions.match_url` wherever the address is
+already known (a pre-filled field, reauth's saved chip), and the picker's
+bridge rewrites it live while somebody is choosing. Unknown or over
+`SIGNIN_LABEL_MAX_NAME` falls back to `Sign in to Canvas` rather than
+truncating - a half-spelled university reads as a bug, a generic label reads as
+a choice. **The wording has ONE home**, `ui/institution_picker.SIGNIN_LABEL_*`,
+read by both consumers; two copies would have the button change wording on the
+first rerun after a pick.
+
+**Why JS at all, and why an OBSERVER.** Inside `st.form` a widget's value never
+reaches Python before submit, so a school picked right now cannot be resolved
+server-side. And Streamlit repaints the button on every rerun and puts the
+SERVER's label back, so an event-only sync is correct until the next rerun and
+then silently wrong. The bridge is otherwise purely event-delegated, which is
+what makes it survive node replacement; the label needed the other tool this
+repo documents - a MutationObserver on `stMain` with `subtree`, coalesced to
+one call per frame, and the write guarded on the text already differing so it
+cannot loop on its own mutation.
+
+**The titles are a MATCHED PAIR, and both corrections were his.** *"Already
+signed in to Canvas in Chrome?"* has the answer yes for essentially every
+student alive, so it qualified nobody - it recruited everybody into the
+highest-friction route. And *"I already have an access token"* described almost
+nobody: Canvas shows a token once, at generation, and students are not meant to
+keep one. They are `Use the browser extension instead` / `Use an access token
+instead` - parallel on purpose, because they are siblings and they sit side by
+side, where a mismatched opening reads as a primary with an afterthought.
+
+**Two cards, two columns, 6px above and 6px between**, so the card behind shows
+through by the same amount in both places.
+
+**`EXTENSION_STORE_URL` is empty and that is a STATE.** Empty renders an honest
+line instead of a button; a dead `href="#"` would preserve the old failure
+(advertise a thing nobody can get) while looking live. Publishing is one line.
+
+**The URL guide is the field's tooltip now**, carrying the ANSWER and not the
+procedure. A hover tooltip dismisses the moment the pointer moves toward the
+field, which is fatal for content whose job is "what do I type in this box";
+the three numbered steps would have been unreadable there. The troubleshooting
+footnote went with it, since its own submit error already says the same thing
+at the moment somebody is reading.
+
+### FOUR traps this cost, three of them self-inflicted
+- **THE GLYPHS WERE INVISIBLE BECAUSE THE COLOUR WAS DOUBLE-ENCODED.** The data
+  URIs were built by passing an already-encoded `%2394a3b8` through `quote()`,
+  which encoded the `%` again: `stroke='%252394a3b8'`. An invalid stroke paints
+  nothing, so the glyph was present, correctly sized, and completely blank.
+  **Encode exactly once, and decode the URI back to prove it** - the generator
+  now asserts the decoded SVG contains a literal `#rrggbb`.
+- **A STRAY `}` ended the rule block early**, from rebuilding the CSS by
+  splicing old lines into a new block. Everything after it was orphaned, which
+  is why `content` and `width` applied while `background-image` computed to
+  `none` - two halves of one intended rule, on opposite sides of the break.
+  **Emit a generated block whole; never splice lines into one.**
+- **I "fixed" a selector on a premise I had not checked.** The glyphs were
+  first hung on `summary p::before`, then moved to the markdown container on
+  the reasoning that a plain-text Streamlit label has no paragraph element.
+  That rule is real, and it does not apply here: the DOM shows the expander
+  label DOES render a `<p>`. The move was harmless (the container matches
+  either shape) but it was a guess dressed as a fix, and it cost a cycle that
+  reading the DOM would have saved. The actual defects were the two above.
+- **The inherited skin zeroed the inner gap**, which is why the token path's
+  "In Canvas: Account, Settings..." line rendered ON TOP of the Log In button.
+  That skin (`login_help_expanders`) was written for a block of prose below the
+  card; these disclosures hold widgets. Retargeting a signed-off skin is still
+  the right move - it is one set of rules, not two - but **read what it assumes
+  about its content before pointing it at different content.**
+
 ## The measurements this rests on - do not re-derive them
 All taken 2026-09-11 against production Canvas.
 - **The production session cookie is `canvas_session`**, not the open-source

@@ -421,8 +421,9 @@ BROWSER_LOGIN_MUTANTS = [
     # whether a warning is logged. There is no observable behaviour to assert,
     # and adding a log-level assertion would pin an implementation detail rather
     # than the contract ("a logout must complete whatever the web view does").
-    ("EQUIVALENT: clear_session loses its explicit no-GUI branch and reaches "
-     "the same answer through the exception handler instead",
+    ("the no-GUI branch goes, so a logout on a machine with no web view "
+     "warns twice about clearing saved passwords it was never asked to "
+     "clear - the same False, reported as a failure",
      LOGIN,
      "    windows = list(getattr(webview, 'windows', None) or ())\n"
      "    if not windows:",
@@ -458,9 +459,9 @@ BROWSER_LOGIN_MUTANTS = [
      "cannot rerun - so clicking it does nothing at all",
      UI,
      "                _browser_clicked = st.form_submit_button(\n"
-     "                    'Sign in with Canvas',",
+     "                    _signin_button_label(",
      "                _browser_clicked = st.button(\n"
-     "                    'Sign in with Canvas',"),
+     "                    _signin_button_label("),
 
     ("the token route stops recording how the user signed in, so a switch "
      "away from a browser session restores the wrong credential for ever",
@@ -661,16 +662,19 @@ BROWSER_LOGIN_MUTANTS = [
     ("an unreadable settings file reinstates the daily login, because of a "
      "file permission problem somewhere else entirely",
      UI,
+     # Anchored INSIDE the function, on the line above the handler. It used to
+     # reach forward to the NEXT function's `def` line for uniqueness, which
+     # made the anchor depend on the two being adjacent - and it broke the
+     # moment anything was declared between them (2026-09-14, the per-host
+     # blocked list). `tests/test_mutation_anchors.py` caught it, which is what
+     # that file is for; an anchor that cannot be separated from its target is
+     # the durable fix rather than re-pointing it at the new neighbour.
+     "        return bool(config.get('keep_signed_in', True))\n"
      "    except Exception:                                              # noqa: BLE001\n"
-     "        return True\n"
-     "\n"
-     "\n"
-     "def _token_upgrade_enabled() -> bool:",
+     "        return True",
+     "        return bool(config.get('keep_signed_in', True))\n"
      "    except Exception:                                              # noqa: BLE001\n"
-     "        return False\n"
-     "\n"
-     "\n"
-     "def _token_upgrade_enabled() -> bool:"),
+     "        return False"),
 
 ]
 
