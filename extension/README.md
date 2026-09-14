@@ -8,7 +8,10 @@ removes the last bit of typing for people who would rather not do it.
 
 ## Installing it
 
-The store listings are not set up yet, so it is a Developer-mode install:
+Not in the Chrome Web Store yet. `packaging/chrome-web-store/LISTING.html` is the
+route to publishing it - the workflow, the decisions that need making first, and
+every listing field's text - and `python scripts/build_extension_package.py`
+builds the upload. Until then it is a Developer-mode install:
 
 1. Open `chrome://extensions` (or `edge://extensions`).
 2. Turn on **Developer mode**.
@@ -36,22 +39,21 @@ the steps if something looks wrong.
 Reads, for the tab you invoked it on, and only when you click:
 
 - `canvas_session` (or `_normandy_session` on a self-hosted Canvas)
-- `_csrf_token`, which Canvas requires alongside the sign-in before it will
-  create the long-lived key that means you stop having to do this
 
-**The stated reason for the second one used to be wrong, and it is worth knowing
-why it was kept anyway.** This file claimed it "saves a round trip". It does not:
-`core/token_mint.mint` always makes the one HTML request it describes, and reads
-the token back out of the jar afterwards. But that jar is the one
-`_session_for` has already installed the handed-over cookies into, so if Canvas
-does not re-set `_csrf_token` on that request, the value the extension supplied
-is the one that gets used. **Whether Canvas re-sets it has not been measured**,
-and dropping the cookie on that reasoning would risk breaking the long-lived key
-on the extension route specifically, which is the one route where nothing else
-can supply it. Measure it against a real Canvas first: sign in through the
-extension, and check whether the response to `GET /profile/settings` carries a
-`Set-Cookie: _csrf_token`. If it does, this cookie can go, and the privacy
-surface gets smaller for free.
+and nothing else.
+
+**`_csrf_token` USED TO BE READ HERE AND IS NOT ANY MORE (2026-09-15).** This
+file justified it as saving the app a round trip before it could create the
+long-lived key. That was measured false on real Canvas: `core.token_mint.mint`
+always makes one `GET /profile/settings`, and the response to exactly that
+request carries `set-cookie: _csrf_token=...; path=/; secure` - even when the
+request already carried one. So the handed-over copy was never the one used.
+Measured in DevTools on `cbscanvas.instructure.com`, on the response headers of
+that document request rather than on the cookie reappearing in the Application
+tab, which page JavaScript could also explain.
+
+The app still ACCEPTS it, so an extension installed before that date keeps
+working; nothing sends it any more.
 
 It is never stored either way: `CanvasCredential.to_storable` keeps only the
 session cookie, so nothing but the session cookie is ever written to disk.
@@ -81,14 +83,31 @@ The app's listener is not a standing fixture. It:
 
 - binds to `127.0.0.1` only, so nothing off your machine can reach it;
 - opens only when you press the button, closes on the first sign-in it
-  accepts, and times out after three minutes;
-- **accepts requests only from a browser extension.** A web page cannot set its
-  own `Origin` header, so a page on the internet cannot pretend to be one;
+  accepts, and **closes the socket itself** three minutes later if nothing
+  arrives (until 2026-09-14 only the acceptance flag flipped and the socket
+  stayed bound for the life of the app - measured, and the reason this line
+  used to be untrue);
+- **accepts requests only from a browser extension**, which now means a POST
+  carrying no `Origin` at all is refused too. A web page cannot set its own
+  `Origin` header, so a page cannot pretend to be an extension - but any other
+  program on the machine can send no header at all, and one that did was
+  accepted, with the app adopting the Canvas address from its payload
+  (measured 2026-09-14). The real extension was measured sending
+  `Origin: chrome-extension://<id>` on every request it makes, so requiring it
+  costs nothing;
 - returns nothing readable to a web page even if one did post to it;
 - **checks the sign-in with Canvas and then shows you whose account it is**, so
   a sign-in that is not yours is visible rather than silent.
 
 ## Notes for whoever works on this next
+
+**Look at the popup before you change it.** `python scripts/popup_gallery.py`
+renders all twelve screens, light and dark, into
+`packaging/chrome-web-store/screens/`. Most of them cannot be reached by hand -
+they depend on whether the app is running, whether it is asking for a sign-in,
+whether Chrome has granted the site, and what Canvas answered. Every popup
+defect found on 2026-09-14 came off that sheet and none came out of the source,
+including a countdown that was rendering on every single screen.
 
 **`canvas-hosts.js` is generated.** Run `python scripts/build_extension_hosts.py`
 after the institution list changes; `--check` fails when it is stale, and a

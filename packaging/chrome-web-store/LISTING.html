@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publishing the Connector</title>
+<style>
+  /* Same house values as the audit register documents, so the set reads as one. */
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --surface-2: #f0f2f6; --line: #d7dce5; --line-soft: #e5e9f0;
+    --text: #1b2230; --text-dim: #4d596b; --text-faint: #7d8899;
+    --accent: #1f6f9e; --accent-dim: rgba(31,111,158,0.10);
+    --crit: #c0392b; --crit-dim: rgba(192,57,43,0.12);
+    --major: #a8690d; --major-dim: rgba(168,105,13,0.13);
+    --good: #1f7a5c; --good-dim: rgba(31,122,92,0.13);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1117; --card: #171b24; --surface-2: #1e2430; --line: #2b3341; --line-soft: #222936;
+      --text: #dfe5ee; --text-dim: #98a4b6; --text-faint: #6d788a;
+      --accent: #4da8da; --accent-dim: rgba(77,168,218,0.12);
+      --crit: #f0655a; --crit-dim: rgba(240,101,90,0.14);
+      --major: #f0a23c; --major-dim: rgba(240,162,60,0.14);
+      --good: #57b894; --good-dim: rgba(87,184,148,0.14);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1117; --card: #171b24; --surface-2: #1e2430; --line: #2b3341; --line-soft: #222936;
+    --text: #dfe5ee; --text-dim: #98a4b6; --text-faint: #6d788a;
+    --accent: #4da8da; --accent-dim: rgba(77,168,218,0.12);
+    --crit: #f0655a; --crit-dim: rgba(240,101,90,0.14);
+    --major: #f0a23c; --major-dim: rgba(240,162,60,0.14);
+    --good: #57b894; --good-dim: rgba(87,184,148,0.14);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 400 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 40px 20px 90px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  .stamp { font: 500 12px ui-monospace, Consolas, monospace; color: var(--text-faint);
+    letter-spacing: .04em; text-transform: uppercase; margin: 0 0 12px; }
+  h1 { font-size: 32px; line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.015em; }
+  .sub { color: var(--text-dim); margin: 0 0 30px; max-width: 64ch; }
+  h2 { font-size: 21px; margin: 44px 0 12px; }
+  h3 { font-size: 16.5px; margin: 26px 0 6px; }
+  p, li { max-width: 72ch; }
+  p { margin: 0 0 12px; }
+  ul, ol { padding-left: 22px; margin: 0 0 12px; }
+  li { margin: 0 0 7px; }
+  code { font: 0.88em ui-monospace, Consolas, monospace; background: var(--surface-2);
+    padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  a { color: var(--accent); }
+  .banner { background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 14px 18px; margin: 0 0 8px; }
+  .banner p:last-child { margin: 0; }
+  .tablewrap { overflow-x: auto; margin: 0 0 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.6px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 11px; border-bottom: 1px solid var(--line-soft); }
+  th { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--text-faint);
+    border-bottom: 1px solid var(--line); }
+  .tag { font: 600 11px ui-monospace, Consolas, monospace; letter-spacing: .05em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .tag.crit { background: var(--crit-dim); color: var(--crit); }
+  .tag.major { background: var(--major-dim); color: var(--major); }
+  .tag.good { background: var(--good-dim); color: var(--good); }
+  .tag.you { background: var(--accent-dim); color: var(--accent); }
+  .field { background: var(--card); border: 1px solid var(--line); border-radius: 9px;
+    padding: 12px 14px; margin: 0 0 12px; }
+  .field .name { font-size: 12.5px; font-weight: 600; color: var(--text-faint); letter-spacing: .03em;
+    text-transform: uppercase; margin: 0 0 6px; }
+  .field .paste { white-space: pre-wrap; font-size: 14.5px; margin: 0; background: var(--surface-2);
+    border-radius: 6px; padding: 10px 12px; user-select: all; }
+  .field .why { font-size: 13.5px; color: var(--text-dim); margin: 8px 0 0; }
+  ol.steps > li { margin-bottom: 14px; }
+  footer { margin: 46px 0 0; padding-top: 16px; border-top: 1px solid var(--line); color: var(--text-faint); font-size: 13.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="stamp">Chrome Web Store &middot; written 14 September 2026</p>
+<h1>Publishing the Canvas Downloader Connector</h1>
+<p class="sub">The whole route from your paid developer account to a live listing, the
+decisions only you can make, and every field's text ready to paste. Build the
+package with <code>python scripts/build_extension_package.py</code>.</p>
+
+<div class="banner">
+  <p><strong>Where you are.</strong> The developer account exists and the US$5 fee is paid.
+  Nothing has been uploaded. A package for version 1.1.0 exists in
+  <code>installer_output/</code>, but it predates the fixes below, so rebuild before uploading.</p>
+</div>
+
+<h2>1. Before you submit</h2>
+<p>A review cycle takes days, and a rejection restarts it, so these come first. Status is as
+of the day this was written; the rule file <code>.claude/rules/browser-login.md</code> is the
+running record.</p>
+<div class="tablewrap"><table>
+  <thead><tr><th>Item</th><th>Why it blocks</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>"Finishing up in 5" shows on every popup screen</td>
+      <td>Visible on the first screen a reviewer opens. The <code>hidden</code> attribute is overridden by the countdown's own CSS.</td>
+      <td><span class="tag good">Fixed, re-rendered</span></td></tr>
+    <tr><td>The app accepts a sign-in with no Origin header</td>
+      <td>Any program on the computer could sign the app in to an address it chooses. Measured: accepted, and the address was adopted.</td>
+      <td><span class="tag good">Fixed, measured both ways</span></td></tr>
+    <tr><td>A sign-in Canvas never confirmed is saved</td>
+      <td>If Canvas does not answer at the moment of the handover, the app signs in and stores the credential anyway. Measured.</td>
+      <td><span class="tag good">Fixed, driven in the app</span></td></tr>
+    <tr><td>The listener's port stays open after its three minutes</td>
+      <td>The privacy policy and README both say it times out.</td>
+      <td><span class="tag good">Fixed</span></td></tr>
+    <tr><td>"Got it, signing you in" card never appears</td>
+      <td>The extension shows success while the app still says "waiting".</td>
+      <td><span class="tag good">Fixed, seen on screen</span></td></tr>
+    <tr><td>Privacy policy extension section</td>
+      <td>The store links it. It said the extension has "no access to your tabs" (it reads the current tab's address when clicked) and omitted the once-a-minute check and the remembered sign-in.</td>
+      <td><span class="tag major">Corrected, needs pushing</span></td></tr>
+    <tr><td>Popup footer copy</td>
+      <td>"This extension never looks at any pages you visit" while the same popup shows "You are currently on: www.google.com". A reviewer comparing copy against permissions will notice.</td>
+      <td><span class="tag you">Your wording</span></td></tr>
+    <tr><td>Screenshots and small promo tile</td>
+      <td>At least one 1280x800 screenshot and one 440x280 tile are required. Waiting on the popup redesign; <code>python scripts/popup_gallery.py</code> re-renders every screen into <code>screens/</code> to compose from.</td>
+      <td><span class="tag you">After the redesign</span></td></tr>
+    <tr><td>The popup's own design</td>
+      <td>Being reworked. <code>screens/</code> holds all twelve states, light and dark, as they are today.</td>
+      <td><span class="tag you">Yours</span></td></tr>
+  </tbody>
+</table></div>
+
+<h2>2. Decisions only you can make</h2>
+
+<div class="banner">
+  <p><strong>Settled 14 September 2026, by the product owner:</strong>
+  declare <strong>non-trader</strong>; keep the name
+  <strong>Canvas Downloader Connector</strong>; publish <strong>Public</strong>;
+  and replace the popup footer with the wording below. The reasoning behind
+  each is kept so nobody re-opens them without new information.</p>
+</div>
+
+<h3>Trader or non-trader</h3>
+<p>Every developer must declare one, because of the EU Digital Services Act. A trader acts
+"for purposes relating to his trade, business, craft or profession"; a non-trader acts
+outside them. A trader's verified name and contact details are shown to EU users. A
+non-trader's listing tells EU users that consumer-protection rights do not apply. Google's
+own FAQ says it is "a legal question. Each publisher must make their own determination",
+and gives no ruling on donations. The extension is free and has no payments. Whether the
+Ko-fi link changes that is your call, not something the docs answer.</p>
+
+<h3>The name</h3>
+<p><code>Canvas Downloader Connector</code> is the manifest name, and the store takes the title
+from the package. The Microsoft Store rejected "Canvas Downloader" three times for containing
+another product's name, which is why that channel is <em>Course Downloader for Canvas</em>.
+The Chrome Web Store has no equivalent mechanical name check. Its policy only forbids
+implying you are "authorized by, endorsed by, or produced by another company", and many
+listings named "Canvas &hellip;" are live. Keeping the name matches the app, the website and the
+button copy in the app ("click the Canvas Downloader button"). Renaming would also rename the
+entry in Chrome's puzzle-piece menu, which the app's instructions point students to.</p>
+
+<h3>Public or Unlisted</h3>
+<p><strong>Public</strong> lists it in search. <strong>Unlisted</strong> installs only from the link,
+which is all the app needs. Both go through the same review. Public is also a way for students
+to find the app; Unlisted keeps it quiet while the route is new.</p>
+
+<h3>Popup footer wording</h3>
+<p>The policy requires what the extension handles to be stated plainly, and the old line
+("This extension never looks at any pages you visit") sat on the same screen that prints the
+address of the tab you are on. Replaced, on his word, with:</p>
+<div class="field"><p class="name">Popup footer</p>
+<p class="paste">This extension only works when you click it. It checks that this tab is your Canvas, then passes your Canvas login to the Canvas Downloader app on this computer. Nothing is sent anywhere else.</p></div>
+
+<h2>3. The workflow</h2>
+<ol class="steps">
+  <li><strong>Finish the account page.</strong> In the
+    <a href="https://chrome.google.com/webstore/devconsole">developer dashboard</a>, Account:
+    the Google account needs 2-Step Verification before it can publish; set the publisher name
+    (it appears under the title, so <code>BrkBuilds</code>, matching the Microsoft Store and GitHub);
+    verify the contact email (required); make the trader declaration; turn on email notifications.
+    The account's email address can never be changed.</li>
+  <li><strong>Build the package.</strong> <code>python scripts/build_extension_package.py</code> writes
+    <code>installer_output/canvas-downloader-connector-&lt;version&gt;.zip</code>. It refuses if the
+    manifest names a missing file, a script does not parse, or <code>canvas-hosts.js</code> is stale,
+    because each of those has shipped once and a rejected upload costs days.</li>
+  <li><strong>Add new item</strong> and upload the zip. The title, summary and icon come from the
+    package. New publishers are limited to two published extensions.</li>
+  <li><strong>Store listing tab.</strong> Paste from section 4.</li>
+  <li><strong>Privacy tab.</strong> Paste from section 5. This is the tab review reads most closely.</li>
+  <li><strong>Distribution tab.</strong> Free, All regions, and the visibility you chose above.</li>
+  <li><strong>Test instructions tab.</strong> Paste from section 6. A reviewer who cannot make it
+    work can reject under "broken functionality", and this extension does nothing without the app.</li>
+  <li><strong>Submit for review.</strong> Leave "publish automatically" ticked unless you want to
+    release an app update the same day; unticked, you get 30 days to press publish before the
+    submission reverts to a draft.</li>
+  <li><strong>Wait.</strong> Google says most reviews finish in a few days and some take a few weeks.
+    This item hits three of the four listed triggers for a longer review: new developer, new
+    extension, and a sensitive permission (<code>cookies</code>) plus broad host access. Past three
+    weeks, contact developer support.</li>
+  <li><strong>When approved.</strong> Copy the listing URL
+    (<code>https://chromewebstore.google.com/detail/&hellip;</code>) into
+    <code>EXTENSION_STORE_URL</code> in <code>ui/auth.py</code>, check the store button on screen
+    (it has never rendered), update the install section of <code>extension/README.md</code>, and ship
+    an app update.</li>
+  <li><strong>Every later update.</strong> Raise <code>version</code> in <code>extension/manifest.json</code>
+    (it must go up), rebuild, Package tab, upload new package, submit. Updates get the same review
+    as a new item.</li>
+</ol>
+
+<h2>4. Store listing tab</h2>
+
+<div class="field"><p class="name">Description</p>
+<p class="paste">Sign in to Canvas Downloader from the Canvas tab you already have open. No password to type, nothing to copy.
+
+Canvas Downloader is a free desktop app that downloads your Canvas course files and keeps a folder in sync. This small extension is optional: it lets the app sign in with the Canvas login you already have in your browser, so you do not have to sign in a second time.
+
+How it works
+1. Open your Canvas in a tab.
+2. In Canvas Downloader, choose "Use the Canvas tab in my browser".
+3. Click the extension and choose "Sign me in".
+
+The first time, Chrome asks whether the extension may use your Canvas site. That is the only site it ever gets access to.
+
+What it does and does not do
+- It only acts when you click it, on the tab you clicked it on.
+- It passes your Canvas login to the Canvas Downloader app on the same computer, and nowhere else. Nothing is sent to the developer, and there is no server.
+- It has no access to your browsing history and runs nothing on the pages you visit.
+- The app only accepts a sign-in while you are asking for one, and shows you whose account it is.
+
+Canvas Downloader is open source (GPL-3.0). Canvas is a trademark of Instructure, Inc. This extension is not made by or affiliated with Instructure.</p>
+<p class="why">Written in the app's student voice. The last sentence answers the impersonation policy directly.</p></div>
+
+<div class="field"><p class="name">Category</p><p class="paste">Education</p>
+<p class="why">"Tools" is the alternative. Education is where a student looks.</p></div>
+
+<div class="field"><p class="name">Language</p><p class="paste">English</p></div>
+
+<div class="field"><p class="name">Homepage URL</p><p class="paste">https://canvasdownloader.app/</p></div>
+<div class="field"><p class="name">Support URL</p><p class="paste">https://github.com/BrkBuilds/Canvas-Downloader/issues</p></div>
+
+<div class="field"><p class="name">Graphics</p>
+<p class="paste">Store icon: assets/store_icon_128.png (96x96 of artwork, 16px transparent padding)
+Screenshots: at least 1, up to 5, 1280x800 (preferred) or 640x400
+Small promo tile: 440x280 PNG or JPEG (required)
+Marquee promo tile: 1400x560 (optional)</p>
+<p class="why">Google's guidance is a 96x96 icon with 16px of transparent padding on each side. The
+listing-tab doc also mentions a YouTube video; if the dashboard marks it required, the existing
+how-to video is about access tokens and will not do.</p></div>
+
+<h2>5. Privacy tab</h2>
+
+<div class="field"><p class="name">Single purpose</p>
+<p class="paste">Signs the Canvas Downloader desktop app in to Canvas using the Canvas login the user already has open in a browser tab, so they do not have to sign in to Canvas a second time inside the app.</p></div>
+
+<div class="field"><p class="name">Justification: cookies</p>
+<p class="paste">When the user clicks "Sign me in", the extension reads the Canvas session cookie (canvas_session, or _normandy_session on a self-hosted Canvas) for the one Canvas site the user granted, and passes them to the Canvas Downloader app running on the same computer at http://127.0.0.1. That cookie is how the app signs in to Canvas. No other cookie is read, nothing is read without a click, and nothing is sent anywhere except the local app.</p></div>
+
+<div class="field"><p class="name">Justification: activeTab</p>
+<p class="paste">When the user opens the popup, the extension reads the address of that one tab to tell them whether they are on their Canvas site before it offers to sign in. It has no access to any other tab and no "tabs" permission.</p></div>
+
+<div class="field"><p class="name">Justification: storage</p>
+<p class="paste">chrome.storage.session holds two short-lived values: the site a sign-in is waiting on while Chrome's permission prompt is open (the prompt closes the popup, so the service worker finishes the sign-in), and whether a sign-in succeeded, so the popup can say so instead of restarting its guide. Session storage is cleared when the browser closes and is not written to disk.</p></div>
+
+<div class="field"><p class="name">Justification: alarms</p>
+<p class="paste">Once a minute the service worker asks the Canvas Downloader app on the same computer (http://127.0.0.1) whether it is waiting for a sign-in, so the toolbar icon can show a dot when it is time to click. It contacts nothing else and sends nothing.</p></div>
+
+<div class="field"><p class="name">Justification: host permission</p>
+<p class="paste">The host permission is optional and nothing is granted at install. At the user's click, chrome.permissions.request asks for exactly one origin: the Canvas site in the tab they are on. Canvas is hosted on thousands of different school domains, including custom domains, so the origin cannot be listed in advance. The extension never requests any other origin.</p>
+<p class="why">Declared as <code>optional_host_permissions</code>. A pattern like <code>*://*/*</code> gets extra scrutiny even when optional, which is why this text says what is requested at runtime.</p></div>
+
+<div class="field"><p class="name">Remote code</p>
+<p class="paste">No, I am not using remote code.</p>
+<p class="why">Every script is in the package. There is no remotely loaded script and no eval.</p></div>
+
+<div class="field"><p class="name">Data usage: what it collects</p>
+<p class="paste">Authentication information</p>
+<p class="why">Tick only this. The policy lists "authentication cookies" under authentication information.
+Nothing else is collected, and the tab address is read to answer one question, not recorded.</p></div>
+
+<div class="field"><p class="name">Data usage: certifications</p>
+<p class="paste">Tick all three:
+- I do not sell or transfer user data to third parties, outside of the approved use cases
+- I do not use or transfer user data for purposes that are unrelated to my item's single purpose
+- I do not use or transfer user data to determine creditworthiness or for lending purposes</p></div>
+
+<div class="field"><p class="name">Privacy policy URL</p>
+<p class="paste">https://canvasdownloader.app/privacy.html</p>
+<p class="why">Push the corrected extension section first. Google's user-data FAQ says the "handle it
+securely" requirement "does not apply to transmissions between a Chrome extension or app and a
+native program on the same computer", which is what the plain-HTTP request to 127.0.0.1 is.</p></div>
+
+<h2>6. Test instructions tab</h2>
+<div class="field"><p class="name">Instructions</p>
+<p class="paste">This extension works together with the Canvas Downloader desktop app (free, open source): https://canvasdownloader.app/
+
+To test:
+1. Install and open Canvas Downloader on Windows or macOS.
+2. In a Chrome tab, sign in to any Canvas site.
+3. In the app's sign-in screen, open "Use the browser extension instead" and click "Use the Canvas tab in my browser".
+4. In the Canvas tab, click the extension icon and choose "Allow access", then "Sign me in".
+The app then shows the signed-in account's name.
+
+Without the app running, the popup shows its guide and says the app is not ready. The extension makes no network request except to http://127.0.0.1 on ports 53127 to 53129, where the app listens only while a sign-in is being asked for.
+
+Source code: https://github.com/BrkBuilds/Canvas-Downloader (extension/ folder).</p>
+<p class="why">If you can give the reviewer a test Canvas login, add it here; a reviewer who cannot sign in
+to any Canvas can only see the guide screens.</p></div>
+
+<footer>
+  <p>Sources, read 14 September 2026:
+  <a href="https://developer.chrome.com/docs/webstore/publish">publish</a>,
+  <a href="https://developer.chrome.com/docs/webstore/set-up-account">account setup</a>,
+  <a href="https://developer.chrome.com/docs/webstore/cws-dashboard-listing">store listing</a>,
+  <a href="https://developer.chrome.com/docs/webstore/cws-dashboard-privacy">privacy tab</a>,
+  <a href="https://developer.chrome.com/docs/webstore/cws-dashboard-distribution">distribution</a>,
+  <a href="https://developer.chrome.com/docs/webstore/review-process">review process</a>,
+  <a href="https://developer.chrome.com/docs/webstore/images">images</a>,
+  <a href="https://developer.chrome.com/docs/webstore/program-policies/user-data-faq">user data FAQ</a>,
+  <a href="https://developer.chrome.com/docs/webstore/program-policies/trader-disclosure">trader disclosure</a>,
+  <a href="https://developer.chrome.com/docs/webstore/program-policies/impersonation-and-intellectual-property">impersonation</a>.
+  The US$5 fee and the 2-Step Verification requirement are not on those pages; they come from
+  Google's support forum and third-party guides, and you have already met the first.</p>
+</footer>
+</div>
+</body>
+</html>

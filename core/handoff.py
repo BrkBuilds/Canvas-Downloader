@@ -84,9 +84,15 @@ WINDOW_SECONDS = 180.0
 _EXTENSION_SCHEMES = ('chrome-extension://', 'moz-extension://',
                       'safari-web-extension://', 'ms-browser-extension://')
 
-#: Cookie names worth accepting. The session cookie is the credential;
-#: `_csrf_token` is accepted because the access-token upgrade needs one and
-#: asking Canvas for it again costs a round trip.
+#: Cookie names worth accepting. The session cookie is the credential.
+#:
+#: `_csrf_token` is still ACCEPTED and is no longer SENT. The extension stopped
+#: reading it on 2026-09-15: the stated reason (that it saves the access-token
+#: upgrade a round trip) was measured false on real Canvas - the one
+#: `GET /profile/settings` that `core.token_mint.mint` makes always answers
+#: with `set-cookie: _csrf_token=...`, even when the request already carried
+#: one. Kept in this list only so an extension installed before that date still
+#: works; `to_storable` drops it either way, so nothing of it reaches disk.
 ACCEPTED_COOKIES = ('canvas_session', '_normandy_session', '_csrf_token')
 
 #: The largest request body worth reading. A session cookie is a few hundred
@@ -145,15 +151,24 @@ _state: dict = _rt.state
 
 
 def _is_extension_origin(origin: str) -> bool:
-    """Whether *origin* is a browser extension rather than a web page.
+    """Whether *origin* is a browser extension. An ABSENT origin is not one.
 
-    An absent Origin is accepted: a direct request from the extension's
-    service worker may omit it, and something without an Origin is not a web
-    page acting on a site's behalf. A PRESENT origin must be an extension one.
+    **It used to answer True for no Origin at all**, on the reasoning that the
+    extension's service worker "may omit it" and that something with no Origin
+    is not a web page. The second half is true and is exactly the problem: it
+    is any OTHER PROGRAM on the machine, and `adopt_pending_handoff` takes the
+    Canvas address from the payload. Measured 2026-09-14 against the real
+    listener: a `urllib` POST with no Origin was answered 200 and the app would
+    have adopted `evil.example` as the student's Canvas.
+
+    **The first half was never measured, and it is false.** The real extension
+    in Chromium 149, driven through its own `connect()`, sent
+    `Origin: chrome-extension://<id>` on `GET /ping`, on the CORS preflight AND
+    on `POST /canvas-session`. So requiring an origin costs the extension
+    nothing. `/ping` still answers a request with no Origin on purpose - see
+    `do_GET` - because all it discloses is whether a sign-in is being asked for.
     """
-    if not origin:
-        return True
-    return origin.startswith(_EXTENSION_SCHEMES)
+    return bool(origin) and origin.startswith(_EXTENSION_SCHEMES)
 
 
 class _Handler(http.server.BaseHTTPRequestHandler):
@@ -291,7 +306,13 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         """Let the extension find which port the app is on."""
         if self.path.rstrip('/') != '/ping':
             return self._reply(404, {'error': 'not found'})
-        if not _is_extension_origin(self.headers.get('Origin') or ''):
+        origin = self.headers.get('Origin') or ''
+        # A PRESENT non-extension origin is a web page, and a page learns
+        # nothing here. An ABSENT one is a local program or a diagnostic such
+        # as `scripts/check_handoff.py`, and the only thing this answers is
+        # whether a sign-in is being asked for - no identity, no address, and
+        # the handover itself (`do_POST`) still demands an extension origin.
+        if origin and not _is_extension_origin(origin):
             return self._reply(403, {'error': 'forbidden'})
         with _lock:
             waiting = bool(_state.get('open')) and not _state.get('payload')
@@ -382,11 +403,21 @@ def start() -> int:
             continue                                   # in use; try the next
         with _lock:
             rt.server = server
+            # A handoff that arrived and was not collected survives a fresh
+            # bind for the same reason it survives a re-arm (above). Since the
+            # socket now closes itself when the window ends, "the window ran
+            # out a moment after the credential landed, and the student pressed
+            # the button again" reaches THIS branch rather than that one.
+            kept = _state.get('payload')
             _state.clear()
+            if kept is not None:
+                _state['payload'] = kept
             _state.update(open=True, port=port,
                           deadline=time.monotonic() + WINDOW_SECONDS)
         threading.Thread(target=server.serve_forever, name='canvas-handoff',
                          daemon=True).start()
+        threading.Thread(target=_close_when_window_ends, args=(server,),
+                         name='canvas-handoff-window', daemon=True).start()
         logger.info("Listening for a Canvas session handoff on 127.0.0.1:%d.",
                     port)
         return port
@@ -441,14 +472,71 @@ def result() -> dict | None:
         return _state.pop('payload', None)
 
 
+#: How often the window watcher re-reads the deadline. It sleeps no longer than
+#: this, so a re-arm that pushes the deadline out is honoured and a watcher
+#: whose listener was already stopped exits within a second.
+_WATCH_TICK_SECONDS = 1.0
+
+
+def _close_when_window_ends(server) -> None:
+    """Close the SOCKET when the window ends, not just the window.
+
+    **The bug this exists for**, measured 2026-09-13 against the real module:
+    when the three minutes ran out `waiting()` flipped the acceptance flag and
+    nothing called `stop()`, so the socket stayed bound and answering `/ping`
+    for the life of the process. The module docstring, `extension/README.md`
+    and the published privacy policy all said it times out.
+
+    One watcher per BIND, and it only ever closes the server it was started
+    for. A re-arm extends the shared deadline, which this re-reads; a `stop()`
+    followed by a new `start()` replaces the server, and the old watcher then
+    exits instead of closing a listener that is not its own.
+
+    Uses `_stop_server(..., keep_payload=True)`: a credential that arrived just
+    before the deadline is the student's own, and closing the socket is no
+    reason to throw it away before the app has collected it.
+    """
+    while True:
+        with _lock:
+            if _runtime().server is not server:
+                return                       # stopped, or superseded
+            left = float(_state.get('deadline') or 0) - time.monotonic()
+        if left <= 0:
+            break
+        time.sleep(min(left, _WATCH_TICK_SECONDS))
+    if _stop_server(only=server, keep_payload=True):
+        logger.info("The Canvas session handoff window ended; stopped "
+                    "listening.")
+
+
 def stop() -> None:
-    """Close the window and the socket. Never raises."""
+    """Close the window and the socket, and forget anything uncollected.
+
+    A deliberate stop is logout, a finished sign-in, or a cancelled attempt,
+    and in every one of those a credential still sitting here belongs to an
+    attempt the student has left behind. Keeping it would let the next press
+    of the button sign in with it. Never raises.
+    """
+    if _stop_server(only=None, keep_payload=False):
+        logger.info("Stopped listening for a Canvas session handoff.")
+
+
+def _stop_server(*, only, keep_payload: bool) -> bool:
+    """Shut the listener down. Answers whether there was one to shut.
+
+    With *only*, it shuts that server and nothing else - the window watcher's
+    guard against closing a listener opened after its own was stopped.
+    """
     rt = _runtime()
     with _lock:
+        if only is not None and rt.server is not only:
+            return False
         server, rt.server = rt.server, None
         _state['open'] = False
+        if not keep_payload:
+            _state.pop('payload', None)
     if server is None:
-        return
+        return False
     try:
         server.shutdown()
     except Exception as e:                             # noqa: BLE001
@@ -457,4 +545,4 @@ def stop() -> None:
         server.server_close()
     except Exception as e:                             # noqa: BLE001
         logger.debug("Handoff server close: %s", e)
-    logger.info("Stopped listening for a Canvas session handoff.")
+    return True

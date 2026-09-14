@@ -68,15 +68,28 @@ HANDOFF_MUTANTS = [
     ("a web page's origin counts as an extension, which is the same hole "
      "wearing a different shape",
      HANDOFF,
-     "    if not origin:\n"
-     "        return True\n"
-     "    return origin.startswith(_EXTENSION_SCHEMES)",
+     "    return bool(origin) and origin.startswith(_EXTENSION_SCHEMES)",
      "    return True"),
+
+    ("a caller with NO Origin counts as an extension again - the code as it "
+     "was until 2026-09-14, when a urllib POST was measured being accepted "
+     "and the app would have adopted evil.example as the student's Canvas",
+     HANDOFF,
+     "    return bool(origin) and origin.startswith(_EXTENSION_SCHEMES)",
+     "    return (not origin) or origin.startswith(_EXTENSION_SCHEMES)"),
+
+    ("the probe is tightened along with the POST, so a caller with no origin "
+     "(the diagnostic checker among them) is refused a harmless question",
+     HANDOFF,
+     "        if origin and not _is_extension_origin(origin):\n"
+     "            return self._reply(403, {'error': 'forbidden'})",
+     "        if not _is_extension_origin(origin):\n"
+     "            return self._reply(403, {'error': 'forbidden'})"),
 
     ("the probe endpoint answers a web page, telling any site that the app is "
      "listening and on which port",
      HANDOFF,
-     "        if not _is_extension_origin(self.headers.get('Origin') or ''):\n"
+     "        if origin and not _is_extension_origin(origin):\n"
      "            return self._reply(403, {'error': 'forbidden'})\n"
      "        with _lock:\n"
      "            waiting = bool(_state.get('open')) and not _state.get('payload')",
@@ -240,14 +253,11 @@ HANDOFF_MUTANTS = [
      "through the one adoption, so the three routes drift apart about what a "
      "network blip means",
      UI,
-     "    credential = from_cookies(cookies, api_url)\n"
-     "    try:\n"
-     "        _adopt_restored_credential(credential)",
-     "    credential = from_cookies(cookies, api_url)\n"
-     "    try:\n"
+     "        _verdict = _adopt_restored_credential(credential, optimistic=False)",
      "        cm = CanvasManager(credential, api_url)\n"
      "        valid, _msg = cm.validate_token()\n"
-     "        st.session_state['is_authenticated'] = valid"),
+     "        st.session_state['is_authenticated'] = valid\n"
+     "        _verdict = 'ok' if valid else 'refused'"),
 
     # -- 7. opening the student's Canvas, and the gate on it ---------------
     # -- 7. opening the student's Canvas, and the gate on it ---------------
@@ -433,7 +443,9 @@ HANDOFF_MUTANTS = [
      "previous error card is drawn over a sign-in that is working",
      UI,
      "    st.session_state.pop('browser_login_failed', None)\n"
+     "    st.session_state.pop('handoff_arrived_shown', None)\n"
      "    port = handoff.start()",
+     "    st.session_state.pop('handoff_arrived_shown', None)\n"
      "    port = handoff.start()"),
 
     ("a failure the app can set loses its card and silently falls back "
@@ -536,6 +548,97 @@ HANDOFF_MUTANTS = [
      DEBUG,
      "        exc = exc.__cause__ or exc.__context__",
      "        exc = None"),
+
+    # -- 12. the 2026-09-14 extension pass --------------------------------
+    ("nothing closes the socket when the window ends, so the listener stays "
+     "bound for the life of the app - the state measured on 2026-09-13",
+     HANDOFF,
+     "        threading.Thread(target=_close_when_window_ends, args=(server,),\n"
+     "                         name='canvas-handoff-window', daemon=True).start()\n",
+     ""),
+
+    ("the window closing throws away a sign-in that arrived just before it",
+     HANDOFF,
+     "    if _stop_server(only=server, keep_payload=True):",
+     "    if _stop_server(only=server, keep_payload=False):"),
+
+    ("a deliberate stop - logout, cancel - keeps an uncollected credential, "
+     "so the next press of the button signs in with it",
+     HANDOFF,
+     "    if _stop_server(only=None, keep_payload=False):",
+     "    if _stop_server(only=None, keep_payload=True):"),
+
+    ("a fresh bind after the window closed discards the student's own "
+     "uncollected sign-in",
+     HANDOFF,
+     "            if kept is not None:\n"
+     "                _state['payload'] = kept",
+     "            if False:\n"
+     "                _state['payload'] = kept"),
+
+    ("the watcher stops noticing its listener was stopped, so every press of "
+     "the button leaves a thread behind for the life of the app",
+     HANDOFF,
+     "            if _runtime().server is not server:\n"
+     "                return                       # stopped, or superseded",
+     "            if False:\n"
+     "                return"),
+
+    ("the handover is adopted OPTIMISTICALLY again, so a sign-in Canvas never "
+     "confirmed is signed in and saved - measured before the fix",
+     UI,
+     "        _verdict = _adopt_restored_credential(credential, optimistic=False)",
+     "        _verdict = _adopt_restored_credential(credential, optimistic=True)"),
+
+    ("the adoption ignores the optimistic switch, so the one rule answers "
+     "'trust it' for a credential that has never been confirmed",
+     UI,
+     "    if not optimistic:\n"
+     "        # Nothing has ever confirmed this credential",
+     "    if False:\n"
+     "        # Nothing has ever confirmed this credential"),
+
+    ("could-not-reach-Canvas collapses into Canvas-refused, so a student with "
+     "a perfectly good Canvas tab is told to go and sign in again",
+     UI,
+     "        if _verdict == 'unconfirmed':",
+     "        if False:"),
+
+    ("the unconfirmed credential is left in the session in place of whatever "
+     "a reconnect was holding",
+     UI,
+     "        if _had_token:\n"
+     "            st.session_state['api_token'] = _prev_token\n"
+     "        else:\n"
+     "            st.session_state.pop('api_token', None)\n",
+     ""),
+
+    ("the arrival tick reruns at once, so the waiting card stays on screen "
+     "through the blocking check and 'Got it' is never seen - finding 8",
+     UI,
+     "            st.session_state['handoff_arrived_shown'] = True\n"
+     "            _state = 'handoff_arrived'",
+     "            st.rerun(scope=\"app\")"),
+
+    ("the arrival tick never hands over, so the student sits on 'Got it' "
+     "while the credential waits uncollected",
+     UI,
+     "        elif (handoff.has_payload()\n"
+     "              and not st.session_state.get('handoff_arrived_shown')):",
+     "        elif handoff.has_payload():"),
+
+    ("a new attempt inherits the previous attempt's arrived flag, so its own "
+     "arrival skips the card",
+     UI,
+     "    st.session_state.pop('handoff_arrived_shown', None)\n"
+     "    port = handoff.start()",
+     "    port = handoff.start()"),
+
+    ("the popup's [hidden] rule is dropped, so 'Finishing up in 5' is back "
+     "on every screen - measured 2026-09-14 in Chromium 149",
+     HTML,
+     "    [hidden] { display: none !important; }\n",
+     ""),
 ]
 
 

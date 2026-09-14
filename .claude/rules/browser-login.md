@@ -10,6 +10,9 @@ paths:
   - "extension/**"
   - "scripts/check_handoff.py"
   - "scripts/build_extension_hosts.py"
+  - "scripts/build_extension_package.py"
+  - "scripts/popup_gallery.py"
+  - "packaging/chrome-web-store/**"
 ---
 
 # Signing in to Canvas with a browser session
@@ -2788,3 +2791,340 @@ rather than failures - macOS simply gets less:
 3. Decide whether B's three missing pieces are worth WKWebView equivalents, or
    whether macOS should lead with C and the token. That is a product call, not
    an engineering one, and it should be made with the measurements in hand.
+
+
+# THE EXTENSION, 2026-09-14: publishing it, and four defects found on the way
+
+Everything here was measured today or read out of Google's own docs today. The
+route to a live listing, the decisions that need a human, and the paste-ready
+listing text live in `packaging/chrome-web-store/LISTING.html` (a document for
+the product owner, so HTML). This section is the mechanism-first half.
+
+## `scripts/build_extension_package.py` pointed at a file that did not exist
+
+It printed *"The listing copy and every permission justification the review
+asks for are in packaging/chrome-web-store/LISTING.html"*. Nothing had ever
+created that file. Same class as the four marketing documents describing a test
+that was never committed: **a document that names an artifact is not evidence
+the artifact exists.** Written now. The script also matched `scripts/build_*`
+and so loaded RELEASE rules rather than these, which is the routing trap this
+repo already records for `scripts/check_handoff.py`; both it and
+`packaging/chrome-web-store/**` are on this file's `paths:` now.
+
+## The listener accepted a POST with NO Origin, and the app adopted its address
+
+`_is_extension_origin` answered **True for an absent Origin**, documented as
+"a direct request from the extension's service worker may omit it". Measured
+against the real listener: a plain `urllib` POST with no header was answered
+**200**, and `handoff.result()` then held
+`{'host': 'evil.example', 'cookies': {...}}` - which `adopt_pending_handoff`
+takes the Canvas address from. So any program running as the user could point
+the app at a Canvas of its choosing.
+
+- **The premise was never measured and it is false.** The real extension, loaded
+  in Chromium 149 and driven through its own `connect()`, sent
+  `Origin: chrome-extension://<id>` on **all three**: `GET /ping`, the CORS
+  preflight, and `POST /canvas-session`. Requiring one costs the feature
+  nothing, which is the measurement that made the fix safe to ship.
+- `/ping` stays permissive for an ABSENT origin on purpose - it discloses only
+  whether a sign-in is being asked for, and `scripts/check_handoff.py` is such a
+  caller. A present non-extension origin is still refused there. Both directions
+  are pinned, so tightening the POST cannot quietly tighten the probe.
+- **The technique, reusable**: copy `extension/` to a temp dir, add
+  `host_permissions` for a FAKE Canvas host to the manifest copy (so
+  `chrome.cookies` works with no human to click Chrome's prompt), launch
+  `chromium` with `--load-extension`, `chrome.cookies.set` a session cookie for
+  that host, open `chrome-extension://<id>/popup.html` as a tab and
+  `chrome.runtime.sendMessage({type:'connect', ...})`. Grant NOTHING for
+  127.0.0.1: a host permission for the listener's own address changes CORS
+  handling and would confound the header being measured.
+
+## A handover Canvas never confirmed was signed in AND written to the store
+
+`adopt_pending_handoff` goes through `_adopt_restored_credential`, whose
+optimistic branch trusts a credential on any non-auth failure because *"it
+validated on a prior launch"*. **A handed-over sign-in has no prior launch.**
+Measured by driving the real function with an unreachable host: returned True,
+`is_authenticated` True, and both `_upgrade_to_access_token` and
+`_persist_browser_login` ran. The control (Canvas answering Unauthorized) was
+refused correctly, which is what made the first result mean something.
+
+- The rule still lives in ONE function: `_adopt_restored_credential(credential,
+  *, optimistic=True)` now RETURNS its verdict (`ok` / `refused` /
+  `optimistic` / `unconfirmed`) and only the handoff asks for `optimistic=False`.
+  A saved credential on an offline launch is still restored optimistically -
+  that is the most important robustness property of the login path and it is
+  pinned by its own test.
+- The two failures are DIFFERENT CARDS because the fix differs: `canvas_refused`
+  means the tab is signed out, `unconfirmed` means the connection is the
+  problem and nothing was saved.
+- The unconfirmed credential goes into `st.session_state['api_token']` before
+  validation, so the failure path puts back whatever was there (a reconnect can
+  be holding one) instead of leaving a credential nothing confirmed.
+
+## The "Got it" card had no caller, and the fix is arm-then-fire
+
+Finding 8 of the 2026-09-13 review: `_browser_notice_html('handoff_arrived')`
+was defined, asserted by three tests that called the formatter directly, and
+reachable from nowhere. The poll fragment now paints it on the tick that sees
+`has_payload()` and reruns on the NEXT tick, because `st.rerun()` does not
+replace the old screen until the run finishes - so asking for the rerun on the
+same tick leaves *"One more click, over in Chrome"* on screen through the
+blocking check with Canvas, which IS the extension-says-done-app-says-waiting
+contradiction. `handoff_arrived_shown` is cleared by `begin_browser_handoff`,
+`cancel_browser_handoff` and `adopt_pending_handoff`: the attempt owns it.
+
+**Verified in the REAL app** (`dev.py`, isolated config dir, the real login
+screen driven in Chromium, headline recorded per animation frame):
+
+    0 ms     One more click, over in Chrome
+    1053 ms  Got it
+    2158 ms  Could not reach Canvas to check that sign-in
+
+with the login screen still showing afterwards, no `.token_fallback` and no
+`auth_method` in the isolated config - i.e. the receiver-side oracle for
+"nothing was saved".
+
+## The socket outlived its window, and the payload must survive the close
+
+When `WINDOW_SECONDS` expired, `waiting()` flipped the flag and **nothing called
+`stop()`**, so the port stayed bound for the life of the process - while the
+module docstring, `extension/README.md` and the published privacy policy all
+said it times out. One watcher thread per BIND now closes it, and three details
+are load-bearing:
+
+- it re-reads the deadline (a re-arm extends it) and exits when the runtime's
+  server is no longer the one it was started for, so a stopped listener leaves
+  no thread behind;
+- it closes with `keep_payload=True`: a credential that arrived seconds before
+  the deadline is the student's own. A deliberate `stop()` - logout, cancel,
+  a finished sign-in - drops it, because there the attempt was abandoned;
+- `start()`'s fresh-bind branch now KEEPS an uncollected payload too. Before the
+  watcher, "the window ran out and the student pressed the button again" went
+  through the idempotent branch; now it reaches the fresh bind, and clearing
+  there would be the 2026-09-13 "re-arming discarded an uncollected credential"
+  defect in a new place.
+
+## "Finishing up in 5" was on EVERY screen of the popup
+
+The `hidden` attribute is only a user-agent rule and any author rule that sets
+`display` beats it. Last session's restyle gave `.countdown { display:
+inline-block }`, so the countdown that belongs to the finished screen sat under
+the button on the guide, on both failure cards and on the first screen a Web
+Store reviewer opens. Invisible in the source, obvious in a screenshot.
+`[hidden] { display: none !important; }` fixes the class rather than the
+instance, and the test is a CENSUS of what `popup.js` toggles plus a rendered
+check in Chromium.
+
+**The instrument**: render the REAL `popup.html`/`popup.js` over HTTP with only
+`chrome.*` stubbed, one context per state, both colour schemes, and tile the
+screenshots into one sheet. Twelve states, 24 shots, about 40 seconds. Every
+popup finding this session came from that sheet and none from reading the code.
+
+## Chrome Web Store: what publishing actually requires (read 2026-09-14)
+
+- **US$5, once, per account. Already paid.** 2-Step Verification is required on
+  the Google account before anything can be published. The contact email must
+  be verified and can never be changed afterwards.
+- **Every developer must declare trader or non-trader** (EU DSA). Google's own
+  FAQ: *"Trader classification is a legal question. Each publisher must make
+  their own determination."* A trader's verified name and contact details are
+  shown to EU users. It is the product owner's call, not an engineering one.
+- **Title and summary come from `manifest.json`.** The listing needs a detailed
+  description, a category, a language, a 128x128 store icon, **at least one
+  1280x800 screenshot** and a **440x280 small promo tile** (both required).
+- **The Privacy tab is what review reads**: single purpose, a justification per
+  permission AND for the host permission, a remote-code declaration, the data
+  categories (ours is **authentication information** - the policy names
+  "authentication cookies" explicitly), three certifications, and a privacy
+  policy URL.
+- **The localhost exemption is real and worth quoting**: *"The requirement to
+  handle the user data securely ... does not apply to transmissions between a
+  Chrome extension or app and a native program on the same computer."* So the
+  plain-HTTP POST to 127.0.0.1 is not a policy problem.
+- **Review is "a few days ... up to a few weeks"**, and this item hits three of
+  the four named triggers for a longer one: new developer, new extension, and a
+  sensitive permission (`cookies`) plus a broad host permission - `*://*/*`
+  draws scrutiny even as `optional_host_permissions`.
+- **New publishers may have at most two published extensions.** A zip over 2 GB
+  is rejected; ours is 30 KB. Deferred publishing gives 30 days to press
+  publish before the submission reverts to a draft.
+- **The name is NOT mechanically checked the way the Microsoft Store checks
+  it.** CWS policy only forbids representing that a product is "authorized by,
+  endorsed by, or produced by another company". The Microsoft Store's three
+  rejections of "Canvas Downloader" under 10.1.1.1 have no CWS equivalent, so
+  keeping the name is a risk decision rather than a known blocker.
+
+## Still open, and stated rather than guessed at
+
+- **The popup says "Canvas Downloader is not running" when it cannot know
+  that.** The listener is deliberately not a standing fixture, so an app that is
+  open but has not been asked for a sign-in is indistinguishable from one that
+  is closed. It is the ordinary state, and the copy claims the worse of the two.
+- **The footer says "This extension never looks at any pages you visit" on the
+  same screen that prints "You are currently on: www.google.com".** Both are
+  the product owner's dictated copy, and a reviewer comparing the copy against
+  `activeTab` will read it as inaccurate. Proposed replacement wording is in
+  `LISTING.html`; it is his to settle.
+- **The finished screen leaves the state row reading "Running, ready to log
+  in"** while the card says the sign-in is done.
+- ~~**`_csrf_token` cannot be dropped on reasoning**~~ - **MEASURED AND
+  DROPPED, 2026-09-15.** The product owner ran it in DevTools on
+  `cbscanvas.instructure.com`: the response to `GET /profile/settings` - the one
+  request `mint()` makes - carries
+  `set-cookie: _csrf_token=...; path=/; secure`, **even when the request already
+  carried one**. So the mint's own jar always gets a fresh token and the
+  handed-over copy was never the one used. The extension no longer reads it;
+  `core.handoff.ACCEPTED_COOKIES` still accepts it so an extension installed
+  before that date keeps working. One fewer cookie taken from the student and
+  one fewer thing for a Web Store reviewer to weigh.
+  - **Read the RESPONSE HEADER, not the cookie list.** A cookie reappearing in
+    the Application tab could equally be page JavaScript setting it through
+    `document.cookie`, which the app's own Python request would never see. The
+    two look identical in the cookie table and answer opposite questions.
+  - The harness measured all four worlds first, which is what made one real
+    measurement decisive: the handed-over copy only ever mattered where Canvas
+    did NOT re-set the cookie, and Canvas does.
+- **The store assets do not exist yet** (screenshots, promo tile), and the
+  extension route's own end-to-end test at a REAL institution has only ever been
+  run by the product owner on 2026-09-12.
+
+## DECIDED 2026-09-14 by the product owner - do not re-open
+
+- **Non-trader** on the Chrome Web Store trader declaration.
+- **The name stays `Canvas Downloader Connector`.** He was shown the Microsoft
+  Store precedent (three 10.1.1.1 rejections) and the fact that Chrome has no
+  equivalent mechanical check, and kept the brand. It is what the app's own
+  copy quotes and what Chrome's puzzle-piece menu will show.
+- **Public**, not Unlisted: store search is a way for students to find the app.
+- **The popup footer changes.** "This extension never looks at any pages you
+  visit" sat on the same screen that prints the address of the tab you are on.
+  Replaced verbatim with: *"This extension only works when you click it. It
+  checks that this tab is your Canvas, then passes your Canvas login to the
+  Canvas Downloader app on this computer. Nothing is sent anywhere else."*
+  The rest of the dictated copy is untouched.
+
+## Coverage after the 2026-09-14 pass
+
+`scripts/_mutate_handoff.py` is **77 mutants, 76 caught in the pass plus the
+77th caught by hand** after its test was fixed (see
+`.claude/rules/testing-and-audits.md` - a comment in `dev.py` was satisfying a
+substring assertion). All 14 mutants added for this session's fixes were caught
+on the first run. `tests/test_handoff.py` is 117 tests.
+
+**`scripts/popup_gallery.py` renders every popup screen** into
+`packaging/chrome-web-store/screens/` - twelve states, light and dark, tight to
+each screen's own height, named for what they are, plus a contact sheet per
+theme. It stubs only `chrome.*`; the markup, CSS and state logic are the shipped
+files. Re-run it after any popup change: every popup defect this session came off
+that sheet, and none came out of reading the source.
+
+
+# 2026-09-15: THE PERMITTING COLUMN, DRIVEN END TO END AT LAST
+
+Everything in this section was measured against a fake Canvas that behaves the
+way Canvas' own source says it does - real TLS, a real certificate, reached
+under a real Canvas-shaped hostname so the app's OWN client stack (canvasapi,
+requests, the domain-scoped jar) runs unmodified. Only the name lookup and the
+trust store are pointed at it, from the test process. Harness:
+`scratchpad/fake_canvas.py` + `audit_login_path.py` + `audit_extra.py` (not in
+the repo; rebuild from this description if it is wanted again).
+
+**40 checks, all passing.** The column that had NEVER been driven - a student
+whose institution PERMITS access tokens, arriving through the extension - now
+has an end-to-end measurement.
+
+## The full chain, through the real extension in Chromium
+
+Real extension, real listener, real adoption, real mint:
+
+    the extension answered {'ok': True, host: fake-canvas.instructure.com}
+    the app held the handover                       -> yes
+    signed in as                                    -> 'Audit Student'
+    upgraded to a minted access token               -> yes
+    settings: auth_method='token', token_source='minted', expires=+119d
+    exactly ONE mint POST, carrying X-CSRF-Token
+    Canvas saw the cookie the BROWSER held, unchanged, end to end
+
+- **The Secure flag on the cookie is load-bearing IN THE HARNESS, and that is
+  worth knowing before writing another one.** Measured in Chromium 149: a
+  cookie set WITHOUT `secure: true` is **not returned by `chrome.cookies.getAll`
+  for an https URL at all**, so a harness that sets a plain cookie makes the
+  extension answer `not_signed_in` and reads as a product failure. Real Canvas
+  sets `canvas_session` Secure+HttpOnly and `_csrf_token` Secure and NOT
+  HttpOnly; mirror both exactly.
+- **`ui/auth.py` binds `CONFIG_FILE` at IMPORT time** (line 69) while
+  `get_config_dir()` re-reads the environment per call. A harness that changes
+  `CANVAS_DL_CONFIG_DIR` between scenarios therefore writes into the FIRST
+  scenario's folder and reads the wrong file: four false failures, all of which
+  looked like product defects. Set `auth.CONFIG_FILE` too. The app itself is
+  fine - it imports once per process.
+
+## The mint path, at an institution that allows it
+
+- One `GET /profile/settings` for a CSRF token, then one
+  `POST /api/v1/users/self/tokens` carrying `X-CSRF-Token`, asking for **119
+  days** (one under Canvas' cap, deliberately).
+- The superseded browser credential is **deleted**, the listener is **closed**,
+  and `minted_token_days` / `minted_token_id` / `token_source='minted'` are
+  recorded.
+- **A token Canvas minted but this machine cannot STORE is not adopted**
+  (driven with the keyring refusing): `upgraded=False`, the session stays, and
+  nothing in the settings claims a token. The docstring's promise is real.
+
+## At a BLOCKED institution the session survives intact
+
+`HTTP 403` -> `blocked_by_institution`, the session is kept and stored,
+`auth_method='browser'`, `token_upgrade_blocked_hosts=['<host>']`, and
+`_token_upgrade_enabled(host)` then answers **False** with no further request.
+No minted-token bookkeeping is written.
+
+## THE CSRF QUESTION, ANSWERED FOR ALL FOUR WORLDS
+
+Driven against a Canvas that does, and does not, re-set `_csrf_token` on
+`GET /profile/settings`, with the extension sending the cookie and not:
+
+| Canvas re-sets it | extension sent one | mint |
+|---|---|---|
+| yes | yes | **minted** |
+| yes | **no** | **minted** |
+| no | yes | **minted** (the handed-over copy is what is used) |
+| no | **no** | **REFUSED** - `csrf_rejected`, HTTP 422 |
+
+So the extension's `_csrf_token` is load-bearing in exactly ONE world: a Canvas
+that does not re-set the cookie. **The measurement that decides whether it can
+be dropped is one line in DevTools** (see below), and it must be taken on a
+real signed-in Canvas, not reasoned about - reading the source has been wrong
+about this cookie twice.
+
+## Both renewals, driven
+
+- **Token renewal**: due -> `PUT .../tokens/:id` and the expiry moves; the
+  institution capping it -> `minted_token_capped=True` recorded and asking
+  stops; not due -> **no request at all**.
+- **Session renewal**: a stored session Canvas rejects -> not signed in,
+  `browser_restore_pending` armed, and the stored session is KEPT so the
+  renewal has something to spend.
+
+## THE ROUTE IS STILL NOT RECORDED - now measured, not read
+
+After an extension sign-in the settings file contains exactly:
+
+    api_url, auth_method='browser', token_upgrade_blocked_hosts
+
+**No key names the route**, and the login page spends
+`browser_restore_pending` on `begin_browser_signin(...)`, i.e. the app's own
+window. So at a token-blocked institution - the population the extension exists
+for - the second launch after the session lapses asks for a full institutional
+password, which is the friction the extension removes. At a permitting
+institution it never arises, because the session was traded for a token on the
+spot. This confirms by measurement what the 2026-09-14 entry above read out of
+the call sites.
+
+## NOT verified, and stated so it is not mistaken for verified
+
+The fake Canvas answers what Canvas' SOURCE says it answers. It is not Canvas:
+a real institution can differ in the `expires_at` it grants, in whether it
+re-sets `_csrf_token`, and in what its WAF does to any of these requests. What
+is now proven is that **the app does the right thing with each of those
+answers**, which is what was untested before.

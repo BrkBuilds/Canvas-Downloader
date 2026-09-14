@@ -42,6 +42,8 @@ let countdownTimer = null;
 
 // ── rendering ──────────────────────────────────────────────────────────────
 
+const CHECK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
 function setSteps(current) {
   // `current === 0` means "no step is actionable yet", which is the honest
   // answer when Canvas Downloader is not running: none of these three steps
@@ -53,7 +55,11 @@ function setSteps(current) {
     el.classList.toggle("done", done);
     el.classList.toggle("now", n === current);
     const dot = el.querySelector(".dot");
-    dot.textContent = done ? "✓" : String(n);
+    if (done) {
+      dot.innerHTML = CHECK_SVG;
+    } else {
+      dot.textContent = String(n);
+    }
   });
 }
 
@@ -208,12 +214,12 @@ function ask(message) {
 function showAppState(app) {
   const on = !!app;
   const ready = !!(app && app.waiting);
-  els.appState.className = "appstate " + (ready ? "on" : "off");
+  els.appState.className = "appstate " + (ready ? "on" : on ? "armed" : "off");
   els.appText.textContent = !on
-    ? "Canvas Downloader is not running"
+    ? "Not running"
     : ready
       ? "Running, ready to log in"
-      : "Running, but not asking for a sign-in yet";
+      : "Running, sign-in not started";
 }
 
 // ── working out where we are ───────────────────────────────────────────────
@@ -302,9 +308,10 @@ async function read() {
   }));
 
   if (needsPermission) {
+    const infoSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
     return show({
-      step: 3, tone: null,
-      title: "One-time approval",
+      step: 3, tone: "info",
+      title: infoSvg + "One-time approval",
       body: "Chrome will ask if Canvas Downloader may use this page. Choose "
           + "Allow. This little window closes when it asks. That is "
           + "normal, and you do not have to do anything else.",
@@ -407,15 +414,19 @@ els.again.addEventListener("click", async () => {
 
 els.recheck.addEventListener("click", async () => {
   els.recheck.disabled = true;
-  els.recheck.textContent = "Checking";
+  els.recheck.classList.add("spinning");
   els.appText.textContent = "Looking for Canvas Downloader";
   els.appState.className = "appstate off";
   try {
     await read();
   } finally {
     els.recheck.disabled = false;
-    els.recheck.textContent = "Check again";
+    els.recheck.classList.remove("spinning");
   }
+});
+
+els.foot.addEventListener("click", () => {
+  els.foot.classList.toggle("expanded");
 });
 
 // ── on open, including straight after the prompt killed us ─────────────────

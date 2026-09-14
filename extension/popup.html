@@ -28,25 +28,32 @@
       --brand:          #0071e3;
       --brand-hover:    #0077ed;
       --brand-ink:      #ffffff;
-      --brand-dim:      rgba(0, 113, 227, 0.10);
+      --brand-dim:      rgba(0, 113, 227, 0.08);
+      --brand-border:   rgba(0, 113, 227, 0.22);
       --good:           #1b8738;
-      --good-dim:       rgba(27, 135, 56, 0.12);
-      --good-border:    rgba(27, 135, 56, 0.30);
+      --good-dim:       rgba(27, 135, 56, 0.09);
+      --good-border:    rgba(27, 135, 56, 0.24);
       --warn:           #b36200;
-      --warn-dim:       rgba(179, 98, 0, 0.10);
-      --warn-border:    rgba(179, 98, 0, 0.28);
+      --warn-dim:       rgba(179, 98, 0, 0.08);
+      --warn-border:    rgba(179, 98, 0, 0.22);
       --bad:            #d7261e;
-      --bad-dim:        rgba(215, 38, 30, 0.10);
-      --bad-border:     rgba(215, 38, 30, 0.28);
+      --bad-dim:        rgba(215, 38, 30, 0.08);
+      --bad-border:     rgba(215, 38, 30, 0.22);
+      --info:           #205c97;
+      --info-dim:       #eff4fa;
+      --info-border:    rgba(32, 92, 151, 0.22);
       --step-off:       #d2d2d7;
+      --dot-armed:      #52745a;
+      --btn-chip:       #ffffff;
+      --btn-chip-hover: #f0f0f2;
       --card-shadow:    0 1px 3px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02);
-      --btn-shadow:     0 2px 8px rgba(0, 113, 227, 0.25);
+      --btn-shadow:     0 1px 2px rgba(0, 0, 0, 0.08);
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg:             #16171a;
         --surface:        #1f2126;
-        --surface-elevated: #26282e;
+        --surface-elevated: #282a30;
         --line:           #30333b;
         --line-subtle:    #26282f;
         --text:           #f5f5f7;
@@ -55,23 +62,40 @@
         --brand:          #0a84ff;
         --brand-hover:    #409cff;
         --brand-ink:      #ffffff;
-        --brand-dim:      rgba(10, 132, 255, 0.16);
-        --good:           #32d74b;
-        --good-dim:       rgba(50, 215, 75, 0.15);
-        --good-border:    rgba(50, 215, 75, 0.32);
-        --warn:           #ff9f0a;
-        --warn-dim:       rgba(255, 159, 10, 0.15);
-        --warn-border:    rgba(255, 159, 10, 0.32);
-        --bad:            #ff453a;
-        --bad-dim:        rgba(255, 69, 58, 0.15);
-        --bad-border:     rgba(255, 69, 58, 0.32);
+        --brand-dim:      rgba(10, 132, 255, 0.09);
+        --brand-border:   rgba(10, 132, 255, 0.24);
+        --good:           #4ecb71;
+        --good-dim:       rgba(78, 203, 113, 0.07);
+        --good-border:    rgba(78, 203, 113, 0.20);
+        --warn:           #e59e3a;
+        --warn-dim:       rgba(229, 158, 58, 0.07);
+        --warn-border:    rgba(229, 158, 58, 0.20);
+        --bad:            #e5685d;
+        --bad-dim:        rgba(229, 104, 93, 0.07);
+        --bad-border:     rgba(229, 104, 93, 0.20);
+        --info:           #93bcf5;
+        --info-dim:       #272d38;
+        --info-border:    rgba(147, 188, 245, 0.22);
         --step-off:       #3a3b40;
+        --dot-armed:      #52735b;
+        --btn-chip:       #2b2e35;
+        --btn-chip-hover: #363a43;
         --card-shadow:    0 2px 8px rgba(0, 0, 0, 0.28);
-        --btn-shadow:     0 3px 12px rgba(10, 132, 255, 0.35);
+        --btn-shadow:     0 1px 2px rgba(0, 0, 0, 0.16);
       }
     }
 
     * { box-sizing: border-box; }
+    /*
+      THE `hidden` ATTRIBUTE IS ONLY A USER-AGENT RULE, and any author rule that
+      sets `display` beats it. `.countdown { display: inline-block }` did exactly
+      that, so "Finishing up in 5" was on EVERY screen of the popup - measured
+      2026-09-14 in Chromium 149, light and dark, including the first one a
+      reviewer opens. popup.js hides things by toggling `.hidden`, so this one
+      rule makes that mean hidden for every element at once, not just the one
+      that was noticed.
+    */
+    [hidden] { display: none !important; }
     body {
       margin: 0;
       width: 340px;
@@ -89,7 +113,9 @@
       display: flex;
       align-items: center;
       gap: 9px;
-      margin: 0 0 14px;
+      padding: 0 0 10px;
+      margin: 0 0 10px;
+      border-bottom: 1px solid var(--line);
     }
     .brand img {
       width: 22px;
@@ -98,17 +124,22 @@
       filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
     }
     .brand span {
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 650;
       letter-spacing: -0.015em;
       color: var(--text);
+    }
+    .brand .brand-sub {
+      color: var(--brand);
+      font-weight: 600;
+      margin-left: 2px;
     }
 
     /* ── the three steps, which are the guide ───────────────────────── */
     .steps {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 12px;
       margin: 0 0 14px;
       position: relative;
     }
@@ -116,23 +147,20 @@
       display: grid;
       grid-template-columns: 22px 1fr;
       gap: 11px;
-      align-items: start;
-      padding: 0 0 12px;
+      align-items: center;
       position: relative;
-    }
-    .step:last-child {
-      padding-bottom: 0;
     }
     /* the rail between the numbers */
     .step:not(:last-child)::before {
       content: "";
       position: absolute;
       left: 10px;
-      top: 22px;
-      bottom: 0;
+      top: 50%;
+      height: calc(100% + 14px);
       width: 2px;
       background: var(--line);
       border-radius: 1px;
+      z-index: 0;
       transition: background 0.25s ease;
     }
     .step.done:not(:last-child)::before {
@@ -142,22 +170,28 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-size: 11.5px;
-      font-weight: 650;
-      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      background: var(--bg);
       color: var(--text-faint);
       border: 1.5px solid var(--step-off);
       position: relative;
       z-index: 1;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .dot svg {
+      display: block;
+    }
     .step .label {
       font-size: 12.8px;
       line-height: 1.42;
       color: var(--text-faint);
-      padding-top: 1.5px;
       transition: color 0.2s ease;
     }
 
@@ -166,8 +200,6 @@
       border-color: var(--good);
       color: #ffffff;
       box-shadow: 0 0 0 2px var(--good-dim);
-      font-size: 12px;
-      font-weight: 700;
     }
     .step.done .label {
       color: var(--text-dim);
@@ -212,39 +244,51 @@
     }
     .card.good {
       border-color: var(--good-border);
-      background: linear-gradient(180deg, var(--good-dim) 0%, var(--surface) 100%);
+      background: var(--good-dim);
     }
     .card.good .title {
       color: var(--good);
     }
     .card.warn {
       border-color: var(--warn-border);
-      background: linear-gradient(180deg, var(--warn-dim) 0%, var(--surface) 100%);
+      background: var(--warn-dim);
     }
     .card.warn .title {
       color: var(--warn);
     }
     .card.bad {
       border-color: var(--bad-border);
-      background: linear-gradient(180deg, var(--bad-dim) 0%, var(--surface) 100%);
+      background: var(--bad-dim);
     }
     .card.bad .title {
       color: var(--bad);
     }
+    .card.info {
+      border-color: var(--info-border);
+      background: var(--info-dim);
+    }
+    .card.info .title {
+      color: var(--info);
+    }
 
     .site {
-      display: inline-flex;
-      align-items: center;
+      display: flex;
+      align-items: flex-start;
       gap: 6px;
-      margin-top: 8px;
+      margin-top: 7px;
+      margin-left: 0;
+      margin-bottom: 2px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 11.5px;
       color: var(--text);
-      background: var(--bg);
+      background: var(--surface-elevated);
       border: 1px solid var(--line);
       border-radius: 6px;
       padding: 4px 8px;
+      word-break: break-all;
       overflow-wrap: anywhere;
+      max-width: 100%;
+      width: fit-content;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
     }
     .site::before {
@@ -253,6 +297,8 @@
       width: 12px;
       height: 12px;
       flex: 0 0 12px;
+      align-self: flex-start;
+      margin-top: 2.5px;
       background-color: var(--text-dim);
       -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='2' y1='12' x2='22' y2='12'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E") no-repeat center / contain;
       mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='2' y1='12' x2='22' y2='12'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E") no-repeat center / contain;
@@ -272,12 +318,12 @@
       border-radius: 9px;
       box-shadow: var(--btn-shadow);
       cursor: pointer;
-      transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
     }
     button#go:hover:not(:disabled) {
-      background: var(--brand-hover);
-      box-shadow: 0 4px 14px rgba(10, 132, 255, 0.4);
+      filter: brightness(1.1);
       transform: translateY(-0.5px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
     }
     button#go:active:not(:disabled) {
       transform: scale(0.98);
@@ -309,16 +355,24 @@
     /* ── the trust & privacy badge ──────────────────────────────────── */
     .foot {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 8px;
-      margin: 14px 0 0;
-      padding: 9px 11px;
+      margin: 11px 0 0;
+      padding: 6px 10px;
       font-size: 11px;
-      line-height: 1.45;
+      line-height: 1.4;
       color: var(--text-dim);
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    .foot:hover {
+      background: var(--surface-elevated);
+      border-color: var(--text-faint);
+      color: var(--text);
     }
     .foot::before {
       content: "";
@@ -326,10 +380,30 @@
       width: 13px;
       height: 13px;
       flex: 0 0 13px;
-      margin-top: 2px;
-      background-color: var(--good);
+      background-color: var(--brand);
       -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E") no-repeat center / contain;
       mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E") no-repeat center / contain;
+    }
+    .foot .foot-collapsed {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    .foot .foot-expanded {
+      display: none;
+    }
+    .foot.expanded {
+      align-items: flex-start;
+    }
+    .foot.expanded::before {
+      margin-top: 2px;
+    }
+    .foot.expanded .foot-collapsed {
+      display: none;
+    }
+    .foot.expanded .foot-expanded {
+      display: block;
     }
 
     /* ── app on/off, always on screen ───────────────────────────────── */
@@ -337,8 +411,8 @@
       display: flex;
       align-items: center;
       gap: 9px;
-      margin: 0 0 14px;
-      padding: 9px 11px;
+      margin: 0 0 11px;
+      padding: 6px 10px;
       border: 1px solid var(--line);
       border-radius: 9px;
       background: var(--surface);
@@ -358,11 +432,17 @@
     .appstate.on {
       color: var(--good);
       border-color: var(--good-border);
-      background: linear-gradient(180deg, var(--good-dim) 0%, var(--surface) 100%);
+      background: var(--good-dim);
     }
     .appstate.on .ind {
       background: var(--good);
       box-shadow: 0 0 0 3px var(--good-dim);
+    }
+    .appstate.armed {
+      color: var(--text-dim);
+    }
+    .appstate.armed .ind {
+      background: var(--dot-armed);
     }
     .appstate.off {
       color: var(--text-dim);
@@ -372,33 +452,47 @@
     }
     .appstate .recheck {
       margin-left: auto;
-      width: auto;
-      flex: 0 0 auto;
-      padding: 3px 9px;
-      font-size: 11.5px;
-      font-weight: 550;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      flex: 0 0 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       color: var(--text-dim);
-      background: var(--bg);
+      background: var(--btn-chip);
       border: 1px solid var(--line);
       border-radius: 6px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
       transition: all 0.15s ease;
       cursor: pointer;
+    }
+    .appstate .recheck svg {
+      display: block;
+      width: 12px;
+      height: 12px;
+      transition: transform 0.2s ease;
     }
     .appstate .recheck:hover:not(:disabled) {
       color: var(--text);
       border-color: var(--text-faint);
-      background: var(--surface-elevated);
+      background: var(--btn-chip-hover);
       transform: translateY(-0.5px);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
     }
     .appstate .recheck:active:not(:disabled) {
-      transform: scale(0.96);
+      transform: scale(0.94);
     }
     .appstate .recheck:disabled {
       opacity: 0.55;
       cursor: default;
       transform: none;
+    }
+    .appstate .recheck.spinning svg {
+      animation: recheck-spin 0.7s linear infinite;
+    }
+    @keyframes recheck-spin {
+      to { transform: rotate(360deg); }
     }
 
     /* ── the countdown out of the finished screen ───────────────────── */
@@ -416,7 +510,7 @@
       width: 100%;
     }
     .countdown b {
-      color: var(--brand);
+      color: var(--text);
       font-weight: 700;
     }
 
@@ -526,7 +620,7 @@
 <body>
   <div class="brand">
     <img src="icon32.png" alt="">
-    <span>Canvas Downloader</span>
+    <span>Canvas Downloader <span class="brand-sub">Connector</span></span>
   </div>
 
   <!--
@@ -539,7 +633,7 @@
     <span class="ind" id="appDot"></span>
     <span id="appText">Looking for Canvas Downloader</span>
     <button class="recheck" id="recheck" type="button"
-            title="Check again">Check again</button>
+            title="check again" aria-label="check again"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg></button>
   </div>
 
   <div class="steps" id="steps">
@@ -569,9 +663,20 @@
   <p class="countdown" id="countdown" hidden>Finishing up in
     <b id="countNum">5</b></p>
 
-  <p class="foot" id="foot">This extension never looks at any pages you
-    visit. It only checks whether Canvas Downloader is open on this
-    computer.</p>
+  <!--
+    THE OLD LINE WAS "This extension never looks at any pages you visit", and
+    it sat on the same screen that prints "You are currently on: <site>" - the
+    address of the tab, which `activeTab` gives us the moment the student opens
+    this popup. Chrome Web Store review compares the copy against the
+    permissions, and a student can compare it against the screen. Replaced on
+    the product owner's word, 2026-09-14, saying what actually happens.
+  -->
+  <div class="foot" id="foot" role="button" tabindex="0" title="Click to read full note">
+    <span class="foot-collapsed">This extension only works when you click it. ...</span>
+    <span class="foot-expanded">This extension only works when you click it. It
+      checks that this tab is your Canvas, then passes your Canvas login to the
+      Canvas Downloader app on this computer. Nothing is sent anywhere else.</span>
+  </div>
 
   <!--
     THE RESTING SCREEN, shown when there is nothing for the student to do: the

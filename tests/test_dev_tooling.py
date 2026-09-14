@@ -436,11 +436,32 @@ def test_the_checker_still_PASSES_that_check_with_one_listener():
 # start.py".
 # ---------------------------------------------------------------------------
 
+def _dev_calls() -> dict:
+    """Every call in dev.py, by name, with the line it is on.
+
+    **By AST, because a COMMENT satisfied the old substring test.** dev.py
+    explains itself directly above the calls - *"`start.py` calls
+    `session_start()` / `session_end()`; this file called neither"* - so
+    `'session_start()' in src` was true with the call deleted, and the mutant
+    that deletes it SURVIVED the 2026-09-14 pass. The prose that describes a
+    guard kept the guard green: the same trap this repo has now hit five times.
+    """
+    import ast
+    tree = ast.parse((_ROOT / 'dev.py').read_text(encoding='utf-8'))
+    found = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            name = getattr(node.func, 'id', None) or getattr(node.func, 'attr', None)
+            if name:
+                found.setdefault(name, []).append(node.lineno)
+    return found
+
+
 def test_dev_keeps_the_SAME_session_record_as_production():
-    src = (_ROOT / 'dev.py').read_text(encoding='utf-8')
-    for call in ('session_start()', 'session_end('):
-        assert call in src, (
-            f"dev.py never calls {call}, so `diagnostics/health.log` is not "
+    calls = _dev_calls()
+    for call in ('session_start', 'session_end'):
+        assert call in calls, (
+            f"dev.py never calls {call}(), so `diagnostics/health.log` is not "
             f"written under `python dev.py` at all and the whole session "
             f"lifecycle goes untested in the tool built to test production")
 
@@ -449,8 +470,12 @@ def test_dev_CLOSES_the_record_before_killing_the_children():
     """The record is what the NEXT launch reads to decide whether this session
     died. Written after the children are gone it describes a session that has
     already been taken apart - and `start.py` orders it the same way."""
-    src = (_ROOT / 'dev.py').read_text(encoding='utf-8')
-    assert src.index('session_end(') < src.index('_terminate_child_processes'), (
+    calls = _dev_calls()
+    assert 'session_end' in calls and '_terminate_child_processes' in calls, (
+        f"one of the two calls is gone entirely: {sorted(calls)[:0] or ''}"
+        f"session_end={calls.get('session_end')}, "
+        f"_terminate_child_processes={calls.get('_terminate_child_processes')}")
+    assert min(calls['session_end']) < min(calls['_terminate_child_processes']), (
         "dev.py kills its children before closing the session record")
 
 

@@ -152,6 +152,40 @@ def test_the_preflight_answers_for_an_extension_and_refuses_a_page(listening):
                  method='OPTIONS')[0] == 403
 
 
+def test_a_caller_with_NO_ORIGIN_cannot_hand_over_a_session(listening):
+    """Any program on the machine, not a web page - and it chose the address.
+
+    Measured 2026-09-14 against the real listener, before the fix: a `urllib`
+    POST with no Origin header was answered 200, and the payload the app would
+    have adopted was `{'host': 'evil.example', ...}`. `adopt_pending_handoff`
+    takes the Canvas address from the payload, so this is "sign the student's
+    app in to an account somebody else controls".
+
+    Requiring an extension origin was measured to cost the real extension
+    nothing: in Chromium 149, driven through its own `connect()`, it sent
+    `Origin: chrome-extension://<id>` on the ping, the preflight and the POST.
+    """
+    status, _b, _h = _call(listening, '/canvas-session',
+                           {'host': 'evil.example',
+                            'cookies': {'canvas_session': 'PLANTED'}})
+    assert status == 403, (
+        "a POST with no Origin was accepted, so any local program can sign "
+        "the app in to a Canvas address of its choosing")
+    assert handoff.result() is None
+    # Positive control, same request with the extension's origin.
+    assert _call(listening, '/canvas-session',
+                 {'host': 'x.instructure.com',
+                  'cookies': {'canvas_session': 'REAL'}}, origin=EXT)[0] == 200
+
+
+def test_the_PROBE_still_answers_a_caller_with_no_origin(listening):
+    """Deliberately permissive, and pinned so tightening the POST does not
+    quietly tighten this too: `/ping` says only whether a sign-in is being
+    asked for, and `scripts/check_handoff.py` is a caller with no origin."""
+    status, body, _h = _call(listening, '/ping')
+    assert status == 200 and body.get('app') == 'canvas-downloader'
+
+
 # ---------------------------------------------------------------------------
 # 2. Loopback only
 # ---------------------------------------------------------------------------
@@ -210,9 +244,143 @@ def test_an_expired_window_stops_accepting(listening, monkeypatch):
     monkeypatch.setattr(handoff, 'WINDOW_SECONDS', -1.0)
     handoff.start()                       # re-arms with the negative clock
     assert handoff.waiting() is False
+    # Two honest answers now: 409 if the request lands before the window
+    # watcher has closed the socket, or a refused connection after. Accepting
+    # a handoff is the only wrong one.
+    try:
+        status = _call(listening, '/canvas-session',
+                       {'host': 'x', 'cookies': {'canvas_session': 'A'}},
+                       origin=EXT)[0]
+    except urllib.error.URLError:
+        status = 'refused'
+    assert status in (409, 'refused'), status
+    assert handoff.result() is None
+
+
+def _wait_until(predicate, seconds: float) -> bool:
+    """Poll with a hard bound, so a regression FAILS rather than hangs."""
+    import time
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        if predicate():
+            return True
+        time.sleep(0.05)
+    return predicate()
+
+
+def _port_answers(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.settimeout(1)
+        return probe.connect_ex(('127.0.0.1', port)) == 0
+
+
+@pytest.fixture
+def short_window(monkeypatch):
+    """A listener whose window is a fraction of a second."""
+    handoff.stop()
+    monkeypatch.setattr(handoff, 'WINDOW_SECONDS', 0.4)
+    monkeypatch.setattr(handoff, '_WATCH_TICK_SECONDS', 0.05)
+    port = handoff.start()
+    if not port:
+        pytest.skip("the handoff ports are in use by another process")
+    yield port
+    handoff.stop()
+
+
+def test_the_SOCKET_closes_when_the_window_ends(short_window):
+    """Not just the window. Measured 2026-09-13: after the deadline `waiting()`
+    went False and the socket stayed bound, answering `/ping` for the life of
+    the process - while the privacy policy says it times out."""
+    assert _port_answers(short_window), "the listener never came up"
+    assert _wait_until(lambda: not _port_answers(short_window), 5.0), (
+        "the window ended and the socket is still open, so the listener is a "
+        "standing fixture on the student's machine")
+    assert handoff.port() == 0
+
+
+def test_a_credential_that_ARRIVED_survives_the_window_closing(short_window):
+    """The student's own sign-in landed just before the deadline. Closing the
+    socket is no reason to lose it before the app has collected it."""
+    assert _call(short_window, '/canvas-session',
+                 {'host': 'x.instructure.com',
+                  'cookies': {'canvas_session': 'THEIRS'}}, origin=EXT)[0] == 200
+    assert _wait_until(lambda: not _port_answers(short_window), 5.0)
+    assert handoff.has_payload() is True, (
+        "the window closing threw away a sign-in that had already arrived")
+    got = handoff.result()
+    assert got and got['cookies']['canvas_session'] == 'THEIRS'
+
+
+def test_pressing_the_button_again_after_the_window_closed_KEEPS_it(short_window,
+                                                                     monkeypatch):
+    """Same property as the re-arm test in this section, reached through the
+    OTHER branch of `start()`: once the watcher has closed the socket, a new
+    press binds afresh instead of re-arming, and must not clear the credential
+    on the way."""
+    assert _call(short_window, '/canvas-session',
+                 {'host': 'x.instructure.com',
+                  'cookies': {'canvas_session': 'THEIRS'}}, origin=EXT)[0] == 200
+    assert _wait_until(lambda: not _port_answers(short_window), 5.0)
+    monkeypatch.setattr(handoff, 'WINDOW_SECONDS', 60.0)
+    assert handoff.start(), "could not re-bind"
+    assert handoff.has_payload() is True, (
+        "a fresh bind after the window closed discarded the student's sign-in")
+
+
+def test_a_deliberate_STOP_forgets_an_uncollected_credential(listening):
+    """Logout and cancel go through `stop()`. A credential left behind would be
+    signed in with on the next press of the button - as whoever sent it."""
     assert _call(listening, '/canvas-session',
-                 {'host': 'x', 'cookies': {'canvas_session': 'A'}},
-                 origin=EXT)[0] == 409
+                 {'host': 'x.instructure.com',
+                  'cookies': {'canvas_session': 'LEFT'}}, origin=EXT)[0] == 200
+    handoff.stop()
+    assert handoff.has_payload() is False, (
+        "stop() kept a credential the student walked away from")
+
+
+def test_the_watcher_never_closes_a_NEWER_listener(monkeypatch):
+    """Stop, then start again with a long window: the first bind's watcher
+    must not close the second bind when the first deadline passes."""
+    handoff.stop()
+    monkeypatch.setattr(handoff, '_WATCH_TICK_SECONDS', 0.05)
+    monkeypatch.setattr(handoff, 'WINDOW_SECONDS', 0.3)
+    first = handoff.start()
+    if not first:
+        pytest.skip("the handoff ports are in use by another process")
+    try:
+        handoff.stop()
+        monkeypatch.setattr(handoff, 'WINDOW_SECONDS', 60.0)
+        second = handoff.start()
+        assert second
+        import time
+        time.sleep(0.8)                      # well past the first deadline
+        assert _port_answers(second), (
+            "the first listener's watcher closed a listener opened after it")
+        assert handoff.waiting() is True
+    finally:
+        handoff.stop()
+
+
+def test_a_STOPPED_listeners_watcher_goes_away(monkeypatch):
+    """One watcher thread per bind. If it did not notice its listener was
+    stopped, every button press would leave a thread behind for the life of the
+    app, each waking once a tick for nothing."""
+    import threading
+
+    def watchers():
+        return [t for t in threading.enumerate()
+                if t.name == 'canvas-handoff-window' and t.is_alive()]
+
+    handoff.stop()
+    monkeypatch.setattr(handoff, '_WATCH_TICK_SECONDS', 0.05)
+    monkeypatch.setattr(handoff, 'WINDOW_SECONDS', 60.0)
+    assert _wait_until(lambda: not watchers(), 3.0), "a watcher from an earlier test is still alive"
+    if not handoff.start():
+        pytest.skip("the handoff ports are in use by another process")
+    assert watchers(), "no watcher was started, so nothing closes the socket"
+    handoff.stop()
+    assert _wait_until(lambda: not watchers(), 3.0), (
+        "the watcher outlived the listener it was watching")
 
 
 def test_stopping_closes_the_socket(listening):
@@ -353,11 +521,44 @@ def test_the_extension_and_the_app_agree_on_the_PORTS():
             f"the app listens on {port} and the extension never tries it")
 
 
-def test_the_extension_and_the_app_agree_on_the_COOKIES():
+def test_the_extension_SENDS_every_cookie_the_sign_in_NEEDS():
+    """The session cookie IS the credential, under either of its two names.
+
+    Deliberately not "every cookie the app accepts": the app accepts one more
+    than the extension sends, and that asymmetry is the point of the test
+    below.
+    """
+    from core.canvas_auth import SESSION_COOKIE_NAMES
     js = _extension_js()
-    for name in handoff.ACCEPTED_COOKIES:
+    for name in SESSION_COOKIE_NAMES:
         assert name in js, (
-            f"the app accepts {name} and the extension never sends it")
+            f"the sign-in IS {name} and the extension never sends it")
+
+
+def test_the_extension_no_longer_reads_the_CSRF_COOKIE():
+    """It was read for a reason that was measured false.
+
+    `extension/README.md` justified it as saving the access-token upgrade a
+    round trip. It does not: `core.token_mint.mint` always makes one
+    `GET /profile/settings`, and MEASURED on real Canvas
+    (cbscanvas.instructure.com, 2026-09-15) the response to exactly that
+    request carries `set-cookie: _csrf_token=...; path=/; secure` - even when
+    the request already carried one. So the handed-over copy was never the one
+    used, and a third cookie was being read for nothing.
+
+    The app still ACCEPTS it, so an extension installed before that date keeps
+    working. Sending it is what stopped.
+    """
+    js = _extension_js()
+    wanted = js.split('const WANTED', 1)[1].split(';', 1)[0]
+    assert '_csrf_token' not in wanted, (
+        "the extension reads _csrf_token again. Canvas re-issues that cookie "
+        "on the one request the mint makes, so this is a third cookie taken "
+        "from the student for nothing - and one more thing for a Web Store "
+        "reviewer to weigh")
+    assert '_csrf_token' in handoff.ACCEPTED_COOKIES, (
+        "the app stopped accepting _csrf_token, which breaks every copy of "
+        "the extension installed before 2026-09-15")
 
 
 def test_the_extension_asks_for_NO_site_access_at_install_time():
@@ -922,7 +1123,7 @@ def test_the_popup_ALWAYS_SAYS_whether_the_app_is_running():
 
     assert 'id="appstate"' in html and 'id="appText"' in html
     assert 'showAppState' in popup
-    assert 'is not running' in popup, "nothing says the app is off"
+    assert 'Not running' in popup, "nothing says the app is off"
     assert 'ready to log in' in popup, "nothing says the app is ready"
 
     # It must be answered before the tab is even looked at, or the wrong-page
@@ -1234,6 +1435,70 @@ def test_the_countdown_is_a_NUMBER_not_an_animation():
     assert 'countdown' not in reduced and 'countNum' not in reduced, (
         "the countdown is hidden under reduced motion, so the student who "
         "most needs a non-animated signal gets none")
+
+
+def test_HIDDEN_means_hidden_for_every_element_popup_js_toggles():
+    """"Finishing up in 5" was on EVERY screen of the popup.
+
+    popup.js hides things with `el.hidden = true`, and the `hidden` attribute
+    is only a user-agent rule: any author rule that sets `display` beats it.
+    `.countdown { display: inline-block }` did, so the countdown that belongs
+    to the finished screen sat under the button on the guide, the failure
+    cards and the first screen a reviewer opens. Measured 2026-09-14 in
+    Chromium 149, both colour schemes.
+
+    A census rather than a check on the countdown: every element popup.js
+    toggles must be covered, and the next one somebody gives a `display`
+    would break the same way.
+    """
+    import re
+    js, html = _popup_js(), _popup_html()
+    toggled = set(re.findall(r'els\.(\w+)\.hidden\s*=', js))
+    assert {'count', 'go'} <= toggled, (
+        f"the scanner found {sorted(toggled)}; it has stopped matching popup.js "
+        "and would pass no matter what leaked")
+    css = html.split('<style>', 1)[1].split('</style>', 1)[0]
+    css = re.sub(r'/\*.*?\*/', '', css, flags=re.S)
+    rule = re.search(r'(?:^|[\s}])\[hidden\]\s*\{([^}]*)\}', css)
+    assert rule and re.search(r'display\s*:\s*none\s*!important', rule.group(1)), (
+        "popup.html has no `[hidden] { display: none !important }`, so any "
+        "element with its own `display` ignores `el.hidden = true` - which is "
+        "how the countdown ended up on every screen")
+
+
+def test_a_HIDDEN_element_really_takes_no_space_when_RENDERED():
+    """The same property in a real browser, because CSS precedence is exactly
+    the kind of thing a text search gets wrong. Skipped, loudly, where no
+    Chromium is installed."""
+    pw = pytest.importorskip("playwright.sync_api")
+    path = (_ROOT / 'extension' / 'popup.html').as_uri()
+    try:
+        with pw.sync_playwright() as p:
+            browser = p.chromium.launch()
+            try:
+                page = browser.new_page(viewport={'width': 340, 'height': 600})
+                page.goto(path)
+                shown = page.evaluate("""() => {
+                  const vis = (el) => el.getClientRects().length > 0;
+                  return {
+                    hiddenVisible: [...document.querySelectorAll('[hidden]')]
+                      .filter(vis).map(el => el.id || el.className),
+                    // Positive control: an element with no hidden attribute
+                    // must render, or "nothing is visible" proves nothing.
+                    controlVisible: vis(document.querySelector('#card')),
+                    countdownHidden: document.querySelector('#countdown').hidden,
+                  };
+                }""")
+            finally:
+                browser.close()
+    except Exception as e:                                  # noqa: BLE001
+        if 'Executable doesn' in str(e) or 'playwright install' in str(e):
+            pytest.skip(f"no Chromium for Playwright on this machine: {e}")
+        raise
+    assert shown['controlVisible'], "the control element did not render"
+    assert shown['countdownHidden'], "the countdown no longer starts hidden"
+    assert not shown['hiddenVisible'], (
+        f"elements marked hidden still render: {shown['hiddenVisible']}")
 
 
 def test_the_RESTING_screen_shows_no_guide_and_no_button():
@@ -1594,6 +1859,182 @@ def test_an_ARRIVED_handoff_has_a_state_of_its_own(notice):
     assert _one_root(html)
     assert 'Got it' in html
     assert 'kc-spin' in html, "the arrived state shows no sign of progress"
+
+
+class _Rerun(Exception):
+    """Stands in for Streamlit's rerun, so a test can see that one was asked for."""
+
+
+@pytest.fixture
+def poll(monkeypatch):
+    """Drive the REAL polling fragment's body, one tick per call.
+
+    `st` is replaced with a recorder and the listener's two questions are
+    answered by the test. Everything the fragment decides is its own code.
+    """
+    import ui.auth as auth
+    from core import handoff as _h
+
+    class _FakeSt:
+        def __init__(self):
+            self.session_state = {'handoff_waiting': True}
+            self.written = []
+
+        def markdown(self, html, **_kw):
+            self.written.append(html)
+
+        def rerun(self, **_kw):
+            raise _Rerun()
+
+    fake = _FakeSt()
+    monkeypatch.setattr(auth, 'st', fake)
+    answers = {'waiting': False, 'payload': False}
+    monkeypatch.setattr(_h, 'waiting', lambda: answers['waiting'])
+    monkeypatch.setattr(_h, 'has_payload', lambda: answers['payload'])
+
+    def tick():
+        before = len(fake.written)
+        try:
+            auth._browser_login_poll.__wrapped__()
+        except _Rerun:
+            return 'rerun', None
+        return 'painted', ''.join(fake.written[before:])
+
+    tick.st = fake
+    tick.answers = answers
+    return tick
+
+
+def test_the_GOT_IT_card_is_actually_REACHED_when_a_signin_arrives(poll):
+    """Finding 8 of the 2026-09-13 review: the card was defined, three tests
+    rendered it directly, and NO production caller ever asked for it. So the
+    student watched "One more click, over in Chrome" while the extension said
+    they were done. Driven through the real fragment, not the formatter."""
+    poll.answers.update(waiting=False, payload=True)
+    first, html = poll()
+    assert first == 'painted', (
+        "the tick that sees the arrival reruns straight away, so the old "
+        "waiting card stays up through the blocking check with Canvas")
+    assert 'Got it' in html, "the arrival tick does not show the arrived card"
+    second, _ = poll()
+    assert second == 'rerun', (
+        "the arrived card never hands over to the run that collects the "
+        "sign-in, so the student is left on 'Got it' for ever")
+
+
+def test_a_window_that_closed_EMPTY_goes_straight_to_the_verdict(poll):
+    """Positive control for the test above: with nothing arrived there is
+    nothing to announce, and waiting a tick would only delay the failure card."""
+    poll.answers.update(waiting=False, payload=False)
+    assert poll()[0] == 'rerun'
+
+
+def test_a_new_attempt_can_show_GOT_IT_again(poll):
+    """The arrived flag belongs to one attempt. Left behind, the second
+    attempt's arrival would skip its card."""
+    import inspect
+    import ui.auth as auth
+    for fn in (auth.begin_browser_handoff, auth.cancel_browser_handoff,
+               auth.adopt_pending_handoff):
+        assert "pop('handoff_arrived_shown'" in inspect.getsource(fn), (
+            f"{fn.__name__} does not clear the arrived flag, so a later "
+            f"attempt's arrival goes straight to the verdict with no card")
+
+
+@pytest.fixture
+def adopt(monkeypatch):
+    """Drive the REAL `adopt_pending_handoff` with Canvas's answer scripted.
+
+    Nothing reaches the network or the credential store: validation is
+    answered by the test, and the two writers are replaced by recorders.
+    """
+    import ui.auth as auth
+    from core import handoff as _h
+
+    class _FakeSt:
+        def __init__(self):
+            self.session_state = {'handoff_waiting': True,
+                                  'api_token': 'PREVIOUS'}
+
+    fake = _FakeSt()
+    monkeypatch.setattr(auth, 'st', fake)
+    writes = []
+    monkeypatch.setattr(auth, '_upgrade_to_access_token',
+                        lambda c: writes.append('upgrade') or False)
+    monkeypatch.setattr(auth, '_persist_browser_login',
+                        lambda c: writes.append('persist'))
+    monkeypatch.setattr(auth, 'cancel_browser_handoff',
+                        lambda: writes.append('cancel'))
+    monkeypatch.setattr(auth.CanvasManager, 'refreshed_credential',
+                        lambda self: None)
+    monkeypatch.setattr(_h, 'waiting', lambda: False)
+
+    def run(verdict):
+        payload = {'host': 'cbscanvas.instructure.com',
+                   'cookies': {'canvas_session': 'HANDED-OVER'}}
+        monkeypatch.setattr(_h, 'result', lambda: payload)
+        monkeypatch.setattr(auth.CanvasManager, 'validate_token',
+                            lambda self: verdict)
+        return auth.adopt_pending_handoff()
+
+    run.st = fake
+    run.writes = writes
+    return run
+
+
+def test_a_handover_Canvas_did_NOT_CONFIRM_is_neither_signed_in_nor_SAVED(adopt):
+    """Measured 2026-09-14 before the fix, by driving this same function: a
+    handover for an address that did not answer returned True, set
+    `is_authenticated`, and called both credential writers. The optimistic
+    restore trusts a credential "because it validated on a prior launch", and
+    a handover has no prior launch."""
+    signed = adopt((False, "We couldn't reach Canvas. Check your connection."))
+    state = adopt.st.session_state
+    assert signed is False and not state.get('is_authenticated'), (
+        "an unconfirmed handover was signed in")
+    assert 'persist' not in adopt.writes and 'upgrade' not in adopt.writes, (
+        f"an unconfirmed handover was written down: {adopt.writes}")
+    assert state.get('handoff_failed') == 'unconfirmed', (
+        "the student is not told that Canvas could not be reached")
+    assert state.get('api_token') == 'PREVIOUS', (
+        "the unconfirmed credential was left in the session in place of what "
+        "was there before")
+
+
+def test_a_handover_Canvas_CONFIRMS_is_signed_in_and_saved(adopt):
+    """The positive control. Without it the test above passes against code
+    that refuses every handover."""
+    signed = adopt((True, 'Logged in as: Student'))
+    assert signed is True and adopt.st.session_state.get('is_authenticated')
+    assert 'persist' in adopt.writes
+
+
+def test_a_handover_Canvas_REFUSES_keeps_its_own_card(adopt):
+    signed = adopt((False, 'Unauthorized - your Canvas sign-in is no longer valid'))
+    assert signed is False
+    assert adopt.st.session_state.get('handoff_failed') == 'canvas_refused'
+    assert not adopt.writes
+
+
+def test_the_OPTIMISTIC_restore_is_unchanged_for_a_SAVED_credential(monkeypatch):
+    """The fix is a switch for credentials that were never confirmed. A saved
+    one on an offline launch must still be trusted - that is the single most
+    important robustness property of the login path."""
+    import ui.auth as auth
+    from core.canvas_auth import from_cookies
+
+    class _FakeSt:
+        session_state = {}
+
+    monkeypatch.setattr(auth, 'st', _FakeSt())
+    monkeypatch.setattr(auth.CanvasManager, 'validate_token',
+                        lambda self: (False, "We couldn't reach Canvas."))
+    auth.st.session_state['api_url'] = 'https://cbscanvas.instructure.com'
+    verdict = auth._adopt_restored_credential(
+        from_cookies({'canvas_session': 'SAVED'},
+                     'https://cbscanvas.instructure.com'))
+    assert verdict == 'optimistic'
+    assert auth.st.session_state.get('is_authenticated') is True
 
 
 def test_a_NEW_attempt_clears_BOTH_previous_failures():

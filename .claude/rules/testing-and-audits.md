@@ -448,3 +448,32 @@ reports nothing, pointing the other way. Relabelled, tested, and killed.
 
 **Planting ONE mutant by hand is the same evidence as re-running the pass**
 when only one mutant's fate is in question, at 1/71th of the 33 minutes.
+
+### A COMMENT kept the guard green - sixth instance, and the score said 76/77
+
+`scripts/_mutate_handoff.py` came back **76/77 on 2026-09-14** after the
+extension pass. The survivor was not one of the new mutants (all 14 were
+caught): it was *"dev.py stops keeping the session record"*, which had been
+recorded as protected since 2026-09-13.
+
+`dev.py` explains itself directly above the calls it makes:
+
+    # `start.py` calls `session_start()` / `session_end()`; this file called
+
+and the test was `assert 'session_start()' in src`. **The comment satisfies it
+with the call deleted**, so the mutant that removes the call - the exact defect
+the section was written for - passed. Its sibling ordering test compared
+`src.index('session_end(')` against `src.index('_terminate_child_processes')`,
+i.e. it could be satisfied by that same comment too.
+
+- **Both now read the AST** (`_dev_calls()` returns every call name with its
+  line number), and the ordering test compares the first LINE of each call.
+- **Verified by hand-planting that one mutant**: CAUGHT, and the file restored
+  byte-identical. That is the technique this file already records - planting one
+  mutant is the same evidence as re-running the pass when only one mutant's fate
+  is in question, at 1/77th of the time.
+- This is the SIXTH time a prose line has kept a guard green here (three in the
+  `browser_login` pass, one in the popup's `signedIn` guard, one in the bundle
+  bytecode set). The pattern is always the same: the code is described in
+  English next to itself, and the test greps for the description. **Assert the
+  call, not the characters** - and where a test must grep, strip comments first.

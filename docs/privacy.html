@@ -645,17 +645,26 @@
         <li><strong>What it reads, and when.</strong> Only when you click it, and only on the tab you clicked it on: the
           sign-in your browser is already holding for that Canvas site. Nothing else on the page, and nothing on any
           other page.</li>
-        <li><strong>It cannot see your browsing.</strong> It has no access to your tabs, no history permission and no
-          script running on any page. Chrome does not tell it which sites you visit, and it holds no access to any site
-          until you grant it for your own sign-in.</li>
+        <li><strong>It cannot see your browsing.</strong> It has no history permission and no script running on any
+          page, and it holds no access to any site until you grant it for your own sign-in. The one thing it reads
+          about a page is the address of the tab you open it on, at the moment you open it, so it can tell you whether
+          you are on your Canvas before it offers to sign you in. Chrome does not tell it which other sites you visit,
+          and nothing about any page is stored or sent anywhere.</li>
+        <li><strong>What it remembers.</strong> Until you close your browser, it remembers that a sign-in succeeded, so
+          it can say so instead of walking you through the steps again. That is held in the browser's own
+          session storage, is never written to disk, and goes when the browser closes.</li>
+        <li><strong>The toolbar mark.</strong> Once a minute it asks the app on your own computer one question - is
+          Canvas Downloader waiting for a sign-in - so the icon can show a dot when clicking it would do something.
+          That question goes to <code>127.0.0.1</code> and nowhere else, and it is not a question about you.</li>
         <li><strong>Where it sends it.</strong> To <code>127.0.0.1</code>, which is your own computer and nowhere else.
           The request cannot leave the machine. Nothing is sent to the developer, and there is no server involved.</li>
         <li><strong>The app only listens when you ask.</strong> The connection opens when you press <em>Use the Canvas
-          tab in my browser</em> in the app, it accepts one sign-in and then stops accepting, and it stops accepting on
-          its own after a few minutes if nothing arrives. It answers only a browser extension, never a web page, and it
-          never sends anything back.</li>
+          tab in my browser</em> in the app, it accepts one sign-in and then closes, and it closes on its own after a
+          few minutes if nothing arrives. It answers only a browser extension, never a web page and never another
+          program on your computer, and it never sends anything back.</li>
         <li><strong>You are shown whose account it is.</strong> The app checks the sign-in with Canvas and then puts the
-          name on screen, so a sign-in that is not yours is visible rather than silent.</li>
+          name on screen, so a sign-in that is not yours is visible rather than silent. A sign-in it cannot check with
+          Canvas is not kept at all.</li>
       </ul>
 
       <h2>This website</h2>

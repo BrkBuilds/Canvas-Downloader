@@ -39,8 +39,23 @@
 /** Ports the app listens on. Mirrors core/handoff.py PORTS; a test pins them. */
 const PORTS = [53127, 53128, 53129];
 
-/** The only cookies ever read. Mirrors core/handoff.py ACCEPTED_COOKIES. */
-const WANTED = ["canvas_session", "_normandy_session", "_csrf_token"];
+/**
+ * The only cookies ever read: the Canvas sign-in itself, and nothing else.
+ *
+ * `_csrf_token` USED TO BE HERE and was removed on 2026-09-15, because the
+ * reason for reading it turned out not to be true. The app needs a CSRF token
+ * to create the long-lived key, but it fetches its own: `core.token_mint.mint`
+ * makes one `GET /profile/settings` and reads the token out of THAT response.
+ * Measured on real Canvas (cbscanvas.instructure.com) the same day - the
+ * response to exactly that request carries
+ * `set-cookie: _csrf_token=...; path=/; secure`, even when the request already
+ * carried one. So the copy this extension handed over was never used, and
+ * reading it was a third cookie taken for nothing.
+ *
+ * The app still ACCEPTS it, so a copy of this extension installed before today
+ * keeps working; it simply is not sent any more.
+ */
+const WANTED = ["canvas_session", "_normandy_session"];
 const SESSION = ["canvas_session", "_normandy_session"];
 
 /** How often to ask whether the app is waiting, so the icon can say so. */

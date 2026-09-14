@@ -145,3 +145,6 @@ marketing/search-data*
 # the product, not the product marketing register, and nothing tracked may
 # depend on it - same reasoning as marketing/ above.
 career/
+
+/packaging/chrome-web-store/screens/light
+/packaging/chrome-web-store/screens/dark

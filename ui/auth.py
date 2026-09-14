@@ -1451,8 +1451,9 @@ def _adopt_restored_token(token: str) -> None:
     _adopt_restored_credential(from_token(token))
 
 
-def _adopt_restored_credential(credential: CanvasCredential) -> None:
-    """Validate a credential recovered from the store and sign in.
+def _adopt_restored_credential(credential: CanvasCredential, *,
+                               optimistic: bool = True) -> str:
+    """Validate a credential and sign in. Answers the verdict.
 
     Extracted so every way a saved credential can arrive - the ordinary
     non-prompting read during init, a macOS Keychain unlock that resolved
@@ -1465,6 +1466,21 @@ def _adopt_restored_credential(credential: CanvasCredential) -> None:
     A token and a browser session are treated identically here on purpose:
     from this point down, nothing in the app behaves differently for one or
     the other.
+
+    **`optimistic=False` is for a credential that has NEVER been confirmed.**
+    The optimistic branch trusts a credential "because it validated on a prior
+    launch", and a sign-in handed over by the browser extension has no prior
+    launch. Measured 2026-09-14 by driving the real `adopt_pending_handoff`:
+    a handover for an address that did not answer was signed in AND written to
+    the credential store, with Canvas never having seen it - and with the
+    listener then accepting a POST that carried no Origin, the address was
+    anybody's choice. So that caller asks for a confirmed verdict, and a
+    network failure is reported rather than trusted. The rule still lives
+    here, once; the caller only says which kind of credential it holds.
+
+    Returns ``'ok'`` (Canvas confirmed it), ``'refused'`` (Canvas rejected it),
+    ``'optimistic'`` (not confirmed, signed in anyway) or ``'unconfirmed'``
+    (not confirmed, and *optimistic* was False, so NOT signed in).
     """
     # A token stays a plain `str` in session state, exactly as it always has.
     # Only a browser login puts the credential OBJECT there. That keeps the
@@ -1504,7 +1520,7 @@ def _adopt_restored_credential(credential: CanvasCredential) -> None:
         # so the SAME run goes on to render the signed-in
         # page. The rerun this replaced was a whole wasted
         # script run against a blank window.
-        return
+        return 'ok'
     # The saved token could not be CONFIRMED this launch.
     # Only a genuine AUTH rejection (expired/revoked/401)
     # should drop the user to the login page - that is the
@@ -1529,12 +1545,19 @@ def _adopt_restored_credential(credential: CanvasCredential) -> None:
     if is_auth_error(msg):
         logger.info("Saved token rejected (auth error) - "
                     "routing to login for a fresh token.")
-    else:
-        st.session_state['is_authenticated'] = True
-        logger.info(
-            "Saved session restored optimistically; the "
-            "token could not be confirmed this launch due "
-            "to a non-auth (network) error: %s", msg)
+        return 'refused'
+    if not optimistic:
+        # Nothing has ever confirmed this credential, so there is no earlier
+        # launch to lean on. See the docstring for the measurement.
+        logger.info("A new Canvas sign-in could not be confirmed (non-auth "
+                    "error), so it was not adopted: %s", msg)
+        return 'unconfirmed'
+    st.session_state['is_authenticated'] = True
+    logger.info(
+        "Saved session restored optimistically; the "
+        "token could not be confirmed this launch due "
+        "to a non-auth (network) error: %s", msg)
+    return 'optimistic'
 
 
 def adopt_pending_keychain_unlock() -> bool:
@@ -1826,6 +1849,7 @@ def begin_browser_handoff(api_url: str = '') -> int:
     # "Canvas sign-in did not finish".
     st.session_state.pop('handoff_failed', None)
     st.session_state.pop('browser_login_failed', None)
+    st.session_state.pop('handoff_arrived_shown', None)
     port = handoff.start()
     st.session_state['handoff_waiting'] = bool(port)
     if not port:
@@ -1849,6 +1873,7 @@ def cancel_browser_handoff() -> None:
     # gone - would tell the student their Canvas had been opened for them when
     # nothing had. Same rule as every other key here: the attempt owns it.
     st.session_state.pop('handoff_opened_tab', None)
+    st.session_state.pop('handoff_arrived_shown', None)
 
 
 def adopt_pending_handoff() -> bool:
@@ -1893,8 +1918,16 @@ def adopt_pending_handoff() -> bool:
     # second opinion here is how the three would come to disagree.
     st.session_state['api_url'] = api_url
     credential = from_cookies(cookies, api_url)
+    # The attempt is being decided now, so the "Got it" state it armed is over
+    # whichever way this goes.
+    st.session_state.pop('handoff_arrived_shown', None)
+    _had_token = 'api_token' in st.session_state
+    _prev_token = st.session_state.get('api_token')
     try:
-        _adopt_restored_credential(credential)
+        # NOT optimistic. A handed-over sign-in has never been confirmed, so a
+        # Canvas that does not answer is a reason to say so, not to trust it.
+        # See `_adopt_restored_credential`.
+        _verdict = _adopt_restored_credential(credential, optimistic=False)
     except Exception:                                              # noqa: BLE001
         logger.warning("Could not adopt the handed-over Canvas session",
                        exc_info=True)
@@ -1903,10 +1936,22 @@ def adopt_pending_handoff() -> bool:
         return False
 
     if not st.session_state.get('is_authenticated'):
-        # Canvas refused it. Almost always because the tab was signed out, or
-        # signed in to a different Canvas than the one it looked like.
+        # The handed-over credential went into `api_token` before it was
+        # checked. Put back whatever was there (a reconnect can be holding
+        # one), so a sign-in Canvas did not confirm is not left behind.
+        if _had_token:
+            st.session_state['api_token'] = _prev_token
+        else:
+            st.session_state.pop('api_token', None)
         st.session_state.pop('handoff_waiting', None)
-        st.session_state['handoff_failed'] = 'canvas_refused'
+        if _verdict == 'unconfirmed':
+            # Canvas did not answer at all - offline, a captive portal, or an
+            # address that is not a Canvas. Nothing was saved.
+            st.session_state['handoff_failed'] = 'unconfirmed'
+        else:
+            # Canvas refused it. Almost always because the tab was signed
+            # out, or signed in to a different Canvas than it looked like.
+            st.session_state['handoff_failed'] = 'canvas_refused'
         return False
 
     st.session_state['url_verified'] = True
@@ -2521,6 +2566,13 @@ _HANDOFF_FAILURES: dict[str, tuple[str, str]] = {
         "Canvas did not accept that sign-in",
         "Open Canvas in Chrome, check that you are really signed in there, "
         "then try again."),
+    # Canvas never answered, so the sign-in could not be checked and nothing
+    # was kept. Its own card because the fix is different: the student's
+    # Canvas tab is fine, and what needs checking is the connection.
+    'unconfirmed': (
+        "Could not reach Canvas to check that sign-in",
+        "Nothing was saved. Check that you are online, then try again. If it "
+        "keeps happening, use the blue <b>Sign in</b> button below instead."),
     'empty_tab': (
         "That tab was not signed in to Canvas",
         "Sign in to Canvas in that tab first, then click the <b>Canvas "
@@ -2678,11 +2730,25 @@ def _browser_login_poll() -> None:
     if st.session_state.get('handoff_waiting'):
         if handoff.waiting():
             _state = 'handoff'
+        elif (handoff.has_payload()
+              and not st.session_state.get('handoff_arrived_shown')):
+            # ARRIVED: say so on THIS tick, collect on the NEXT. The card
+            # existed from 2026-09-13 and no caller ever asked for it - three
+            # tests rendered it directly and passed against a state the app
+            # could not reach. Asking for the rerun here instead would leave
+            # "One more click, over in Chrome" on screen while the next run
+            # blocks on checking the sign-in with Canvas, because a rerun does
+            # not replace the old screen until it finishes - which is exactly
+            # the extension-says-done, app-says-waiting contradiction. Arm the
+            # action, fire it a run later.
+            st.session_state['handoff_arrived_shown'] = True
+            _state = 'handoff_arrived'
         else:
-            # Arrived, or the window closed. Either way a full run decides:
-            # `adopt_pending_handoff` signs the user in or records why not,
-            # and it is the ONLY thing that can collect the credential - which
-            # is why this fragment has to still be on screen to ask for it.
+            # Collected next, or the window closed with nothing in it. Either
+            # way a full run decides: `adopt_pending_handoff` signs the user in
+            # or records why not, and it is the ONLY thing that can collect
+            # the credential - which is why this fragment has to still be on
+            # screen to ask for it.
             st.rerun(scope="app")
     else:
         status = browser_login.status()
