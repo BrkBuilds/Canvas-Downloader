@@ -33,7 +33,9 @@ from shared.components import inject_material_icons_font
 from core.state_registry import (
     ensure_download_state,
 )
-from core.cancellation import cancel_download, is_download_cancelled, reset_download_cancel
+from core.cancellation import (cancel_download, is_download_cancelled, reset_download_cancel,
+                               blocking_run, blocking_run_completed,
+                               wait_for_other_blocking_run)
 from engine.estimation import panopto_estimators, stepwise_estimator, transfer_estimator
 from engine.progress_dashboard import (
     DashboardPlaceholders, render_full_dashboard, render_active_file,
@@ -568,7 +570,7 @@ components.html("""<script>
         'div[class*="st-key-nav_btn_sync"]',      // sidebar: Sync Course Folders
         'div[class*="st-key-nav_btn_logout"]',    // sidebar: Logout
         'div[class*="st-key-login_submit_btn"]',  // login submission button
-        'div[class*="st-key-btn_analyze_sync"]',  // Analyze, Review & Sync
+        'div[class*="st-key-btn_analyze_sync"]',  // Sync Review
         'div[class*="st-key-btn_quick_sync"]',    // Quick Sync All
         'div[class*="st-key-btn_custom_download"]',// Course Selector: Custom Download
         'div[class*="st-key-btn_quick_download"]', // Course Selector: Quick Download
@@ -1050,16 +1052,32 @@ if not st.session_state['is_authenticated']:
 # new logical day (day rolls at 4am), if the user enabled daily auto-sync and
 # curated at least one course, kick off a headless Quick Sync over that set. The
 # run surfaces on the Today page as a slim progress bar (see core.auto_sync).
+#
+# ONLY ON A SESSION CANVAS HAS CONFIRMED THIS LAUNCH (owner report 2026-09-07
+# #4). A restore that could not reach Canvas signs the user in OPTIMISTICALLY,
+# which is right for the app and wrong for a headless run that fetches every
+# course at once: a laptop still joining wifi, and a revoked token, each ended
+# in one amber notice per course. Unconfirmed, the check is NOT consumed -
+# `poll_session_confirmation` re-asks Canvas off the script thread, and the
+# first run after it answers yes starts the sync, so a late wifi still gets
+# today's files. A refusal routes to sign-in instead.
 if not st.session_state.get('_auto_sync_checked'):
-    st.session_state['_auto_sync_checked'] = True
     # Only on a clean entry point - never interrupt an in-progress download/sync
     # that a query-param restore may have landed us in.
-    if not st.session_state.get('download_status'):
+    if st.session_state.get('download_status'):
+        st.session_state['_auto_sync_checked'] = True
+    else:
         try:
             from core.auto_sync import should_auto_sync, start_today_sync
-            if should_auto_sync():
-                start_today_sync(is_auto=True)  # sets state + st.rerun(); never falls through
+            if not should_auto_sync():
+                st.session_state['_auto_sync_checked'] = True
+            else:
+                from ui.auth import poll_session_confirmation
+                if poll_session_confirmation():
+                    st.session_state['_auto_sync_checked'] = True
+                    start_today_sync(is_auto=True)  # sets state + st.rerun(); never falls through
         except Exception:
+            st.session_state['_auto_sync_checked'] = True
             logger.warning("Daily auto-sync launch check failed", exc_info=True)
 
 # (The Panopto transcription-config dialog and the global Settings dialog are
@@ -1344,13 +1362,16 @@ with st.container():
                         'download_rubrics': st.session_state.get('persistent_dl_rubrics', False),
                         'isolate_secondary_content': st.session_state.get('persistent_dl_isolate_secondary', True),
                     }
-                    course_files, _, _module_map = cm.get_course_files_metadata(
-                        course,
-                        progress_callback=analysis_progress_hook,
-                        secondary_content_settings=_scan_secondary,
-                        is_scanning_phase=True,
-                        download_mode=st.session_state.get('download_mode'),
-                    )
+                    # One scan per session at a time - see core.cancellation.
+                    wait_for_other_blocking_run(lambda: _paint_scan(f"Connecting to {course.name}…"))
+                    with blocking_run('scan', unit=idx):
+                        course_files, _, _module_map = cm.get_course_files_metadata(
+                            course,
+                            progress_callback=analysis_progress_hook,
+                            secondary_content_settings=_scan_secondary,
+                            is_scanning_phase=True,
+                            download_mode=st.session_state.get('download_mode'),
+                        )
                     
                     # Apply the folder's file filter, through the SAME two
                     # primitives the download engine and the sync analyzer use.
@@ -1728,18 +1749,33 @@ with st.container():
                     _app_log(f"Post-processing: [{', '.join(_pp_active) or 'none'}]", _dl_dbg)
                     _app_log(f"Secondary content: [{', '.join(_sec_active) or 'none'}]", _dl_dbg)
 
+                # A reconnected run must not download this course AGAIN while the
+                # run it replaced is still inside it - see core.cancellation's
+                # "One blocking run per session". Always rendered (one element,
+                # every run), so the page's element tree does not change shape.
+                _dl_heartbeat = st.empty()
+                _dl_done_by_other_run = (
+                    wait_for_other_blocking_run(lambda: _dl_heartbeat.markdown(""))
+                    and blocking_run_completed('download', current_idx))
                 try:
-                    asyncio.run(cm.download_course_async(
-                        course,
-                        st.session_state['download_mode'],
-                        st.session_state['download_path'],
-                        progress_callback=update_ui,
-                        check_cancellation=check_cancellation,
-                        file_filter=st.session_state['file_filter'],
-                        debug_mode=st.session_state.get('debug_mode', False),
-                        post_processing_settings=_pp_settings,
-                        secondary_content_settings=_secondary_settings
-                    ))
+                    # The replaced run finished this course and was stopped before
+                    # it could say so: carry on with ITS bookkeeping below instead
+                    # of downloading the course a second time. If it did NOT finish
+                    # (stopped mid-course), the course runs again - skip-existing
+                    # makes that a resume.
+                    if not _dl_done_by_other_run:
+                        with blocking_run('download', unit=current_idx):
+                            asyncio.run(cm.download_course_async(
+                                course,
+                                st.session_state['download_mode'],
+                                st.session_state['download_path'],
+                                progress_callback=update_ui,
+                                check_cancellation=check_cancellation,
+                                file_filter=st.session_state['file_filter'],
+                                debug_mode=st.session_state.get('debug_mode', False),
+                                post_processing_settings=_pp_settings,
+                                secondary_content_settings=_secondary_settings
+                            ))
                 except Exception as _dl_crash:
                     logger.error(f"Download engine crashed for '{course.name}': {_dl_crash}", exc_info=True)
                     _crash_err = DownloadError(
@@ -2135,15 +2171,18 @@ with st.container():
                 render_dashboard(course.name)
                 
                 try:
-                    dropped_errors = asyncio.run(cm.download_isolated_batch_async(
-                        course=course,
-                        error_queue=errors,
-                        save_dir=st.session_state['download_path'],
-                        progress_callback=lambda msg, progress_type='log', **kw: update_ui(msg, progress_type, course_name=kw.pop('course_name', course.name), **kw),
-                        check_cancellation=check_cancellation,
-                        debug_mode=st.session_state.get('debug_mode', False),
-                        mb_tracker=st.session_state['retry_mb_tracker']
-                    ))
+                    # One retry pass per session at a time - see core.cancellation.
+                    wait_for_other_blocking_run(lambda: render_dashboard(course.name))
+                    with blocking_run('retry', unit=course_name):
+                        dropped_errors = asyncio.run(cm.download_isolated_batch_async(
+                            course=course,
+                            error_queue=errors,
+                            save_dir=st.session_state['download_path'],
+                            progress_callback=lambda msg, progress_type='log', **kw: update_ui(msg, progress_type, course_name=kw.pop('course_name', course.name), **kw),
+                            check_cancellation=check_cancellation,
+                            debug_mode=st.session_state.get('debug_mode', False),
+                            mb_tracker=st.session_state['retry_mb_tracker']
+                        ))
                 except Exception as _retry_crash:
                     logger.error(f"Isolated retry engine crashed for '{course.name}': {_retry_crash}", exc_info=True)
                     update_ui(f"Retry engine crashed: {_retry_crash}", progress_type='log', course_name=course.name)
@@ -2690,13 +2729,17 @@ with st.container():
                 _pan_max_bytes = None
 
             try:
-                _pan_summary = run_panopto_batch(
-                    cm, _pan_targets,
-                    settings=pan_settings,
-                    progress=pan_progress,
-                    is_cancelled=check_cancellation,
-                    max_file_size_bytes=_pan_max_bytes,
-                )
+                # One Panopto pass per session at a time - see core.cancellation.
+                _pan_heartbeat = st.empty()
+                wait_for_other_blocking_run(lambda: _pan_heartbeat.markdown(""))
+                with blocking_run('panopto'):
+                    _pan_summary = run_panopto_batch(
+                        cm, _pan_targets,
+                        settings=pan_settings,
+                        progress=pan_progress,
+                        is_cancelled=check_cancellation,
+                        max_file_size_bytes=_pan_max_bytes,
+                    )
                 st.session_state['panopto_summary'] = _pan_summary
             except (KeyboardInterrupt, SystemExit):
                 raise

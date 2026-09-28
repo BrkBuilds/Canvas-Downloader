@@ -109,6 +109,12 @@ whether Chrome has granted the site, and what Canvas answered. Every popup
 defect found on 2026-09-14 came off that sheet and none came out of the source,
 including a countdown that was rendering on every single screen.
 
+**Store screenshots and promo tiles** are rendered by
+`python scripts/build_extension_store_graphics.py` into
+`packaging/chrome-web-store/assets/`. It composes the 5 required/recommended
+1280x800 screenshots, 440x280 small promo tile, and 1400x560 marquee promo
+banner from the real popup screens.
+
 **`canvas-hosts.js` is generated.** Run `python scripts/build_extension_hosts.py`
 after the institution list changes; `--check` fails when it is stale, and a
 test runs that check. It carries only the 100 Canvas hosts that a

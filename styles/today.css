@@ -49,6 +49,20 @@ div.st-key-today_subtitle_help_row [data-testid="stColumn"] {
     padding: 0 !important;
 }
 
+/* THE SUBTITLE MUST BE ALLOWED TO WRAP. With `flex: 0 0 auto` above, the text
+   column sized itself to the whole sentence on ONE line and could not shrink,
+   so the sentence ran off the right edge of the window - measured at 1512px
+   as well as 1312px, i.e. on an ordinary screen, not only a scaled one - and
+   Streamlit's row wrap pushed Help onto a line of its own. The text column
+   shrinks now and the row does not wrap, so a sentence that fits keeps Help
+   right after it and one that does not wraps with Help beside it. */
+div.st-key-today_subtitle_help_row [data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap !important;
+}
+div.st-key-today_subtitle_help_row [data-testid="stColumn"]:first-child {
+    flex: 0 1 auto !important;
+}
+
 div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_btn"] {
     margin-bottom: 0 !important;
     margin-top: 0 !important;

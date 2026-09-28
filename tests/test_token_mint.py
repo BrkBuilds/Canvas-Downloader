@@ -506,7 +506,8 @@ def _fn(name):
                 if isinstance(f, ast.FunctionDef) and f.name == name)
 
 
-def _upgrade_with(monkeypatch, result, *, store_ok=True, config=None):
+def _upgrade_with(monkeypatch, result, *, store_ok=True, config=None,
+                  enabled=True):
     """Drive `_upgrade_to_access_token` with a fixed mint outcome.
 
     *config* is what the settings file ALREADY holds. It defaults to empty,
@@ -527,7 +528,7 @@ def _upgrade_with(monkeypatch, result, *, store_ok=True, config=None):
     stored = dict(config or {})
     monkeypatch.setattr(auth, 'st', types.SimpleNamespace(
         session_state=ss, toast=lambda *a, **k: None))
-    monkeypatch.setattr(auth, '_token_upgrade_enabled', lambda *a, **k: True)
+    monkeypatch.setattr(auth, '_token_upgrade_enabled', lambda *a, **k: enabled)
     monkeypatch.setattr(auth, 'read_config_for_update', lambda: (dict(stored), True))
     monkeypatch.setattr(auth, 'write_config_atomically',
                         lambda cfg: written.update(cfg) or True)
@@ -552,6 +553,62 @@ def test_a_successful_upgrade_switches_the_app_to_the_token(monkeypatch):
     assert deleted == ['https://x.instructure.com'], (
         "the superseded session cookie was left on disk, which is a "
         "credential the user can neither see nor revoke")
+
+
+# ── The upgrade's OUTCOME is written down (2026-09-26) ───────────────────────
+# A packaged build keeps no log of a sign-in: records go to stderr, and
+# debug_log.txt exists only for a download run. So when a student at a school
+# whose Canvas offers "+ New Access Token" signed in twice and no token
+# appeared, nothing on her Mac could say why - only a 403 was ever recorded.
+# These pin that EVERY branch leaves its answer in the settings file.
+
+@pytest.mark.parametrize('reason, detail', [
+    (token_mint.BLOCKED, 'HTTP 403'),
+    (token_mint.NEEDS_FRESH_LOGIN, 'HTTP 302'),
+    (token_mint.CSRF_REJECTED, 'HTTP 422: {"errors":"invalid"}'),
+    (token_mint.NETWORK, 'ConnectionError()'),
+    (token_mint.UNEXPECTED, 'HTTP 400: expires_at too far'),
+])
+def test_a_FAILED_upgrade_writes_down_why(monkeypatch, reason, detail):
+    ok, _ss, written, _deleted = _upgrade_with(
+        monkeypatch, token_mint.MintResult(reason=reason, detail=detail))
+    assert ok is False
+    last = written.get('token_upgrade_last')
+    assert last, f"a {reason} upgrade left no trace in the settings file"
+    assert last['reason'] == reason
+    assert last['detail'] == detail
+    assert last['host'] == 'x.instructure.com'
+    assert last['at'], "without a time it cannot be matched to a sign-in"
+
+
+def test_an_upgrade_that_was_NEVER_TRIED_says_so(monkeypatch):
+    """Never asked and asked-and-failed look identical in Canvas."""
+    ok, _ss, written, _deleted = _upgrade_with(
+        monkeypatch, token_mint.MintResult(reason=token_mint.OK, token='T'),
+        enabled=False)
+    assert ok is False
+    assert written['token_upgrade_last']['reason'] == 'not_attempted'
+
+
+def test_a_minted_but_UNSTORED_token_is_named_as_such(monkeypatch):
+    """The key EXISTS in the student's Canvas here, unlike every other failure."""
+    ok, _ss, written, _deleted = _upgrade_with(
+        monkeypatch,
+        token_mint.MintResult(token='T-123', token_id='9', reason=token_mint.OK),
+        store_ok=False)
+    assert ok is False
+    assert written['token_upgrade_last']['reason'] == 'minted_but_not_stored'
+    assert '9' in written['token_upgrade_last']['detail']
+
+
+def test_a_SUCCESSFUL_upgrade_is_recorded_without_the_token(monkeypatch):
+    ok, _ss, written, _deleted = _upgrade_with(monkeypatch, token_mint.MintResult(
+        token='T-SECRET-123', token_id='9', expires_at=_iso(119),
+        reason=token_mint.OK))
+    assert ok is True
+    assert written['token_upgrade_last']['reason'] == 'ok'
+    assert 'T-SECRET-123' not in json.dumps(written['token_upgrade_last']), (
+        "the outcome record carried the token value into a plain-text file")
 
 
 def test_a_token_that_cannot_be_STORED_is_not_adopted(monkeypatch):

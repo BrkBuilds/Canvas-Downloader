@@ -117,9 +117,9 @@ running record.</p>
     <tr><td>Popup footer copy</td>
       <td>"This extension never looks at any pages you visit" while the same popup shows "You are currently on: www.google.com". A reviewer comparing copy against permissions will notice.</td>
       <td><span class="tag you">Your wording</span></td></tr>
-    <tr><td>Screenshots and small promo tile</td>
-      <td>At least one 1280x800 screenshot and one 440x280 tile are required. Waiting on the popup redesign; <code>python scripts/popup_gallery.py</code> re-renders every screen into <code>screens/</code> to compose from.</td>
-      <td><span class="tag you">After the redesign</span></td></tr>
+    <tr><td>Screenshots and promo tiles</td>
+      <td>All 5 screenshots (1280x800), small promo tile (440x280), and marquee banner (1400x560) generated into <code>assets/</code> via <code>python scripts/build_extension_store_graphics.py</code>.</td>
+      <td><span class="tag good">Generated</span></td></tr>
     <tr><td>The popup's own design</td>
       <td>Being reworked. <code>screens/</code> holds all twelve states, light and dark, as they are today.</td>
       <td><span class="tag you">Yours</span></td></tr>
@@ -236,12 +236,19 @@ Canvas Downloader is open source (GPL-3.0). Canvas is a trademark of Instructure
 
 <div class="field"><p class="name">Graphics</p>
 <p class="paste">Store icon: assets/store_icon_128.png (96x96 of artwork, 16px transparent padding)
-Screenshots: at least 1, up to 5, 1280x800 (preferred) or 640x400
-Small promo tile: 440x280 PNG or JPEG (required)
-Marquee promo tile: 1400x560 (optional)</p>
-<p class="why">Google's guidance is a 96x96 icon with 16px of transparent padding on each side. The
-listing-tab doc also mentions a YouTube video; if the dashboard marks it required, the existing
-how-to video is about access tokens and will not do.</p></div>
+Screenshots (1280x800 PNG in assets/):
+- screenshot_1_signin_1280x800.png   (One-click sign in from active tab)
+- screenshot_2_guidance_1280x800.png (Smart status detection and 3-step guide)
+- screenshot_3_handoff_1280x800.png  (Desktop app handoff and course load)
+- screenshot_4_privacy_1280x800.png  (Privacy-first localhost architecture)
+- screenshot_5_themes_1280x800.png   (Light and dark mode support)
+
+Promo tiles (in assets/):
+- promo_tile_440x280.png             (Required small promo tile)
+- marquee_promo_1400x560.png         (Featured marquee banner)
+
+Re-render anytime with: python scripts/build_extension_store_graphics.py</p>
+<p class="why">All 5 screenshots meet Chrome Web Store's 1280x800 requirement with real UI captures. The 440x280 small promo tile is ready to upload.</p></div>
 
 <h2>5. Privacy tab</h2>
 

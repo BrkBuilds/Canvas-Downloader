@@ -6,7 +6,7 @@ others does not merely disappear: Streamlit rewrites each host by index, and the
 sheet that used to sit there is replaced by its neighbour's.
 
 MEASURED IN THE REAL APP, 2026-08-20, by sampling that list on every animation
-frame across a real "Analyze, Review & Sync" on the sync page:
+frame across a real "Sync Review" on the sync page:
 
     at rest      [0] cancel-button  [1] sidebar nav-active  [2] <277KB main
                  sheet>  [3] hub-button  [4] main-column buttons

@@ -452,6 +452,38 @@ def render_download_settings(fetch_courses_fn):
     div[data-testid="stHorizontalBlock"]:has(.st-key-action_dl_confirm) {
         margin-top: -15px !important;
     }
+    /* ONE LINE PER LABEL, at any window width. These buttons sat in RATIO
+       columns, so their width was a share of the page: at 1312px (a MacBook
+       on "Larger Text") "Save Preset" got ~130px and "Confirm and Download"
+       ~173px, and both broke onto two lines. A column sized to its own label
+       (max-content, label nowrap) cannot break, and the empty spacer column
+       beside it absorbs the difference. "Contains the button but no column of
+       its own" picks the LEAF column however Streamlit nests its wrappers. */
+    div[data-testid="stColumn"]:has(div.st-key-action_dl_back):not(:has(div[data-testid="stColumn"])),
+    div[data-testid="stColumn"]:has(div.st-key-action_dl_confirm):not(:has(div[data-testid="stColumn"])),
+    div[data-testid="stColumn"]:has(div.st-key-btn_save_config):not(:has(div[data-testid="stColumn"])),
+    div[data-testid="stColumn"]:has(div.st-key-btn_presets_hub):not(:has(div[data-testid="stColumn"])) {
+        min-width: max-content !important;
+    }
+    div.st-key-action_dl_back button p,
+    div.st-key-action_dl_confirm button p,
+    div.st-key-btn_save_config button p,
+    div.st-key-btn_presets_hub button p {
+        white-space: nowrap !important;
+    }
+    /* ...and the ROWS must not wrap. Streamlit's rows do, and they decide from
+       each column's ratio width clamped up to its new minimum - so the sum came
+       out wider than the row and both pairs STACKED (measured at 1312px:
+       "Confirm and Download" 896px wide on a line of its own). With nowrap the
+       empty spacer shrinks instead, down to nothing. */
+    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"] div.st-key-action_dl_confirm),
+    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"] div.st-key-btn_save_config) {
+        flex-wrap: nowrap !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"] div.st-key-action_dl_confirm)
+        > div[data-testid="stColumn"]:not(:has(button)) {
+        min-width: 0 !important;
+    }
     </style>""")
 
     # Consume pending toasts from preset dialogs
@@ -1625,9 +1657,19 @@ def render_download_settings(fetch_courses_fn):
                 ]
 
                 css_blocks.append('''
+                /* AT MOST three across, and never narrower than 185px. The
+                   column count follows the GRID's own width, not the viewport:
+                   this card shares its row with Card 1, so its width depends on
+                   the sidebar, the page padding and the OS display scaling, and
+                   a viewport breakpoint guesses at all three. Measured in
+                   Chromium: three columns at 1312px gave each title a 101px box
+                   and "Announcements" needs 109, so it broke mid-word; at 1366
+                   it fit with 3px to spare. A macOS user on "Larger Text" broke
+                   "Assignments" and "Submissions" too, because WebKit's metrics
+                   differ - hence the margin: 185px leaves ~123px for a title. */
                 div[class*="st-key-secondary_cards_grid"] {
                     display: grid !important;
-                    grid-template-columns: repeat(3, 1fr) !important;
+                    grid-template-columns: repeat(auto-fill, minmax(max(185px, calc((100% - 24px) / 3)), 1fr)) !important;
                     grid-auto-rows: 1fr !important;
                     gap: 12px !important;
                 }
@@ -1639,16 +1681,6 @@ def render_download_settings(fetch_courses_fn):
                 div[class*="st-key-secondary_cards_grid"] > div[data-testid="stElementContainer"] div[data-testid="stButton"],
                 div[class*="st-key-secondary_cards_grid"] > div[data-testid="stElementContainer"] button {
                     height: 100% !important;
-                }
-                @media (max-width: 900px) {
-                    div[class*="st-key-secondary_cards_grid"] {
-                        grid-template-columns: repeat(2, 1fr) !important;
-                    }
-                }
-                @media (max-width: 600px) {
-                    div[class*="st-key-secondary_cards_grid"] {
-                        grid-template-columns: 1fr !important;
-                    }
                 }
                 /* Nuke Streamlit's center alignment */
                 div[class*="st-key-btn_dl_"] button > div,
@@ -2259,8 +2291,14 @@ def render_download_settings(fetch_courses_fn):
                     text-align: left !important; width: 100% !important; display: block !important;
                     font-size: 0.75rem !important; color: #a0a0a0; white-space: normal !important; margin-top: -2px !important; line-height: 1.2 !important;
                 }
+                /* NO `height: auto` here. This selector has exactly the
+                   specificity of the grid's `height: 100%` rule above and comes
+                   later, so it won the tie: every card sat at its OWN content
+                   height and a one-line description (Audio) measured 58px in a
+                   68px row. The Canvas Content grid never hit this because its
+                   stretch rule uses `> div[...] button`, which outranks it. */
                 div[class*="st-key-btn_pan_out_"] button {
-                    min-height: 58px !important; height: auto !important;
+                    min-height: 58px !important;
                     padding: 10px 10px 10px 50px !important;
                     background-position: 15px center !important; background-size: 24px !important; background-repeat: no-repeat !important;
                     border-radius: 12px !important; display: flex; flex-direction: column;

@@ -2250,3 +2250,55 @@ def test_the_header_does_not_claim_MORE_than_is_true():
     header = bg[:bg.index('const PORTS')]
     assert 'granted' in header, (
         "the header does not mention the one origin the extension can see")
+
+
+# ---------------------------------------------------------------------------
+# 12. macOS: the Local Network prompt (2026-09-26)
+#
+# A student on macOS saw "Allow Canvas Downloader to find devices on local
+# networks?" the moment she pressed the extension button. `HTTPServer`'s own
+# `server_bind` does a `socket.getfqdn()` lookup purely to fill in a field
+# only CGI reads, and it is the one name lookup on that path. Whether removing
+# it removes the prompt is NOT measured (it needs a Mac); the card tells a Mac
+# user what to click either way, which is the half that is pinned here.
+# ---------------------------------------------------------------------------
+
+def test_the_listener_binds_WITHOUT_a_hostname_lookup(monkeypatch):
+    def _no_lookups(*_a, **_k):
+        raise AssertionError("the listener did a hostname lookup while binding")
+    monkeypatch.setattr(socket, 'getfqdn', _no_lookups)
+    server = handoff._Server(('127.0.0.1', 0), handoff._Handler)
+    try:
+        assert server.server_port > 0
+        assert server.server_name == '127.0.0.1'
+    finally:
+        server.server_close()
+
+
+def test_CONTROL_the_stock_server_really_does_look_the_name_up(monkeypatch):
+    """Without this, the test above could pass because nothing ever calls
+    getfqdn - i.e. it could not say yes."""
+    import http.server
+    calls = []
+    monkeypatch.setattr(socket, 'getfqdn', lambda *a, **k: calls.append(a) or 'x')
+    server = http.server.HTTPServer(('127.0.0.1', 0), http.server.BaseHTTPRequestHandler)
+    server.server_close()
+    assert calls, "the stock HTTPServer no longer looks the name up - re-check the premise"
+
+
+def test_a_MAC_is_told_to_allow_the_local_network_prompt(monkeypatch):
+    import re
+    import ui.auth as auth
+    monkeypatch.setattr(auth.sys, 'platform', 'darwin')
+    mac = auth._extension_guide_html()
+    monkeypatch.setattr(auth.sys, 'platform', 'win32')
+    win = auth._extension_guide_html()
+
+    assert 'find devices on local networks' in mac and '<b>Allow</b>' in mac
+    assert 'local networks' not in win, "Windows users were told about a macOS prompt"
+    # ORDER: the prompt comes when the button is pressed, so the Allow step
+    # must come BEFORE "Sign me in", not after it.
+    assert mac.index('local networks') < mac.index('Sign me in')
+    # Numbered straight: 1..4 on a Mac, 1..3 elsewhere.
+    assert re.findall(r"class='lxs-n'>(\d)<", mac) == ['1', '2', '3', '4']
+    assert re.findall(r"class='lxs-n'>(\d)<", win) == ['1', '2', '3']

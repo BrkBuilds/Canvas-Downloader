@@ -84,7 +84,7 @@ def build_quick_sync_skip_notice(skipped: dict | None) -> str | None:
 
 
 #: The one follow-up action, beside the sentence it belongs to.
-QUICK_SYNC_SKIP_DETAIL = ("To download them, run a normal 'Analyze, Review & Sync' "
+QUICK_SYNC_SKIP_DETAIL = ("To download them, run a normal 'Sync Review' "
                           "and select them manually.")
 
 

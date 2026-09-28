@@ -98,7 +98,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         # `logging` module anywhere in the app land in this file too.
         set_active_debug_file(debug_file)
         log_session_header(debug_file, context="Sync analysis")
-        _mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Analyze, Review & Sync"
+        _mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Sync Review"
         log_debug(f"=== Sync Analysis: {course_name} (ID: {course_id}) ===", debug_file)
         log_debug(f"Mode: {_mode_label}", debug_file)
         log_debug(f"Course Folder: {local_folder}", debug_file)
@@ -438,7 +438,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             # Discovery is the slowest part of analysis (per-recording LTI
             # handshakes). Quick Sync and the Today daily auto-sync reuse a
             # scan younger than 24h stored in this folder's DB; the deliberate
-            # "Analyze, Review & Sync" flow ALWAYS re-scans so the review is
+            # "Sync Review" flow ALWAYS re-scans so the review is
             # 100% fresh. Every fresh scan (any mode) refreshes the cache.
             from panopto.discovery import PanoptoVideo as _PanVideo
             _PAN_CACHE_KEY = 'panopto_discovery_cache'
@@ -572,6 +572,48 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         log_debug(f"Panopto phase: {int((time.perf_counter() - _t_panopto) * 1000)} ms", debug_file)
 
     return course, sync_mgr, manifest, canvas_files, result, detected, panopto_payload
+
+
+def _report_analysis_failures(failures, *, total_pairs: int, analysed: int) -> None:
+    """Say ONCE what went wrong, however many courses it went wrong for.
+
+    Owner report 2026-09-07 (#4): a revoked token, and on another day a laptop
+    still joining wifi, each produced one amber "Could not analyse ..." notice
+    PER COURSE, stacking up under the daily sync's card. Every course had failed
+    for the same reason, so the stack said one thing N times.
+
+    **A login Canvas refused is not a notice at all.** When nothing analysed and
+    every failure is an auth rejection, retrying course by course cannot help,
+    so the run is cleared and the user is sent to sign in again - the same
+    reconnect the course list uses (`force_reauth`, which also knows to renew a
+    browser session rather than ask for a token). The run state is cleared FIRST:
+    `force_reauth` does not, and without it a fresh sign-in would land back in
+    this half-finished analysis.
+    """
+    from core.canvas_logic import is_auth_error
+    if not failures:
+        return
+    if analysed == 0 and all(is_auth_error(e) for _n, e in failures):
+        logger.info("Sync analysis: Canvas refused the sign-in for all %d "
+                    "course(s); routing to reconnect.", len(failures))
+        from core.state_registry import cleanup_sync_state
+        from ui.auth import force_reauth
+        cleanup_sync_state()
+        force_reauth("Your Canvas connection expired or the access token was "
+                     "revoked. Please reconnect with a new token.")
+        return  # force_reauth reruns; kept for readers
+
+    from ui.amber_notice import render_amber_notice
+    names = [n for n, _e in failures]
+    first_reason = str(failures[0][1]) or type(failures[0][1]).__name__
+    if len(failures) == 1:
+        render_amber_notice(f"Could not analyse \"{names[0]}\"", detail=first_reason)
+        return
+    shown = ", ".join(names[:5]) + (f" and {len(names) - 5} more" if len(names) > 5 else "")
+    render_amber_notice(
+        f"Could not analyse {len(failures)} of {total_pairs} courses",
+        detail=f"{shown}. First error: {first_reason}",
+    )
 
 
 def run_analysis(sync_pairs, main_placeholder=None):
@@ -715,6 +757,9 @@ def run_analysis(sync_pairs, main_placeholder=None):
     import concurrent.futures as _cf
     from streamlit.runtime.scriptrunner import get_script_run_ctx, add_script_run_ctx as _add_ctx
     _analysis_pool = _cf.ThreadPoolExecutor(max_workers=1, thread_name_prefix="canvas-sync-analysis")
+    # Courses whose analysis raised, collected rather than announced one by one.
+    # See `_report_analysis_failures` below the loop.
+    _analysis_failures: list[tuple[str, Exception]] = []
     try:
      for pair_num, pair in enumerate(pairs_to_analyze, 1):
         # CHECK FOR CANCEL INSIDE THE LOOP
@@ -888,16 +933,16 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # traceback into the active debug log (print_exc goes to a console
             # that doesn't exist in frozen builds).
             logger.error(f"Sync Analysis Error: {str(e)}", exc_info=True)
-            from ui.amber_notice import render_amber_notice
-            render_amber_notice(
-                f"Could not analyse \"{display_name}\"",
-                detail=str(e),
-            )
+            _analysis_failures.append((display_name, e))
             continue
 
     finally:
         # Don't wait for in-flight work if cancelled - let thread finish in bg
         _analysis_pool.shutdown(wait=False)
+
+    if _analysis_failures and not is_sync_cancelled():
+        _report_analysis_failures(_analysis_failures, total_pairs=len(pairs_to_analyze),
+                                  analysed=len(all_results))
 
     # Clean up the UI when all courses are done analyzing
     if analysis_ui_placeholder is not None:

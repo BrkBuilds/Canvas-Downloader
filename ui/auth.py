@@ -17,6 +17,7 @@ import logging
 import os
 import sys
 import threading
+import time
 from html import escape as _he
 
 import streamlit as st
@@ -1061,6 +1062,8 @@ def force_reauth(reason: str = "") -> None:
         _reset_browser_login_state()
         st.session_state['browser_restore_pending'] = True
     st.session_state['is_authenticated'] = False
+    st.session_state.pop(SESSION_CONFIRMED_KEY, None)
+    st.session_state.pop('_session_reconfirm', None)
     # The credential this refers to has just been deleted, so any cached
     # Keychain-unlock verdict is now about nothing. Left standing, a previous
     # 'denied' would make begin_keychain_unlock a no-op for the rest of the
@@ -1451,6 +1454,81 @@ def _adopt_restored_token(token: str) -> None:
     _adopt_restored_credential(from_token(token))
 
 
+#: True once Canvas ITSELF confirmed the sign-in during this launch - a restore
+#: that validated, or an interactive sign-in. An OPTIMISTIC restore (Canvas could
+#: not be reached, so a previously verified credential was trusted) leaves it
+#: False. `is_authenticated` cannot tell the two apart, and that is the whole of
+#: owner report 2026-09-07 #4: the daily auto-sync fired on an unconfirmed
+#: session and failed once per course. Written at the decision sites only.
+SESSION_CONFIRMED_KEY = 'session_confirmed'
+
+#: How often an unconfirmed session asks Canvas again, at most.
+RECONFIRM_INTERVAL_S = 30.0
+
+
+def session_confirmed() -> bool:
+    return bool(st.session_state.get(SESSION_CONFIRMED_KEY))
+
+
+def poll_session_confirmation() -> bool:
+    """Is the sign-in confirmed yet? Asks Canvas again, OFF the script thread.
+
+    For a session restored optimistically. The check runs on a daemon thread,
+    at most every `RECONFIRM_INTERVAL_S`, and its answer is read on a later
+    run: a validation on the script thread would freeze the window for the
+    whole request timeout on exactly the networks this exists for (a captive
+    portal, a laptop still joining wifi). The thread touches no `st.*`; it
+    writes into a plain dict the next run reads.
+
+    An auth rejection sends the user to sign in again (the revoked-token half
+    of the report); anything else just waits for the next interval.
+    """
+    if session_confirmed():
+        return True
+    if not st.session_state.get('is_authenticated'):
+        return False
+    now = time.monotonic()
+    job = st.session_state.get('_session_reconfirm')
+    if job is not None:
+        if not job.get('done'):
+            return False
+        st.session_state.pop('_session_reconfirm', None)
+        st.session_state['_session_reconfirm_at'] = now
+        if job.get('valid'):
+            msg = str(job.get('msg') or '')
+            st.session_state[SESSION_CONFIRMED_KEY] = True
+            st.session_state['user_name'] = msg.split(": ", 1)[1] if ": " in msg else msg
+            logger.info("The restored Canvas sign-in is confirmed now.")
+            return True
+        from core.canvas_logic import is_auth_error
+        if is_auth_error(str(job.get('msg') or '')):
+            logger.info("Canvas refused the restored sign-in on re-check; "
+                        "routing to reconnect.")
+            force_reauth("Your Canvas connection expired or the access token "
+                         "was revoked. Please reconnect with a new token.")
+        return False
+    if now - float(st.session_state.get('_session_reconfirm_at', 0.0)) < RECONFIRM_INTERVAL_S:
+        return False
+
+    credential = st.session_state.get('api_token')
+    api_url = st.session_state.get('api_url', '') or ''
+    job = {'done': False}
+
+    def _work() -> None:
+        try:
+            valid, msg = CanvasManager(credential, api_url).validate_token()
+            job.update(valid=bool(valid), msg=msg)
+        except Exception as e:                                     # noqa: BLE001
+            job.update(valid=False, msg=str(e))
+        finally:
+            job['done'] = True
+
+    st.session_state['_session_reconfirm'] = job
+    st.session_state['_session_reconfirm_at'] = now
+    threading.Thread(target=_work, name='session-reconfirm', daemon=True).start()
+    return False
+
+
 def _adopt_restored_credential(credential: CanvasCredential, *,
                                optimistic: bool = True) -> str:
     """Validate a credential and sign in. Answers the verdict.
@@ -1516,6 +1594,7 @@ def _adopt_restored_credential(credential: CanvasCredential, *,
                            exc_info=True)
         st.session_state['is_authenticated'] = True
         st.session_state['user_name'] = msg.split(": ", 1)[1] if ": " in msg else msg
+        st.session_state[SESSION_CONFIRMED_KEY] = True
         # No st.rerun() here: this runs during session init,
         # so the SAME run goes on to render the signed-in
         # page. The rerun this replaced was a whole wasted
@@ -1553,6 +1632,8 @@ def _adopt_restored_credential(credential: CanvasCredential, *,
                     "error), so it was not adopted: %s", msg)
         return 'unconfirmed'
     st.session_state['is_authenticated'] = True
+    st.session_state[SESSION_CONFIRMED_KEY] = False
+    st.session_state['_session_reconfirm_at'] = time.monotonic()
     logger.info(
         "Saved session restored optimistically; the "
         "token could not be confirmed this launch due "
@@ -2236,6 +2317,46 @@ def _record_token_upgrade_blocked(api_url: str) -> None:
                        "allow access tokens", exc_info=True)
 
 
+#: The settings key holding what the LAST access-token upgrade attempt did.
+_UPGRADE_LAST_KEY = 'token_upgrade_last'
+
+
+def _upgrade_outcome(api_url: str, reason: str, detail: str = '') -> dict:
+    """One record of an upgrade attempt: which school, what happened, when."""
+    from datetime import datetime
+    return {'host': canvas_host(api_url or ''), 'reason': str(reason or ''),
+            'detail': str(detail or '')[:200],
+            'at': datetime.now().isoformat(timespec='seconds')}
+
+
+def _record_token_upgrade_outcome(api_url: str, reason: str,
+                                  detail: str = '') -> None:
+    """Write down what the upgrade did, in the one file a user can send us.
+
+    **Without this, a failed upgrade in a packaged build leaves no trace.** The
+    mint logs every outcome distinctly, but a shipped app's log records go to
+    stderr, which nothing keeps - `debug_log.txt` exists only for a download
+    run, and sign-in happens before any. Only a 403 was ever written down
+    (`token_upgrade_blocked_hosts`). So when a student at Malmö University,
+    whose Canvas offers "+ New Access Token", signed in twice on 2026-09-20 and
+    no token appeared, nothing on her Mac could say why. The settings file is
+    what a user can find and send, so the answer lives there.
+
+    Holds the reason and a short detail (an HTTP status and at most 200
+    characters of Canvas' error body). Never a token or a cookie: `detail` is
+    empty on success, and on failure it is Canvas' answer, not our request.
+    """
+    try:
+        config_data, may_write = read_config_for_update()
+        if not may_write:
+            return
+        config_data[_UPGRADE_LAST_KEY] = _upgrade_outcome(api_url, reason, detail)
+        write_config_atomically(config_data)
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not record the access-token upgrade outcome",
+                       exc_info=True)
+
+
 def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
     """Mint a long-lived access token for a session that just signed in.
 
@@ -2250,17 +2371,22 @@ def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
     """
     api_url = st.session_state.get('api_url', '') or ''
     if not _token_upgrade_enabled(api_url):
+        # Recorded too: "never asked" and "asked and failed" look identical in
+        # Canvas, and only this line tells them apart afterwards.
+        _record_token_upgrade_outcome(api_url, 'not_attempted',
+                                      'turned off, or this school refused before')
         return False
 
     from core import token_mint
     try:
         result = token_mint.mint(credential, api_url)
-    except Exception:                                              # noqa: BLE001
+    except Exception as e:                                         # noqa: BLE001
         # `mint` is written not to raise; this is the belt on the braces,
         # because a sign-in that works must never be undone by an upgrade that
         # is optional by design.
         logger.warning("The access-token upgrade raised; keeping the browser "
                        "session.", exc_info=True)
+        _record_token_upgrade_outcome(api_url, 'raised', type(e).__name__)
         return False
 
     if not result:
@@ -2268,11 +2394,17 @@ def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
             # Remember the no FOR THIS INSTITUTION, so the next sign-in here
             # does not ask again - and so a sign-in somewhere else still does.
             _record_token_upgrade_blocked(api_url)
+        _record_token_upgrade_outcome(api_url, result.reason, result.detail)
         return False
 
     if not store_token(api_url or 'default', result.token):
         logger.warning("Canvas minted an access token but it could not be "
                        "stored; keeping the browser session instead.")
+        # The token EXISTS in the student's Canvas at this point; recording
+        # that is the difference between "no key appeared" and "a key appeared
+        # that this app is not using".
+        _record_token_upgrade_outcome(api_url, 'minted_but_not_stored',
+                                      f'token id {result.token_id}')
         return False
 
     st.session_state['api_token'] = result.token
@@ -2308,6 +2440,7 @@ def _upgrade_to_access_token(credential: CanvasCredential) -> bool:
             config_data.pop('minted_token_capped', None)
             config_data.pop('mac_api_token', None)
             config_data.pop('api_token', None)
+            config_data[_UPGRADE_LAST_KEY] = _upgrade_outcome(api_url, 'ok')
             write_config_atomically(config_data)
     except Exception:                                              # noqa: BLE001
         logger.warning("Could not record the minted access token", exc_info=True)
@@ -2490,6 +2623,25 @@ def _extension_guide_html() -> str:
     Chrome has hidden; here it would be a warning about a problem they have
     not met yet.
     """
+    # macOS gets the button press as a step of its own, because that press is
+    # when macOS may raise its Local Network prompt ("...collect data from
+    # devices on your networks"), and a student who was not told to expect it
+    # reads that as a reason to click Don't Allow - which ends the sign-in.
+    # Worded "If macOS asks" because whether it still asks is not yet measured
+    # on a Mac; see `core.handoff._Server.server_bind`.
+    if sys.platform == 'darwin':
+        last_steps = (
+            "<li><span class='lxs-n'>3</span><span class='lxs-t'>Press the "
+            "button below. If macOS asks to let Canvas Downloader <b>find "
+            "devices on local networks</b>, click <b>Allow</b>.</span></li>"
+            "<li><span class='lxs-n'>4</span><span class='lxs-t'>Click the "
+            "<b>Canvas Downloader</b> icon in Chrome and choose "
+            "<b>Sign me in</b>.</span></li>")
+    else:
+        last_steps = (
+            "<li><span class='lxs-n'>3</span><span class='lxs-t'>Press the "
+            "button below, then click the <b>Canvas Downloader</b> icon and "
+            "choose <b>Sign me in</b>.</span></li>")
     return (
         "<div class='login-ext-steps'>"
         "<div class='lxs-lead'>Signs you in from the Canvas tab you already "
@@ -2499,9 +2651,7 @@ def _extension_guide_html() -> str:
         "<b>Chrome</b> or <b>Edge</b>.</span></li>"
         "<li><span class='lxs-n'>2</span><span class='lxs-t'>Open your Canvas "
         "in a tab.</span></li>"
-        "<li><span class='lxs-n'>3</span><span class='lxs-t'>Press the button "
-        "below, then click the <b>Canvas Downloader</b> icon and choose "
-        "<b>Sign me in</b>.</span></li>"
+        f"{last_steps}"
         "</ol></div>")
 
 
@@ -3286,7 +3436,7 @@ def render_login_page(fetch_courses_fn):
         padding-bottom: 12px;
     }
 
-    /* Submit Button styling: Solid Blue Physical Volume matching Analyze, Review & Sync */
+    /* Submit Button styling: Solid Blue Physical Volume matching Sync Review */
     div.st-key-login_submit_btn button {
         background-color: #1f77b4 !important;
         border: none !important;
@@ -4237,6 +4387,22 @@ def render_login_page(fetch_courses_fn):
     }
     div[class*="st-key-login_card_wrapper_"] .login-handoff-live b {
         color: #4da8da;
+    }
+    /* The card is the LAST element in the extension disclosure, and every
+       stMarkdownContainer carries Streamlit's `margin-bottom: -16px` - so the
+       live line ate the disclosure's bottom padding and sat on its edge,
+       reading as text cut off underneath. Only this card is released: the
+       guide and the store line above it are followed by more content, where
+       the negative margin is what the spacing was tuned against. */
+    div[class*="st-key-login_card_wrapper_"]
+        [data-testid="stMarkdownContainer"]:has(> .login-handoff) {
+        margin-bottom: 0 !important;
+    }
+    /* And a little air of its own. The disclosure has no bottom padding (its
+       sibling ends on a button, which does not need any), so a line of text
+       here sat 14px under the button and flush on the card's floor. */
+    div[class*="st-key-login_card_wrapper_"] .login-handoff-live {
+        padding-bottom: 8px;
     }
 
     /* ── The two disclosures, and the glyph on each header ──────────────────
@@ -5302,6 +5468,7 @@ def render_login_page(fetch_courses_fn):
                     st.session_state['url_verified'] = True
                     st.session_state['is_authenticated'] = True
                     st.session_state['user_name'] = message.split(": ", 1)[1] if ": " in message else message
+                    st.session_state[SESSION_CONFIRMED_KEY] = True
                     # Successful reconnect clears any "your connection expired" banner.
                     st.session_state.pop('reauth_reason', None)
 
@@ -5982,6 +6149,30 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         /* Tight global vertical gap */
         div[data-testid="stDialog"] [data-testid="stVerticalBlock"] { gap: 0.3rem !important; }
 
+        /* THE DIALOG FITS THE WINDOW. The scroll area was a fixed 620px, and
+           the header plus the Cancel/Save row add 187px, so the dialog was
+           807px tall whatever the window was. Measured at 1312x795 (a MacBook
+           on "Larger Text"): the dialog ran from y=48 to y=855 and Save
+           Settings sat at y=783-831, partly below the screen, reachable only
+           by scrolling the overlay behind it. 283 = 187 of chrome + the 48px
+           Streamlit leaves above the dialog + the same again below it. At
+           1512x930 this still answers 620, so the default look is unchanged.
+           The width gets the same 48px of air on each side: Streamlit's
+           "large" is a flat 1280px, which on a 1312px window is edge to edge. */
+        /* BOTH elements: Streamlit puts `height=620` on the stLayoutWrapper
+           around the keyed block, not on the block itself. Capping only the
+           block (measured) shrank it to 512px inside a wrapper still 620px
+           tall, so the dialog did not move by a pixel. */
+        div[data-testid="stDialog"] div.st-key-stg_scroll,
+        div[data-testid="stDialog"] div[data-testid="stLayoutWrapper"]:has(> div.st-key-stg_scroll) {
+            height: auto !important;
+            max-height: max(240px, min(620px, calc(100vh - 283px))) !important;
+        }
+        div[data-testid="stDialog"] div[role="dialog"]:has(div.st-key-stg_scroll) {
+            width: min(1280px, calc(100vw - 96px)) !important;
+            max-width: calc(100vw - 96px) !important;
+        }
+
         /* ── Cards ──
            1.51 puts the st-key-* class directly ON the container's stVerticalBlock
            (the old stVerticalBlockBorderWrapper element no longer exists), so the
@@ -6418,7 +6609,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
 </div>
 """, unsafe_allow_html=True)
 
-        with st.container(height=620, border=False):
+        with st.container(height=620, border=False, key="stg_scroll"):
 
             # ── DOWNLOADS & STORAGE ───────────────────────────────────
             # One section for everything that shapes a run plus everything the

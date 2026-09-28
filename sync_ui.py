@@ -99,7 +99,7 @@ _sb_info = "font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; 
 _SYNC_HELP_TEXT = (
     # -- Introduction --------------------------------------------------------
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 12px;'>"
-    f"Welcome to Sync Mode! This feature intelligently keeps the course folders on your PC up to date with Canvas by remembering exactly which files you downloaded for each course, and thereby only fetching files that are new or changed on Canvas. <br>To begin, link a course folder to a Canvas course to create a <b style='color: #ffffff;'>Course Pair</b>. These pairs are added to your <b style='color: #ffffff;'>Sync List</b>, which you can save as a <b style='color: #ffffff;'>Saved Group</b> (e.g., <em>Semester 1</em>), or separately as a <b style='color: #ffffff;'>Saved Pair</b> to easily load in next time. <br>When you are ready to download, use <b style='color: #3fd9ff;'>{HELP_ICONS['bolt']} Quick Sync</b> to automatically grab new files and safe updates in one click, or use <b style='color: #3fd9ff;'>{HELP_ICONS['search']} Analyze &amp; Review</b> to manually inspect every change and select what to keep."
+    f"Welcome to Sync Mode! This feature intelligently keeps the course folders on your PC up to date with Canvas by remembering exactly which files you downloaded for each course, and thereby only fetching files that are new or changed on Canvas. <br>To begin, link a course folder to a Canvas course to create a <b style='color: #ffffff;'>Course Pair</b>. These pairs are added to your <b style='color: #ffffff;'>Sync List</b>, which you can save as a <b style='color: #ffffff;'>Saved Group</b> (e.g., <em>Semester 1</em>), or separately as a <b style='color: #ffffff;'>Saved Pair</b> to easily load in next time. <br>When you are ready to download, use <b style='color: #3fd9ff;'>{HELP_ICONS['bolt']} Quick Sync</b> to automatically grab new files and safe updates in one click, or use <b style='color: #3fd9ff;'>{HELP_ICONS['search']} Sync Review</b> to manually inspect every change and select what to keep."
     "</div>"
     "<hr>"
 
@@ -227,11 +227,11 @@ _SYNC_HELP_TEXT = (
     "</div>"
     "<hr>"
 
-    # Analyze, Review & Sync flow
-    f"<div style='{_slbl}'>{HELP_ICONS['search']} Analyze, Review &amp; Sync</div>"
+    # Sync Review flow
+    f"<div style='{_slbl}'>{HELP_ICONS['search']} Sync Review</div>"
     "<div style='display: flex; align-items: center; margin-bottom: 0;'>"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>1</div><div>"
-    f"<div style='{_step_title}'>{HELP_ICONS['cursor']} Click Analyze, Review & Sync</div>"
+    f"<div style='{_step_title}'>{HELP_ICONS['cursor']} Click Sync Review</div>"
     f"<div style='{_step_body}'><ul><li>Starts analysis of the courses on your Sync List.</li><li>Analysis scans Canvas and compares every file to your local course folder.</li><li><b style='color: #ffffff;'>Looks for all files with changes and sorts them into 7 categories.</b></li></ul></div>"
     f"</div></div></div>{_arr_r}"
     f"<div style='{_step_card_r}'><div style='{_step_inner}'><div style='{_step_num_r}'>2</div><div>"
@@ -311,7 +311,7 @@ _SYNC_HELP_TEXT = (
 
     # -- Quick Sync vs Analyze -----------------------------------------------
     "<details style='margin-top: 4px;'>"
-    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>Quick Sync vs Analyze &amp; Review &amp; Sync</summary>"
+    "<summary style='cursor: pointer; font-weight: 700; color: #ffffff; font-size: 1.25rem; user-select: none; padding: 4px 0;'>Quick Sync vs Sync Review</summary>"
     "<div style='margin-top: 6px; padding-left: 12px;'>"
     "<div style='font-size: 0.85rem; color: #e6e6e6; margin-bottom: 10px;'>Both modes scan Canvas - the difference is the use case, and how much control you have over what gets downloaded.</div>"
     "<div style='display: flex; gap: 16px; margin-bottom: 16px;'>"
@@ -328,7 +328,7 @@ _SYNC_HELP_TEXT = (
     "<span style='color: rgba(255,255,255,0.9); font-size: 0.82rem;font-weight: 600;'>Quick everyday use between lectures, morning catch-up - whenever you need the latest files from Canvas as quickly as possible.</span>"
     "</div></div>"
     "<div style='flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 11px 13px;'>"
-    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['search']} Analyze, Review &amp; Sync</div>"
+    f"<div style='font-weight: 700; color: #ffffff; font-size: 1rem; margin-bottom: 7px;'>{HELP_ICONS['search']} Sync Review</div>"
     "<div style='color: #d9d9d9; font-size: 0.85rem; line-height: 1.7;'>"
     "✅ Full overview of all course folder &amp; Canvas changes across 7 different categories.<br>"
     "✅ Select on a per-file basis what you want to download and what you don't - full control.<br>"
@@ -345,9 +345,9 @@ _SYNC_HELP_TEXT = (
     "<div style='font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 2; margin-top: 5px;'>"
     "<b style='color: #ffffff;'>Checking for new files between classes</b> ➜ Quick Sync<br>"
     "<b style='color: #ffffff;'>Start-of-week catch-up on your courses</b> ➜ Quick Sync<br>"
-    "<b style='color: #ffffff;'>Just before an exam, you want to ensure course folders are fully up to date</b> ➜ Analyze, Review &amp; Sync<br>"
-    "<b style='color: #ffffff;'>You have been editing files</b> ➜ Analyze, Review &amp; Sync<br>"
-    "<b style='color: #ffffff;'>First time setting up a new course folder</b> ➜ Analyze, Review &amp; Sync"
+    "<b style='color: #ffffff;'>Just before an exam, you want to ensure course folders are fully up to date</b> ➜ Sync Review<br>"
+    "<b style='color: #ffffff;'>You have been editing files</b> ➜ Sync Review<br>"
+    "<b style='color: #ffffff;'>First time setting up a new course folder</b> ➜ Sync Review"
     "</div></div>"
     "</div>"
     "</details>"
@@ -430,7 +430,7 @@ _SYNC_HELP_TEXT = (
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>How many courses can I sync at once?</summary>"
     "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63,217,255,0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-    "There is no limit! You can add as many courses to your Sync List as you need. When you start a sync (whether using <b>Quick Sync</b> or <b>Analyze, Review &amp; Sync</b>), the app will process all courses in your Sync List in a single batch. <br>However, for Sync Review, too many courses at once may seem overwhelming - if that is the case for you, stick to a maximum of 3 course pairs at once."
+    "There is no limit! You can add as many courses to your Sync List as you need. When you start a sync (whether using <b>Quick Sync</b> or <b>Sync Review</b>), the app will process all courses in your Sync List in a single batch. <br>However, for Sync Review, too many courses at once may seem overwhelming - if that is the case for you, stick to a maximum of 3 course pairs at once."
     "</div></details>"
     "<details style='margin-top: 8px; cursor: pointer;'>"
     "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>What is a Course Pair and do I need one per course?</summary>"
@@ -1157,8 +1157,11 @@ def _sync_pairs_section(courses, course_names, course_options):
                                 f'<div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:6px;">{SVG_CLOCK}{ts_str}</div>'
                             )
                         else:
+                            # The folder text sits in its own span because an
+                            # ellipsis needs an ELEMENT to clip: a bare text node
+                            # in a flex row just runs on. See `.sp-folder-line`.
                             _details_html = (
-                                f'<div style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;display:flex;align-items:center;">{SVG_FOLDER_YELLOW}{esc(folder_display)}</div>'
+                                f'<div class="sp-folder-line" style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;display:flex;align-items:center;">{SVG_FOLDER_YELLOW}<span class="sp-folder-text">{esc(folder_display)}</span></div>'
                                 f'<div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:2px;">{SVG_CLOCK}{ts_str}</div>'
                             )
                         st.markdown(_details_html, unsafe_allow_html=True)
@@ -1851,7 +1854,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         """)
     
         with col_analyze:
-            if st.button('Analyze, Review & Sync', type="primary",
+            if st.button('Sync Review', type="primary",
                          key="btn_analyze_sync",
                          use_container_width=True,
                          disabled=not _can_sync,
@@ -2663,7 +2666,7 @@ def _render_sync_history():
 
                             sync_mode_str = entry.get('sync_mode', 'normal')
                             sync_mode_text = (f"{HELP_ICONS['bolt_small']} Quick Sync" if sync_mode_str == 'quick'
-                                              else f"{HELP_ICONS['search_small']} Analyze, Review & Sync")
+                                              else f"{HELP_ICONS['search_small']} Sync Review")
 
                             # "Fake expander": Streamlit strips HTML from expander
                             # labels AND a real expander can't show a rich header
@@ -3860,11 +3863,16 @@ def _run_sync_panopto():
             logger.debug(f"Panopto history amend failed: {_hist_err}")
 
     try:
-        _summary = run_panopto_batch(
-            cm, _targets, settings=pan,
-            progress=progress, is_cancelled=is_sync_cancelled,
-            max_file_size_bytes=_pan_max_bytes,
-        )
+        # One Panopto pass per session at a time - see core.cancellation.
+        from core.cancellation import blocking_run, wait_for_other_blocking_run
+        _pan_heartbeat = st.empty()
+        wait_for_other_blocking_run(lambda: _pan_heartbeat.markdown(""))
+        with blocking_run('sync_panopto'):
+            _summary = run_panopto_batch(
+                cm, _targets, settings=pan,
+                progress=progress, is_cancelled=is_sync_cancelled,
+                max_file_size_bytes=_pan_max_bytes,
+            )
         # Carry the analysis-derived "already up to date" count + the selected
         # count so the completion card reads honestly (no misleading "Skipped").
         _summary['uptodate'] = int(st.session_state.get('panopto_uptodate_total', 0) or 0)

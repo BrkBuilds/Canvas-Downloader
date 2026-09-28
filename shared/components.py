@@ -2732,31 +2732,17 @@ def render_panopto_disabled_notice(mode: str = 'download') -> None:
     if not names:
         return
 
-    n = len(names)
-    rows_html = ''.join(
-        f'<div class="skip-file-row">'
-        f'<img class="skip-file-icon" src="{_SKIP_PANOPTO_SVG}" alt=""/>'
-        f'<span class="skip-file-name">{esc(name)}</span>'
-        f'</div>'
-        for name in names[:50]
-    )
+    # ONE QUIET LINE, not a panel (owner, 2026-09-26). The skip-panel treatment
+    # gave a feature the user switched off ON PURPOSE the same weight as a real
+    # problem: a full-width row at the level of the error panel, reading as
+    # "couldn't download". The user already knows they turned it off, so the
+    # only job left is a reminder of where the switch is. Still exactly ONE
+    # element, so nothing below it moves index.
     st.markdown(
-        "<details class='skip-panel skip-panel-solo'>"
-        "<summary class='skip-panel-header'><div class='sp-header-row'>"
-        f'<img class="sp-chevron" src="{_SKIP_CHEVRON_SVG}" alt="toggle"/>'
-        f'<img class="sp-funnel" src="{_SKIP_PANOPTO_SVG}" alt=""/>'
-        f"<span class='sp-title'>Lecture recordings were not fetched for "
-        f"<b>{n}</b> course{'s' if n != 1 else ''} &mdash; Panopto is switched "
-        f"off in <b>Settings</b>.</span>"
-        "</div></summary>"
-        "<div class='skip-panel-body'>"
-        "<div class='sp-subtitle'>Nothing is missing that you already had &mdash; "
-        "recordings already on your computer are untouched, and each folder keeps "
-        "the recording formats it was set up with. Turn it back on in "
-        "<b>Settings &rsaquo; Panopto lecture recordings</b> and the next run "
-        "picks them up again.</div>"
-        f"<div class='skip-file-list'>{rows_html}</div>"
-        "</div></details>",
+        "<div class='panopto-off-note'>"
+        f'<img src="{_SKIP_PANOPTO_SVG}" alt=""/>'
+        "<span>Lecture recordings skipped: Panopto is turned off in "
+        "Settings.</span></div>",
         unsafe_allow_html=True,
     )
 

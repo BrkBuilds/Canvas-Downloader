@@ -803,7 +803,7 @@ def run_sync():
                     _set_dbg(_debug_file)
                     if pair_idx == 0:
                         _dbg_header(_debug_file, context=f"Sync execution | {total_pairs} pair(s)")
-                    _sync_mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Analyze, Review & Sync"
+                    _sync_mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Sync Review"
                     log_debug(f"=== Sync Execution: {_log_name} | Mode: {_sync_mode_label} ===", _debug_file)
                     log_debug(f"Pair {pair_idx + 1}/{total_pairs} | Folder: {local_path}", _debug_file)
                     log_debug(

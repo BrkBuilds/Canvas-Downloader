@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status 26. september</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<style>
+  :root {
+    --bg: #f7f8fa; --surface: #ffffff; --surface-2: #f0f2f6;
+    --line: #d7dce5; --text: #1b2230; --dim: #4d596b; --faint: #7d8899;
+    --accent: #1f6f9e; --accent-dim: rgba(31,111,158,0.10);
+    --crit: #c0392b; --crit-dim: rgba(192,57,43,0.12);
+    --major: #a8690d; --major-dim: rgba(168,105,13,0.13);
+    --good: #1f7a5c; --good-dim: rgba(31,122,92,0.13);
+    --grey-dim: rgba(125,136,153,0.15);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1216; --surface: #171b21; --surface-2: #1f242c;
+      --line: #2c333d; --text: #e6e9ee; --dim: #a9b2bf; --faint: #7b8594;
+      --accent: #5aa9d6; --accent-dim: rgba(90,169,214,0.13);
+      --crit: #e0685a; --crit-dim: rgba(224,104,90,0.15);
+      --major: #d9a041; --major-dim: rgba(217,160,65,0.15);
+      --good: #4fbf92; --good-dim: rgba(79,191,146,0.15);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 "IBM Plex Sans", system-ui, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 40px 16px 80px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.3rem; margin: 48px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 1.05rem; margin: 28px 0 8px; }
+  .stamp { color: var(--faint); font-size: .9rem; margin: 0 0 24px; }
+  p, li { color: var(--text); }
+  .lead { font-size: 1.08rem; }
+  code { font: .88em "IBM Plex Mono", monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+  .box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; margin: 16px 0; }
+  .box.key { border-left: 4px solid var(--accent); }
+  .box.warn { border-left: 4px solid var(--major); }
+  .box.crit { border-left: 4px solid var(--crit); }
+  .box > :first-child { margin-top: 0; } .box > :last-child { margin-bottom: 0; }
+  .tablewrap { overflow-x: auto; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: .93rem; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { background: var(--surface-2); font-weight: 600; font-size: .85rem; color: var(--dim); }
+  tr:last-child td { border-bottom: 0; }
+  td.nw { white-space: nowrap; }
+  .tag { display: inline-block; font-size: .75rem; font-weight: 600; padding: 1px 8px; border-radius: 99px; white-space: nowrap; }
+  .t-now { background: var(--crit-dim); color: var(--crit); }
+  .t-rel { background: var(--major-dim); color: var(--major); }
+  .t-hold { background: var(--grey-dim); color: var(--dim); }
+  .t-ok { background: var(--good-dim); color: var(--good); }
+  .t-bug { background: var(--crit-dim); color: var(--crit); }
+  .t-doc { background: var(--accent-dim); color: var(--accent); }
+  .t-q { background: var(--major-dim); color: var(--major); }
+  ol.steps li { margin-bottom: 8px; }
+  .muted { color: var(--dim); }
+  .small { font-size: .88rem; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Status 26. september: hvad der skal opdateres</h1>
+<p class="stamp">Audit-register &middot; skrevet 26. september 2026 &middot; søskende til SIGNIN_STATE_OF_PLAY_2026-09-13 og MACOS_PARITY_2026-09-13</p>
+
+<p class="lead">Hvad der er sket siden sidste session den 15. september, hvad Isabellas Mac-test den 20. september viser, og
+hvilke dokumenter der er forældede. Ingen kode og intet dokument er ændret i denne omgang; det her er kortlægningen før vi går i gang.</p>
+
+<div class="box key">
+<p><strong>Det korte svar, i tre punkter.</strong></p>
+<ol>
+  <li><strong>Extensionen er udgivet, men den app den forbinder til er ikke.</strong> Canvas Downloader Connector er live i Chrome Web Store
+    (v1.1.0, opdateret 22. september, 2 brugere, 1 anmeldelse på 5,0). Den knap i appen, som store-teksten beder brugeren trykke på,
+    <em>"Use the Canvas tab in my browser"</em>, findes kun i v2.0.3, og v2.0.3 er ikke udgivet: GitHub og Microsoft Store står stadig på v2.0.2,
+    og v2.0.2 indeholder hverken <code>core/handoff.py</code> eller <code>core/browser_login.py</code> (tjekket i tagget).
+    Så lige nu kan ingen, der finder extensionen i storen, bruge den. <strong>Det er den ene beslutning alt andet hænger på: hvornår v2.0.3 udkommer.</strong></li>
+  <li><strong>Isabellas test beviser at extension-ruten virker på macOS</strong>, som den første måling nogensinde på en Mac. Men den viser også, at
+    token-opgraderingen (den automatiske 120-dages nøgle) sandsynligvis <em>ikke</em> skete på Malmö Universitet, selvom MAU ser ud til at tillade tokens.
+    Det er stadig den eneste del af login-opgraderingen, der aldrig er set virke mod en rigtig Canvas.</li>
+  <li><strong>Marketing-mappen er ikke rørt siden 8. september.</strong> Ingen af dens 30 dokumenter nævner "Sign in with Canvas" eller extensionen,
+    og sitet og README er stadig token-først. Det er forventeligt, fordi funktionen ikke er udgivet, men det betyder at hele sættet skal opdateres
+    i samme skub som v2.0.3.</li>
+</ol>
+</div>
+
+<h2>1. Hvad der er sket siden sidst</h2>
+<div class="tablewrap"><table>
+<tr><th>Dato</th><th>Hændelse</th><th>Kilde</th></tr>
+<tr><td class="nw">13. sep</td><td>CBS slår access tokens fra. Sign-in-sprinten får sin begrundelse. Audit-rapporten "The two new ways in" skrives med 12 fund.</td><td>commit a7e6b72a</td></tr>
+<tr><td class="nw">14. sep</td><td>Auth-skærmen bygges om: "Sign in to &lt;skole&gt;" er primær, extension og token er to sideordnede disclosures. Per-host blokeringsliste, "Got it"-kortet vises nu, førstegangs-teksten er rettet.</td><td>commit c05dfa55</td></tr>
+<tr><td class="nw">15. sep</td><td>Extensionen færdiggøres ("ToBeDeployed"). Listeneren kræver nu en extension-Origin, lukker sin port når vinduet udløber, <code>_csrf_token</code> droppes. Den "tilladende kolonne" køres ende-til-ende mod en falsk Canvas: 40 af 40 checks.</td><td>commit e660cd5b</td></tr>
+<tr><td class="nw">20. sep</td><td>macOS-DMG bygget manuelt fra HEAD (workflow_dispatch, 13:56). Testet på Isabellas Mac 14:09-14:21 mod Malmö Universitet.</td><td>gh run 35509197791, 18 WhatsApp-billeder</td></tr>
+<tr><td class="nw">22. sep</td><td>Chrome Web Store-listingen opdateret til v1.1.0 og er offentlig.</td><td>listingen, hentet i dag</td></tr>
+<tr><td class="nw">nu</td><td>Ucommittet: 7 store-grafikker, <code>LISTING.html</code>, <code>extension/README.md</code>, <code>scripts/build_extension_store_graphics.py</code>. Plus 14 løse PNG-filer i repo-roden (<code>find-section*.png</code>, <code>mobile-find*.png</code>, <code>test-billigst.png</code>), som ser ud til at høre til et andet projekt.</td><td>git status</td></tr>
+<tr><td class="nw">nu</td><td><strong>macOS-CI er rød på de sidste to pushes.</strong> To tests i <code>tests/test_browser_login.py</code>: en timing-test (0,50 s mod et 0,4 s ur, linje 1060) og "the wedged orphan survived" (linje 1930). Windows-CI er grøn.</td><td>gh run 34907763503</td></tr>
+</table></div>
+
+<h2>2. Hvad Isabellas billeder viser</h2>
+<p class="muted small">v2.0.3, MacBook Pro, Malmö Universitet (<code>mau.instructure.com</code>), 20. september. Billederne ligger i <code>Downloads/CANVASDOWNLOADER TBD</code>.
+Første halvdel er taget med skærmskalering "Larger Text" (1312&times;848), fra 14:20 skiftes til "Default".</p>
+
+<div class="tablewrap"><table>
+<tr><th>Tid</th><th>Hvad billedet viser</th><th>Type</th></tr>
+<tr><td class="nw">14:09</td><td>Login-siden med extension-kortet åbent. <strong>macOS spørger "Allow "Canvas Downloader" to find devices on local networks?"</strong> med teksten <em>"This will allow the app to discover, connect to, and collect data from devices on your networks."</em> Det er den værst tænkelige tekst at vise en studerende midt i et login.
+  <br><span class="small muted">Umålt hypotese, læst ud af koden: begge lyttere binder korrekt til 127.0.0.1, men <code>http.server.HTTPServer.server_bind</code> kalder <code>socket.getfqdn(host)</code>, og <code>core/handoff.py</code>'s <code>_Server</code> overskriver den ikke. Et omvendt navneopslag kan på macOS udløse Local Network-tilladelsen. Skal måles på en Mac før det rettes.</span></td><td><span class="tag t-bug">Bug, ny</span></td></tr>
+<tr><td class="nw">14:09</td><td>Kortet siger <em>"Not in the Chrome store yet. The blue button above does the same job with no extension at all."</em> Det var sandt da buildet blev lavet og er forkert nu. Kommer fra <code>ui/auth.py:2465</code>; <code>EXTENSION_STORE_URL</code> er stadig tom.</td><td><span class="tag t-doc">Tekst, forældet</span></td></tr>
+<tr><td class="nw">14:10</td><td>Chrome: <em>"Canvas Downloader Connector has requested additional permissions. Read and change your data on mau.instructure.com"</em>. Forventet og korrekt: det er den valgfri host-tilladelse, spurgt for præcis den ene side. Teksten "Read and change" er Chromes, ikke vores.</td><td><span class="tag t-ok">Virker</span></td></tr>
+<tr><td class="nw">14:11</td><td>Appen er logget ind som "Isabella". <strong>Extension-ruten virker ende-til-ende på macOS</strong>, som MACOS_PARITY forudsagde. Sync-siden viser et gammelt CBS-par fra 28. juni med "Folder not found". Sandsynligvis legitimt (mappen er flyttet), men det er et spørgsmål til dig.</td><td><span class="tag t-ok">Virker</span> <span class="tag t-q">Spørgsmål</span></td></tr>
+<tr><td class="nw">14:12-14:13</td><td>Custom Download ved "Larger Text": kortlabels brydes midt i ordet (<em>"Assignment s"</em>, <em>"Announcem ents"</em>, <em>"Submission s (Results)"</em>), "Go back" brydes over to linjer, og Quick Downloads nederste kortrække skæres af den sticky knapbar. Ved "Default" (14:21) ser alt rigtigt ud. Det er et <strong>bredde-problem, ikke et Mac-problem</strong>: en Windows-laptop med 125-150 % skalering har samme effektive bredde.</td><td><span class="tag t-bug">Bug, layout</span></td></tr>
+<tr><td class="nw">14:14</td><td>Settings: overskriften "PANOPTO LECTURE RECORDINGS" ser ud til at stå tom. <strong>RETTET SAMME DAG, det var forkert læst</strong>: kortene ligger under folden, og den sticky Cancel/Save-bar dækker dem. Målt i den rigtige app: scroller man, er de der. Det reelle problem var at dialogen var 807 px høj uanset vinduet, så Save lå delvist under skærmkanten ved 1312&times;795. Det er rettet.</td><td><span class="tag t-ok">Ikke en bug</span></td></tr>
+<tr><td class="nw">14:14</td><td>Settings viser heller ingen kontakt for <code>keep_signed_in</code> eller <code>token_upgrade_enabled</code> (fund 9 fra 13. sep, stadig åbent).</td><td><span class="tag t-bug">Kendt, åben</span></td></tr>
+<tr><td class="nw">14:14</td><td>Today's files: undertitlen løber ud over højre kant (<em>"...first time you open the app - no nee"</em>). Full Disk Access-hjælpekortet vises korrekt.</td><td><span class="tag t-bug">Bug, layout</span></td></tr>
+<tr><td class="nw">14:15</td><td>Logget ud, "Sign in to Canvas - mau.se"-vinduet åbner med MauID-siden, og appen viser "Finish signing in to Canvas". Rute B åbner på macOS. Billederne viser ikke om login gennemførtes.</td><td><span class="tag t-ok">Åbner</span></td></tr>
+<tr><td class="nw">14:19</td><td>Canvas &rarr; Inställningar på MAU: <strong>"Godkända integrationer" viser kun "Canvas for iOS"</strong>, og knappen <em>"+ Ny åtkomsttoken"</em> er der. Knappen tyder på at MAU tillader studerende at lave tokens. Hvis appens auto-mint var lykkedes ved en af de to logins, ville en integration ved navn "Canvas Downloader" stå her. Den gør ikke, og der findes ingen revoke i koden, så den er ikke blevet slettet af et logout.</td><td><span class="tag t-q">Den vigtigste</span></td></tr>
+</table></div>
+
+<div class="box warn">
+<p><strong>Hvorfor 14:19-billedet er det vigtigste.</strong> Den tilladende kolonne (skoler der tillader tokens) er den, hvor login-opgraderingen
+skal give studerende en 120-dages nøgle uden at de ved det. Den er kun kørt mod en falsk Canvas (15. sep). CBS svarede 403, som forventet.
+MAU er den første rigtige skole i den anden kolonne, og nøglen dukkede ikke op. Tre forklaringer, og kun én måling skiller dem ad:</p>
+<ol>
+  <li>mint-kaldet blev afvist (MAU blokerer alligevel, eller svarer noget vi ikke har set),</li>
+  <li>mint-kaldet blev aldrig forsøgt (fx fordi et tidligere afslag står i <code>token_upgrade_blocked_hosts</code>),</li>
+  <li>det skete efter kl. 14:19, ved rute B-login som endnu ikke var færdigt.</li>
+</ol>
+<p><strong>Det Isabella skal sende</strong> (fem minutter): <code>~/Library/Application Support/CanvasDownloader/canvas_downloader_settings.json</code>
+(se efter <code>auth_method</code>, <code>token_source</code>, <code>minted_token_id</code>, <code>token_upgrade_blocked_hosts</code>) og
+<code>diagnostics/health.log</code> fra samme mappe, plus et nyt kig på Godkända integrationer i dag. Filen indeholder ingen adgangskode; tokenet ligger i Keychain.</p>
+</div>
+
+<h2>3. De 12 fund fra 13. september: hvor de står</h2>
+<div class="tablewrap"><table>
+<tr><th>#</th><th>Fund</th><th>Status i dag</th></tr>
+<tr><td>1</td><td>Extension-ruten annonceres men kan ikke fås</td><td><span class="tag t-rel">Halvt</span> Storen er live. Appens tekst og <code>EXTENSION_STORE_URL</code> er ikke opdateret, og appen er ikke udgivet.</td></tr>
+<tr><td>2</td><td>Førstegangs-teksten siger "get a token"</td><td><span class="tag t-ok">Rettet 14. sep</span></td></tr>
+<tr><td>3</td><td>Privacy-siden modsiger sig selv</td><td><span class="tag t-ok">Rettet</span> Extension-afsnit tilføjet, "we do not modify" fjernet. Meta-beskrivelserne (3 tags) er stadig token-only.</td></tr>
+<tr><td>4</td><td>Logout tilbagekalder ikke det mintede token</td><td><span class="tag t-now">Åben</span> Der findes stadig ingen <code>revoke</code> i <code>core/token_mint.py</code>.</td></tr>
+<tr><td>5</td><td>Afinstallation efterlader login og evt. adgangskode</td><td><span class="tag t-now">Åben</span> <code>[UninstallDelete]</code> er uændret.</td></tr>
+<tr><td>6</td><td>Optimistisk gendannelse tunet til 120 dage, kører på 1 dag</td><td><span class="tag t-rel">Halvt</span> Handoff bruger nu <code>optimistic=False</code>. Den ugentlige genstart med en gemt session er uændret.</td></tr>
+<tr><td>7</td><td>Listeneren overlever sit vindue / accepterer uden Origin</td><td><span class="tag t-ok">Rettet 14. sep</span></td></tr>
+<tr><td>8</td><td>"Got it"-kortet renderede aldrig</td><td><span class="tag t-ok">Rettet 14. sep</span></td></tr>
+<tr><td>9</td><td>To samtykke-indstillinger uden UI</td><td><span class="tag t-now">Åben</span> Bekræftet af Isabellas Settings-billede.</td></tr>
+<tr><td>10</td><td>Extensionen tager <code>_csrf_token</code> uden grund</td><td><span class="tag t-ok">Rettet 15. sep</span></td></tr>
+<tr><td>11</td><td>Første login venter op til 15 s bag et skjult vindue</td><td><span class="tag t-hold">Ikke genmålt</span> <code>SILENT_TIMEOUT</code> er stadig 15,0.</td></tr>
+<tr><td>12</td><td>Med hjælpetekst slået fra forklarer extension-knappen intet</td><td><span class="tag t-hold">Ikke genmålt</span></td></tr>
+<tr><td>+</td><td>Ruten gemmes ikke, så extension-brugere fornyes via appens vindue (fuld adgangskode)</td><td><span class="tag t-now">Åben</span> Målt 15. sep. Rammer netop den population extensionen er lavet til.</td></tr>
+<tr><td>+</td><td>UI'en læser ikke <code>token_upgrade_blocked_hosts</code></td><td><span class="tag t-now">Åben</span> Sætningen i CLAUDE.md er stadig sand.</td></tr>
+</table></div>
+
+<h2>4. Dokumenterne: hvad der skal opdateres, og hvornår</h2>
+<p>Delt i tre efter hvornår sætningen bliver sand. Det meste må <em>ikke</em> skrives nu, for så beskriver sitet en funktion ingen kan hente.</p>
+
+<h3><span class="tag t-now">A</span> Sandt i dag, kan opdateres nu</h3>
+<div class="tablewrap"><table>
+<tr><th>Dokument</th><th>Hvad der er forkert</th></tr>
+<tr><td><code>extension/README.md</code></td><td>Linje 11: <em>"Not in the Chrome Web Store yet."</em> Den er live; linket skal ind.</td></tr>
+<tr><td><code>packaging/chrome-web-store/LISTING.html</code></td><td>Status-tabellen beskriver en indsendelse der venter. Skal registrere: udgivet, v1.1.0, 22. sep, URL, og hvad der blev valgt. Den ucommittede ændring (grafikker "Generated") hører med.</td></tr>
+<tr><td>Chrome Web Store-listingen selv</td><td>Trin 1 henviser til en knap der ikke findes i nogen udgivet app. Enten tilføjes "Requires Canvas Downloader 2.0.3 or newer", eller også udgives 2.0.3 snart. Listingen linker kun til privacy-siden og GitHub issues, ikke til <code>canvasdownloader.app</code>, så en der finder extensionen først, har ingen vej til selve appen.</td></tr>
+<tr><td><code>.claude/rules/browser-login.md</code></td><td>"The store assets do not exist yet", "<code>EXTENSION_STORE_URL</code> is empty and that is a STATE", og macOS-afsnittet "Nothing below has been run on a Mac". Alle tre er forældede. Isabellas test er den første Mac-måling og skal ind som den.</td></tr>
+<tr><td><code>tests/audit/MACOS_PARITY_2026-09-13.html</code></td><td>Samme: "Nothing here has been run on a Mac". Filen siger selv "Keep the two in step or delete one".</td></tr>
+<tr><td><code>tests/audit/OWNER_REPORTS.md</code></td><td>Seneste indgang er 13. sep. Mac-fundene ovenfor hører hjemme her (registret for defekter du selv har ramt), adskilt i "bekræftet ved læsning" og "mangler repro".</td></tr>
+<tr><td><code>scripts/build_extension_store_graphics.py</code></td><td>Ny og utracket. Matcher <code>scripts/build_*</code> og får derfor RELEASE-reglerne, ikke browser-login-reglerne. Skal på <code>paths:</code>-listen i samme commit som den tilføjes (samme fælde som <code>check_handoff.py</code>).</td></tr>
+<tr><td><code>marketing/README.md</code> + <code>DISTRIBUTION.md</code></td><td>Chrome Web Store findes ikke som kanal. Den er en ny opdagelsesflade (kategori Education, offentlig søgning), og den er den eneste kanal vi har, der ikke er en tekst-søgemaskine.</td></tr>
+<tr><td><code>marketing/STRATEGY.md</code></td><td>Konkurrent-tabellen giver jasp-nerd-extensionen fordelen <em>"No token at all - rides your browser session; zero setup"</em>. Den fordel har vi nu også, og for skoler der har slået tokens fra, er det vores mest konkrete positionering. Afventer dog udgivelsen for at blive sand for brugerne.</td></tr>
+<tr><td><code>memory-bank/activeContext.md</code></td><td>"Current Focus" og "Next Steps" beskriver sommerens arbejde. Seneste indgang er 14. sep.</td></tr>
+<tr><td><code>docs/privacy.html</code> meta</td><td>Tre meta-beskrivelser (<code>description</code>, <code>og:</code>, <code>twitter:</code>) siger kun "Your Canvas Access Token never leaves your computer". Selve siden er allerede opdateret og live.</td></tr>
+</table></div>
+
+<h3><span class="tag t-rel">B</span> Sandt fra den dag v2.0.3 udgives, skrives i samme skub</h3>
+<div class="tablewrap"><table>
+<tr><th>Dokument</th><th>Hvad der skal til</th></tr>
+<tr><td><code>ui/auth.py</code> (app-tekst)</td><td><code>EXTENSION_STORE_URL</code> udfyldes og <em>"Not in the Chrome store yet..."</em> erstattes. Skal ske <strong>før</strong> 2.0.3 bygges, ellers udgives den forkerte tekst.</td></tr>
+<tr><td><code>README.md</code></td><td>14 omtaler af access tokens, 0 af "Sign in with Canvas". Setup-afsnittet skal lede med sign-in og beholde tokenet som alternativ. README er 60 % af repoets trafik (FINDINGS, 2. sep).</td></tr>
+<tr><td><code>docs/win-setup.html</code>, <code>docs/mac-setup.html</code></td><td>Token-først, 0 omtaler af sign-in. mac-setup indlejrer en video om at lave et token; videoen skal have en ledsager eller en note, ikke slettes.</td></tr>
+<tr><td><code>docs/guide.html</code></td><td>Sektionen <code>#api-token</code> præsenterer tokenet som mekanismen. Mangler en sektion over den.</td></tr>
+<tr><td><code>docs/canvas-access-token-explained.html</code></td><td>Bygger på at tokens kan fås. Ét ærligt afsnit om skoler der slår dem fra er også et reelt søgeord, som ingen besvarer endnu.</td></tr>
+<tr><td><code>docs/index.html</code></td><td>"Is it safe"-panelet og FAQ er token-only, og versionen er 2.0.2. <strong>Din tekst</strong>: jeg rapporterer, du skriver.</td></tr>
+<tr><td>Microsoft Store-listingen (<code>marketing/STORE_LISTING.md</code>)</td><td>Linje 1612: <em>"You sign in with an access token you create yourself"</em>. Certificeringsnoterne til reviewerne bruger token-ruten; den findes stadig, så de kan blive.</td></tr>
+<tr><td>Release notes v2.0.3 + <code>marketing/CHANGELOG.md</code></td><td>Findes ikke endnu. <code>RELEASE_NOTES_v2.0.2.md</code> er skabelonen.</td></tr>
+<tr><td>En side eller sektion om Connector-extensionen</td><td>Sitet nævner kun "browser extensions" om konkurrenter. Ingen side linker til vores egen.</td></tr>
+</table></div>
+
+<h3><span class="tag t-hold">C</span> Må ikke skrives endnu, fordi det ikke er sandt eller ikke er målt</h3>
+<div class="box crit">
+<ul>
+  <li><strong>"Log ind én gang" om extensionen.</strong> På en skole der har slået tokens fra, er extensionen i dag den <em>kortest</em>-levende rute:
+    sessionen varer en dag, og fornyelsen går via appens eget vindue med fuld adgangskode, fordi ruten ikke gemmes. Målt 15. sep.</li>
+  <li><strong>"Appen laver automatisk en 120-dages nøgle til dig."</strong> Aldrig set virke mod en rigtig Canvas, og MAU-testen peger på at den ikke gjorde. Vent på Isabellas fil.</li>
+  <li><strong>Password-manager og "forbliv logget ind" på Mac.</strong> Begge er no-ops på macOS. Et Mac-login i appens vindue kræver adgangskoden hver gang, medmindre skolens egen SSO husker den.</li>
+  <li><strong>Google-SSO-skoler på Mac.</strong> Stadig umålt.</li>
+</ul>
+</div>
+
+<h2>5. Anbefalet rækkefølge</h2>
+<ol class="steps">
+  <li><strong>Få Isabellas indstillingsfil og health.log.</strong> Fem minutter, og det afgør om login-opgraderingen virker i den kolonne der betyder mest.</li>
+  <li><strong>Ryd gruppe A.</strong> Små, sande i dag, og de fleste er registre jeg selv læser, så de forkerte sætninger vil ellers styre næste session forkert.</li>
+  <li><strong>Beslut hvad der skal med i v2.0.3.</strong> Mit forslag til minimum før udgivelse: store-teksten og URL'en i appen, local-network-prompten (målt og forstået, ikke nødvendigvis rettet) og en grøn macOS-CI. Layout ved stor skalering og de åbne login-fund kan diskuteres.</li>
+  <li><strong>Så bug-fiksning</strong>, og gruppe B skrives i samme skub som udgivelsen, så sitet, README og storen skifter samme dag som appen.</li>
+</ol>
+
+<p class="small muted">Kilder: git-historik siden 20. aug, <code>gh release list</code>, <code>gh run view 34907763503</code>, Chrome Web Store-listingen hentet 26. sep,
+de 18 billeder, <code>.claude/rules/browser-login.md</code>, SIGNIN_STATE_OF_PLAY_2026-09-13, og grep i <code>ui/</code>, <code>core/</code>, <code>docs/</code>, <code>marketing/</code>.
+Hypotesen om local-network-prompten er læst ud af koden, ikke målt.</p>
+
+</main>
+</body>
+</html>

@@ -163,7 +163,7 @@ PATTERNS: list[tuple[str, re.Pattern]] = [
     # -- sync ----------------------------------------------------------
     ("sync_analysis_start", re.compile(
         r"=== Sync Analysis: (?P<course>.+?) \(ID: (?P<cid>\d+)\) ===")),
-    ("sync_mode", re.compile(r"^Mode: (?P<mode>Quick Sync|Analyze, Review & Sync|.+)$")),
+    ("sync_mode", re.compile(r"^Mode: (?P<mode>Quick Sync|Sync Review|Analyze, Review & Sync|.+)$")),
     ("sync_folder", re.compile(r"^Course Folder: (?P<folder>.+)$")),
     ("sync_manifest", re.compile(
         r"^Loaded local manifest: (?P<rows>\d+) tracked entrie\(s\)")),
@@ -559,7 +559,8 @@ def summarize(pl: ParsedLog) -> dict:
         "sync_synced": [e.data["name"] for e in pl.of("sync_synced")],
         "sync_totals": (totals.data if totals else None),
         "quick_sync": (pl.last("qs_summary").data if pl.last("qs_summary") else None),
-        # "Mode: Quick Sync" / "Mode: Analyze, Review & Sync". The pattern has
+        # "Mode: Quick Sync" / "Mode: Sync Review" (called "Analyze, Review &
+        # Sync" before 2026-09-26, so old logs carry that). The pattern has
         # always been parsed; nothing surfaced it, so the only Quick-Sync
         # signal a check could reach was the presence of the QS summary line -
         # true, but incidental. Which mode ran decides what the run was even

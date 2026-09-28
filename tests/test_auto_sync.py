@@ -217,7 +217,7 @@ def test_todays_files_only_covers_daily_sync_courses(config_dir, monkeypatch):
 
 
 def test_todays_files_includes_review_sync_arrivals(config_dir, monkeypatch):
-    """A file downloaded via "Analyze, Review & Sync" arrived today too - only
+    """A file downloaded via "Sync Review" arrived today too - only
     the RESTORED ones are curation rather than an arrival."""
     import ui.today_dashboard as td
     monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))

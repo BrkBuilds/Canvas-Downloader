@@ -732,6 +732,35 @@ div[class*="st-key-sync_pair_card_"][data-testid="stVerticalBlock"] {
     align-items: stretch !important;
 }
 
+/* ONE LINE EACH, ENDING BEFORE THE SAVE ICON, AT ANY ZOOM.
+   The title is a Markdown <p> and the Save icon is absolutely positioned over
+   the card, so nothing reserved room for it: a long course name ran straight
+   underneath the icon (measured at 1920px), and on a narrower window - a
+   MacBook on "Larger Text" gives 1312 - the title and folder wrapped over two
+   to four lines instead. Both now stay on one line and end in an ellipsis.
+   32px = the icon's 16px inset + its 20px width, minus the card's 12px
+   padding, plus 8px of air. The folder line takes the same edge so the two
+   read as one column. The save button's own label is a <p> inside a
+   stMarkdownContainer too, hence the :not(). */
+div[class*="st-key-sync_pair_card_"]
+    [data-testid="stElementContainer"]:not([class*="st-key-save_pair_"])
+    [data-testid="stMarkdownContainer"] > p {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding-right: 32px !important;
+}
+div[class*="st-key-sync_pair_card_"] .sp-folder-line {
+    min-width: 0;
+    padding-right: 32px;
+}
+div[class*="st-key-sync_pair_card_"] .sp-folder-text {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* =========================================
    MAIN SYNC LIST: COURSE + FOLDER PILL ROW
    -----------------------------------------

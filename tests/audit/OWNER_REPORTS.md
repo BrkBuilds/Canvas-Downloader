@@ -27,7 +27,14 @@ are the 2.0.4 list.
 
 ### 1. "See configuration" on Quick Download does not reflect what was chosen
 
-**Status**: open
+**Status**: fixed 2026-09-26. Confirmed by reading, then in the real page: the
+panel rendered `active_preset['settings']` while "Confirm and Download" ran the
+preset with the page's organisation choice applied, and "Customize" carried a
+third hand-written copy. `ui.quick_download.quick_run_settings` is now the one
+definition all three call. Driven at 1312px: choosing "All in One Folder"
+turned the preview from "With Subfolders" to "All in One Folder".
+`tests/test_quick_download_config.py` (census + behaviour); the revert mutant
+fails 2 of 5.
 **Severity**: low
 **Reported**: 2026-09-07, owner, from ordinary use
 **Reproduced by Claude**: no
@@ -51,7 +58,17 @@ truth, which is the defect class CLAUDE.md names first.
 
 ### 2. Custom Download: "See configuration" and "Change folder" get swallowed into the download phase card
 
-**Status**: open
+**Status**: open - NOT REPRODUCED, 2026-09-26, and not "fixed" on a guess.
+Driven in a harness (real `app.py`, fake courses, scan and download patched to
+block): every element on the Step 2 screen tagged, then sampled every 200ms
+through the scan and the download. Custom and Quick, every disclosure open,
+and "Change folder" (a 1.5s blocking picker) followed by Confirm at 300, 900
+and 1700ms: **0 leftovers in ~200 samples** across both phases. The probe can
+say yes - it counted 29 Step 2 elements before the swap. Note Custom Download
+has no "See configuration"; Quick Download has both it and a folder picker, so
+the report may have been Quick. Then driven against REAL Canvas (course 43660,
+the real engine, the owner's session): 368 samples across both flows, 0
+leftovers. Needs a screenshot the next time it happens.
 **Severity**: medium (cosmetic, but persistent and highly visible)
 **Reported**: 2026-09-07, owner, seen once on his own PC
 **Reproduced by Claude**: no
@@ -84,7 +101,27 @@ and children.
 
 ### 3. Panopto switched OFF still produces a failure expander on the success screen
 
-**Status**: open
+**Status**: fixed 2026-09-26, by a design change the owner chose from a
+side-by-side before/after: the skip-panel is now ONE muted line inside the
+card ("Lecture recordings skipped: Panopto is turned off in Settings."), no
+expander, no bold (his words). Still one element, so no index shift. Verified
+on the real run of course 43660; `tests/test_panopto_switch_ui.py` pins the
+shape, 3/3 mutants caught. The investigation that led there, 2026-09-26 - narrowed by reading, not reproduced. Ruled out:
+the Panopto phase does not run while the switch is off (`effective_contract`,
+`app.py`), and `panopto_summary` is cleared by both cleanup lists, so a stale
+card from an earlier run is not it. The only engine error that names Panopto is
+`LTI/Media Stream` ("streamed via a Canvas plugin (e.g., Panopto/Studio)") for
+a URL-less media FILE - but that is raised whatever the switch says, which does
+not fit "only when off".
+
+**Then driven for real, 2026-09-26** (course 43660, Quick Download "Complete
+Canvas Download", switch OFF, real engine and session): "Download Success",
+and NO failure for recordings. What the screen does carry is the full-width
+expander *"Lecture recordings were not fetched for 1 course - Panopto is
+switched off in Settings."* at the same weight as the error panel under it -
+almost certainly the panel the owner read as "couldn't download". So this is a
+DESIGN question (make the off-notice quieter), not a defect, and the shape is
+the owner's call.
 **Severity**: low, but it is the one that annoys the owner most
 **Reported**: 2026-09-07, owner
 **Reproduced by Claude**: no
@@ -122,7 +159,19 @@ empty.
 
 ### 4. Today's files runs on a session that was never CONFIRMED, and reports one amber notice per course
 
-**Status**: open
+**Status**: fixed 2026-09-26, both halves. `ui.auth.SESSION_CONFIRMED_KEY` is
+written at the decision sites (validated restore, interactive sign-in -> True;
+optimistic restore -> False). `app.py`'s daily-sync hook starts only behind
+`poll_session_confirmation()`, which re-asks Canvas on a DAEMON THREAD at most
+every 30s and does NOT consume the once-per-session check while unconfirmed -
+so a late wifi still gets today's sync, and an auth refusal goes to sign-in.
+The analysis loop collects failures and `_report_analysis_failures` says it
+once ("Could not analyse N of M courses"), or routes to reconnect when every
+course was an auth refusal (clearing the run first - `force_reauth` does not).
+`tests/test_today_unconfirmed_session.py`, 8/8 mutants caught. **Still not
+verified**: which message the revoked token of incident 2 produced - with this
+gate it can no longer cascade, but `is_auth_error` not recognising it is the
+reason it was restored optimistically, and that needs the real message.
 **Severity**: medium, and it is the one with real user impact
 **Reported**: 2026-09-07, owner, from two separate incidents on two machines
 **Root cause**: CONFIRMED by reading, on the auto-sync precondition. The second
@@ -182,6 +231,27 @@ still fail some courses mid-run.
 ---
 
 ## 2026-09-12: A DROPPED BROWSER CONNECTION RE-RAN THE WHOLE DOWNLOAD, TWICE
+
+**UPDATE 2026-09-26 - REPRODUCED, and the mechanism below is WRONG in one
+place.** It is not a NEW session. Measured in a harness by closing the page's
+WebSocket mid-download: the browser reconnects in the SAME session, and
+Streamlit's `runner.fastReruns` (on by default) stops the running script and
+starts a NEW run at once. A fresh tab on the same URL was measured too and
+starts nothing. Two cases:
+
+* the old run is blocked with no Streamlit call - it keeps going, the new run
+  downloads the same course CONCURRENTLY (`download_course_async` twice, 1.6s
+  apart, one session id). **Fixed**: `core.cancellation.blocking_run` - a claim
+  in the PROCESS (in the stopped run even reading `st.session_state` raises
+  StopException, measured), the new run waits, and a unit the old run FINISHED
+  is not repeated. After: one start, page ends on "Download Complete!". All four
+  blocking calls in `app.py` plus sync's Panopto pass hold a claim; a census in
+  `tests/test_blocking_run_guard.py` fails on a new unguarded one. 7/7 mutants.
+* the old run makes Streamlit calls (the real engine does, on every progress
+  tick) - it is stopped at the next one and the new run restarts the course,
+  skip-existing making it a resume. **NOT fixed**: that needs the work off the
+  script thread with the new run re-attaching, the way `sync/execution.py`
+  already does with `sync_worker_future`. That is the remaining half.
 
 Reported as *"something happened when the panopto download was supposed to
 start, where the mb tracker started from the beginning... files were at

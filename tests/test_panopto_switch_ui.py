@@ -205,108 +205,62 @@ def test_card4_off_state_emits_a_stylesheet_like_the_on_state():
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# The skipped-recordings panel: the third member of an existing family
+# The Panopto-off note: ONE quiet line (owner, 2026-09-26)
+#
+# It used to be the third member of the skip-panel family - a full-width
+# expander at the weight of the error panel beside it, which the owner read as
+# "couldn't download panopto lecture recordings" on a SUCCESS screen, about a
+# feature he had switched off on purpose. He chose one muted line instead,
+# after seeing both side by side, and asked for no bold in it.
 # ═══════════════════════════════════════════════════════════════════════════
 
-def test_the_notice_reuses_the_skip_panel_family():
-    """Not a new component. The size-skip and archive notices already share
-    this markup and CSS; a fourth visual language for the same idea is how a
-    completion screen stops looking like one screen.
-
-    Asserted as whole CLASS ATTRIBUTES, not bare class names: `"skip-panel"` is
-    a substring of `skip-panel-body`, so renaming the outer element still left
-    every loose check passing.
-    """
-    fn = _func_src("shared/components.py", "render_panopto_disabled_notice")
-    for attr in ("class='skip-panel skip-panel-solo'",
-                 "class='skip-panel-header'",
-                 "class='sp-header-row'",
-                 'class="sp-chevron"',
-                 "class='sp-title'",
-                 "class='skip-panel-body'",
-                 "class='sp-subtitle'",
-                 "class='skip-file-list'",
-                 'class="skip-file-row"',
-                 'class="skip-file-name"'):
-        assert attr in fn, f"the family's {attr!r} is gone"
-
-
-def test_the_notice_is_silent_while_switched_on(config_dir, monkeypatch):
-    """The switch must be the thing that stops it.
-
-    An earlier version left the resolver un-stubbed, so it returned [] and the
-    notice fell silent for the WRONG reason - a mutant that deleted the switch
-    check entirely still passed. Feed it courses, so the only remaining reason
-    to render nothing is the switch.
-    """
-    import shared.components as C
-    from panopto import settings as S
-    S.set_globally_enabled(True)
-    monkeypatch.setattr(C, "panopto_disabled_courses", lambda mode: ["A", "B"])
-    called = []
-    monkeypatch.setattr(C.st, "markdown", lambda *a, **k: called.append(a))
-    C.render_panopto_disabled_notice(mode="sync")
-    assert called == []
-
-
-def test_the_notice_is_silent_when_nothing_wanted_recordings(config_dir, monkeypatch):
-    """Otherwise it appears on every run of every files-only course - which is
-    nearly all of them."""
+def _render_off(monkeypatch, names=("Makroøkonomi", "Statistik")):
     import shared.components as C
     from panopto import settings as S
     S.set_globally_enabled(False)
-    monkeypatch.setattr(C, "panopto_disabled_courses", lambda mode: [])
-    called = []
-    monkeypatch.setattr(C.st, "markdown", lambda *a, **k: called.append(a))
-    C.render_panopto_disabled_notice(mode="sync")
-    assert called == []
-
-
-def test_the_notice_counts_courses_never_recordings(config_dir, monkeypatch):
-    """Forced by the fix itself: discovery is skipped, so the recording count is
-    genuinely unknown. Claiming one would mean running the very scan the switch
-    exists to avoid."""
-    import shared.components as C
-    from panopto import settings as S
-    S.set_globally_enabled(False)
-    monkeypatch.setattr(C, "panopto_disabled_courses",
-                        lambda mode: ["Makroøkonomi", "Statistik"])
+    monkeypatch.setattr(C, "panopto_disabled_courses", lambda mode: list(names))
     out = []
     monkeypatch.setattr(C.st, "markdown", lambda *a, **k: out.append(a[0]))
     C.render_panopto_disabled_notice(mode="sync")
-    assert len(out) == 1
+    return out
+
+
+def test_the_note_is_ONE_quiet_line_not_a_panel(config_dir, monkeypatch):
+    out = _render_off(monkeypatch)
+    assert len(out) == 1, "one element, so nothing below it moves index"
     html = out[0]
-    assert "<b>2</b> course" in html
-    assert "recording" not in html.split("</summary>")[0].replace(
-        "Lecture recordings", ""), "the headline must not claim a recording count"
-    assert "Makroøkonomi" in html and "Statistik" in html
+    assert "class='panopto-off-note'" in html
+    for panel_part in ("<details", "<summary", "skip-panel", "sp-chevron"):
+        assert panel_part not in html, f"the note grew back into a panel ({panel_part})"
 
 
-def test_the_notice_escapes_course_names(config_dir, monkeypatch):
-    """Course names are Canvas data and reach an unsafe_allow_html string."""
-    import shared.components as C
-    from panopto import settings as S
-    S.set_globally_enabled(False)
-    monkeypatch.setattr(C, "panopto_disabled_courses",
-                        lambda mode: ["<img src=x onerror=alert(1)>"])
-    out = []
-    monkeypatch.setattr(C.st, "markdown", lambda *a, **k: out.append(a[0]))
-    C.render_panopto_disabled_notice(mode="sync")
-    assert "<img src=x" not in out[0]
-    assert "&lt;img" in out[0]
+def test_the_note_has_no_bold(config_dir, monkeypatch):
+    """Asked for directly: "der skal bare ikke være bold i teksten"."""
+    html = _render_off(monkeypatch)[0]
+    assert "<b>" not in html and "<strong>" not in html
+    css = (Path(__file__).resolve().parent.parent / "styles" / "completion.css").read_text(encoding="utf-8")
+    block = css[css.index(".panopto-off-note {"):]
+    assert "font-weight" not in block.split("}", 3)[0] + block.split("}", 3)[1], (
+        "the note's own rules made its text bold")
 
 
-def test_the_notice_says_nothing_was_lost(config_dir, monkeypatch):
-    """Same register as its two siblings: nothing failed, nothing is missing."""
-    import shared.components as C
-    from panopto import settings as S
-    S.set_globally_enabled(False)
-    monkeypatch.setattr(C, "panopto_disabled_courses", lambda mode: ["A"])
-    out = []
-    monkeypatch.setattr(C.st, "markdown", lambda *a, **k: out.append(a[0]))
-    C.render_panopto_disabled_notice(mode="sync")
-    assert "Nothing is missing" in out[0]
-    assert "Settings" in out[0]
+def test_the_note_points_at_Settings_and_claims_no_count(config_dir, monkeypatch):
+    """Discovery is skipped while the switch is off, so no recording count is
+    known - the line must not invent one."""
+    html = _render_off(monkeypatch)[0]
+    assert "Settings" in html
+    import re
+    text = re.sub(r"<[^>]+>", "", html)
+    assert not re.search(r"\d", text), f"the note claims a number: {text!r}"
+
+
+def test_no_Canvas_text_reaches_the_note(config_dir, monkeypatch):
+    """Course names are Canvas data and this is an unsafe_allow_html string.
+    The note no longer names courses at all, which is the strongest form of
+    escaping - and this pins that it stays that way."""
+    html = _render_off(monkeypatch, names=["<img src=x onerror=alert(1)>", "Makroøkonomi"])[0]
+    assert "img src=x" not in html and "onerror" not in html
+    assert "Makroøkonomi" not in html
 
 
 @pytest.mark.parametrize("victim", ["is_globally_enabled", "resolver"])

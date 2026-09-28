@@ -165,3 +165,139 @@ def reset_sync_cancel() -> None:
         st.session_state['sync_cancel_requested'] = False
     except Exception:
         pass
+
+
+# ═══════════════════════════════════════════════
+# One blocking run per session (owner report 2026-09-12)
+# ═══════════════════════════════════════════════
+#
+# MEASURED 2026-09-26: when the browser's websocket drops mid-download and the
+# page reconnects on its own (the ordinary case - a backgrounded tab, a wifi
+# blip), Streamlit keeps the SAME session and starts a NEW script run while the
+# old one is still blocked inside the download. Both runs see
+# `download_status == 'running'`, so the new one downloads the same course
+# again, concurrently. Driven in a harness by closing the page's WebSocket:
+# `download_course_async` started twice, 1.6s apart, same session id, both on a
+# `ScriptRunner.scriptThread`. That is the reported "Download Start" three
+# times from one click, and "100% with 7 minutes left" is two runs painting
+# one screen.
+#
+# The owner-report entry guessed at a NEW session that had lost its state.
+# That was measured too and is not it: a fresh tab on the same URL has no run
+# state and starts nothing.
+#
+# THE CLAIM CANNOT LIVE IN `session_state`, and that was measured, not assumed:
+# in the run Streamlit has stopped, even READING `st.session_state` raises
+# StopException (the proxy checks the run's stop flag). So the run being
+# replaced could never write "I finished". The claim lives here instead, in the
+# process, keyed by the session id both runs share (measured: identical). It
+# names the THREAD holding the phase, so a run that died without releasing it
+# blocks nothing - a dead thread's claim is ignored.
+#
+# Not re-import proof, deliberately: a file-watcher reload (source runs only;
+# the shipped app has no watcher) empties these dicts, which only disables the
+# guard for a run in flight - it cannot strand anything, because nothing here
+# owns an OS resource.
+
+_runs_lock = threading.Lock()
+_runs: dict = {}      # session id -> {'thread', 'phase', 'unit'}
+_completed: dict = {} # session id -> (phase, unit) of the last NORMAL exit
+
+
+def _session_id() -> "str | None":
+    try:
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        return getattr(get_script_run_ctx(), 'session_id', None)
+    except Exception:                                              # noqa: BLE001
+        return None
+
+
+def other_blocking_run(session_id: "str | None" = None) -> "threading.Thread | None":
+    """The live thread of ANOTHER run of this session inside a blocking phase."""
+    sid = session_id or _session_id()
+    if sid is None:
+        return None
+    with _runs_lock:
+        rec = _runs.get(sid)
+    thread = rec.get('thread') if rec else None
+    if (thread is None or thread is threading.current_thread()
+            or not thread.is_alive()):
+        return None
+    return thread
+
+
+class blocking_run:
+    """Claim a blocking phase (scan, download, retry, Panopto, sync) for this run.
+
+    Use as ``with blocking_run('download', unit=idx):`` around the call that
+    blocks. Released on the way out only if this thread still holds it.
+
+    **A NORMAL exit records (phase, unit) as completed, and that is load-bearing.**
+    Streamlit stops the replaced run at its FIRST Streamlit call after the
+    blocking call returns - measured: the course finished, the index was never
+    advanced, and the waiting run downloaded it again. This record is a plain
+    dict in the process, so it survives the stop, and `blocking_run_completed`
+    lets the waiting run carry on from it instead of repeating the work.
+    """
+
+    def __init__(self, phase: str, unit=None, *, session_id: "str | None" = None):
+        self.phase = phase
+        self.unit = unit
+        self.sid = session_id
+
+    def __enter__(self):
+        self.sid = self.sid or _session_id()
+        if self.sid is not None:
+            with _runs_lock:
+                _completed.pop(self.sid, None)
+                _runs[self.sid] = {'thread': threading.current_thread(),
+                                   'phase': self.phase, 'unit': self.unit}
+        return self
+
+    def __exit__(self, exc_type, *_exc):
+        if self.sid is None:
+            return False
+        with _runs_lock:
+            rec = _runs.get(self.sid)
+            if rec and rec.get('thread') is threading.current_thread():
+                if exc_type is None:
+                    _completed[self.sid] = (self.phase, self.unit)
+                _runs.pop(self.sid, None)
+        return False
+
+
+def blocking_run_completed(phase: str, unit=None, *,
+                           session_id: "str | None" = None) -> bool:
+    """Did the run this one replaced FINISH *phase* for *unit*?"""
+    sid = session_id or _session_id()
+    with _runs_lock:
+        return sid is not None and _completed.get(sid) == (phase, unit)
+
+
+def wait_for_other_blocking_run(heartbeat, *, poll: float = 0.4,
+                                session_id: "str | None" = None) -> bool:
+    """If another run of this session holds a blocking phase, wait for it.
+
+    Answers True when it waited and False when nothing else was running, in
+    which case the caller does the work itself. After a True, ask
+    `blocking_run_completed` whether that run finished the unit.
+
+    *heartbeat* must be a Streamlit call (an empty ``markdown``): Streamlit only
+    delivers a pending click - Cancel included - at a Streamlit call, so a
+    silent sleep here would make the screen deaf until the other run ended.
+    Cancel works while waiting because the cancel signal is the process-global
+    Event above, which the other run's engine polls.
+    """
+    sid = session_id or _session_id()
+    thread = other_blocking_run(sid)
+    if thread is None:
+        return False
+    with _runs_lock:
+        phase = (_runs.get(sid) or {}).get('phase', '?')
+    logger.info("A reconnected run found the %s phase still running in another "
+                "run of this session; waiting for it instead of starting again.",
+                phase)
+    while thread.is_alive():
+        heartbeat()
+        thread.join(poll)
+    return True

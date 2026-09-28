@@ -371,6 +371,23 @@ class _Server(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
     allow_reuse_address = False        # never inherit somebody else's socket
 
+    def server_bind(self):
+        """Bind WITHOUT the hostname lookup ``HTTPServer`` adds.
+
+        The stock ``server_bind`` calls ``socket.getfqdn(host)`` purely to fill
+        in ``server_name``, which only CGI and wsgiref ever read. On macOS 15+
+        a name lookup is one of the things that can raise "Allow Canvas
+        Downloader to find devices on local networks?", and a student saw
+        exactly that prompt the moment they pressed the extension button,
+        which is when this listener binds (2026-09-20). It is the only lookup
+        on that path, so it goes. NOT YET VERIFIED ON A MAC to remove the
+        prompt: the login card tells a Mac user what to click either way.
+        """
+        socketserver.TCPServer.server_bind(self)
+        host, port = self.server_address[:2]
+        self.server_name = host
+        self.server_port = port
+
 
 def start() -> int:
     """Open the handoff window. Answers the port, or 0 if none could be had.

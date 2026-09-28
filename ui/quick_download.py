@@ -131,6 +131,22 @@ _QUICK_PRESETS = [
 # Callbacks
 # ---------------------------------------------------------------------------
 
+def quick_run_settings(preset: dict, org_mode: str) -> dict:
+    """The settings a Quick Download run EXECUTES: the preset, with the page's
+    own "Choose how files are organized" answer applied on top.
+
+    ONE definition, three readers: the "See configuration" panel previews
+    exactly this, "Confirm and Download" runs exactly this, and the "Customize
+    this configuration" hand-off carries exactly this. The panel used to read
+    the raw preset instead, so choosing "All in One Folder" still showed "With
+    Subfolders" - the owner's 2026-09-07 report, and two sources of truth for
+    one run.
+    """
+    settings = dict(preset['settings'])
+    settings['download_mode'] = org_mode
+    return settings
+
+
 def _select_preset_cb(preset_id: str, default_mode: str) -> None:
     st.session_state['quick_preset_id'] = preset_id
     st.session_state['quick_org_mode'] = default_mode
@@ -782,6 +798,37 @@ div.st-key-page_nav_quick_start button:active {{
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
 }}
 
+/* THE PAGE HAS A WIDTH, NOT A SHARE. The content column was 2.4/4.4 of
+   whatever the window left over, which is ~580px on a 1512px window and
+   ~470px on a 1312px one - and 1312 is what a MacBook on "Larger Text"
+   gives. Every card and label on the page is tuned for 580, so below it the
+   preset cards grew tall and thin and the action labels broke. Holding the
+   column at 580 (or the whole width, if the window cannot spare that) lets
+   the empty side columns absorb the difference instead. The row is found by
+   the sticky bar it contains, which exists on this page only once. */
+/* nowrap is load-bearing: Streamlit's rows wrap, so without it the minimum
+   width pushed the RIGHT spacer onto a line of its own and the page sat
+   off-centre, 314px from the left edge and 0 from the right (measured). */
+div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"] div.st-key-sticky_actions_quick) {{
+    flex-wrap: nowrap !important;
+}}
+div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"] div.st-key-sticky_actions_quick)
+    > div[data-testid="stColumn"]:nth-child(2) {{
+    /* minus the row's two 1rem gaps, or at the 1024px minimum window the
+       column overran the row by 4px (measured 16px left, 12px right) */
+    min-width: min(580px, calc(100% - 2rem)) !important;
+}}
+div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"] div.st-key-sticky_actions_quick)
+    > div[data-testid="stColumn"]:not(:nth-child(2)) {{
+    min-width: 0 !important;
+}}
+/* One line each. At the old [1, 3.5, 1.5] split "Go back" had ~90px and
+   wrapped under its own arrow even at 1512px. */
+div.st-key-page_nav_quick_back button p,
+div.st-key-page_nav_quick_start button p {{
+    white-space: nowrap !important;
+}}
+
 </style>
 """)
 
@@ -1081,7 +1128,8 @@ div.st-key-page_nav_quick_start button:active {{
         with st.container(key="qd_config_wrap"):
             with st.expander("See configuration"):
                 if active_preset is not None:
-                    _config_badges = render_config_summary_badges(active_preset['settings'], show_path=False)
+                    _config_badges = render_config_summary_badges(
+                        quick_run_settings(active_preset, selected_org), show_path=False)
                     st.html("<div style='color:#64748b; font-size:0.82rem; padding:0 0 10px 0; line-height:1.5;'>The badges below show the preset download configuration. (Square tag = file organization, round tag = what will be downloaded or converted).</div>")
                     st.markdown(_config_badges, unsafe_allow_html=True)
                 else:
@@ -1095,8 +1143,7 @@ div.st-key-page_nav_quick_start button:active {{
                          "Choose a preset above to customize its settings.",
                 ):
                     # Pre-populate all download settings from the active preset
-                    _s = dict(active_preset['settings'])  # type: ignore[index]
-                    _s['download_mode'] = selected_org  # carry over org choice
+                    _s = quick_run_settings(active_preset, selected_org)  # type: ignore[arg-type]
                     st.session_state['download_mode']        = _s['download_mode']
                     st.session_state['file_filter']          = _s.get('file_filter', 'all')
                     st.session_state['dl_isolate_secondary'] = _s.get('dl_isolate_secondary', False)
@@ -1150,7 +1197,9 @@ div.st-key-page_nav_quick_start button:active {{
         # go inside - the click handlers below stay out, so an error notice they
         # render never appears inside the floating bar.
         with st.container(key="sticky_actions_quick"):
-            act_back, _spacer, act_start = st.columns([1, 3.5, 1.5])
+            # Sized so both labels fit on one line at the page's 580px:
+            # ~130px for "Go back" and ~200px for "Confirm and Download".
+            act_back, _spacer, act_start = st.columns([1.3, 2.2, 2])
             with act_back:
                 back_clicked = st.button("Go back", key="page_nav_quick_back", use_container_width=True)
             with act_start:
@@ -1193,8 +1242,7 @@ div.st-key-page_nav_quick_start button:active {{
                 st.stop()
 
             preset   = next((p for p in _QUICK_PRESETS if p['id'] == selected_id), _QUICK_PRESETS[0])
-            settings = dict(preset['settings'])
-            settings['download_mode'] = selected_org
+            settings = quick_run_settings(preset, selected_org)
 
             from shared.components import resolve_courses_or_stop
             all_courses = resolve_courses_or_stop(fetch_courses_fn, retry_key="quick_start_conn_retry")

@@ -5,7 +5,7 @@ Reported by the product owner on the real completion screen, macOS 26.6,
 
     ⚠️ Quick Sync skipped 2 files you edited locally and 4 files deleted
        locally and 2 files deleted on Canvas.
-       To download them, run a normal 'Analyze, Review & Sync' and select
+       To download them, run a normal 'Sync Review' and select
        them manually.
 
 Two things wrong with it, and neither is a bug in the sync:
@@ -148,7 +148,7 @@ def test_the_panel_is_INFO_not_amber():
 
 
 def test_the_detail_line_lives_beside_the_sentence_it_belongs_to():
-    assert "Analyze, Review & Sync" in QUICK_SYNC_SKIP_DETAIL
+    assert "Sync Review" in QUICK_SYNC_SKIP_DETAIL
     assert "QUICK_SYNC_SKIP_DETAIL" in COMPLETION_SRC
 
 
