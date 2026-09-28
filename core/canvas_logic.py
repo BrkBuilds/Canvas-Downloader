@@ -13,7 +13,8 @@ from datetime import datetime, timezone
 from canvasapi import Canvas
 from canvasapi.requester import Requester
 from canvasapi.exceptions import (CanvasException, Forbidden,
-                                  ResourceDoesNotExist, Unauthorized)
+                                  InvalidAccessToken, ResourceDoesNotExist,
+                                  Unauthorized)
 import asyncio
 import aiohttp
 import types
@@ -1007,16 +1008,35 @@ def is_auth_error(exc) -> bool:
     revoked Canvas token), centralizing the scattered 401 / "unauthorized" checks.
 
     Matches:
-      - canvasapi ``Unauthorized``
+      - canvasapi ``Unauthorized`` and ``InvalidAccessToken``
       - any exception whose ``status_code`` is 401
-      - any exception whose message mentions 401 / unauthorized / "user not authorised"
+      - any exception whose message mentions 401 / unauthorized / "user not
+        authorised" / "user authorisation required"
+
+    **`InvalidAccessToken` is NOT a subclass of `Unauthorized`**, and it is the
+    one real Canvas raises. canvasapi picks it for any 401 carrying a
+    `WWW-Authenticate` header, and Canvas sends that header on every API 401.
+    Measured 2026-09-28 against `cbscanvas.instructure.com/api/v1/users/self`,
+    all three answering `401` + `WWW-Authenticate: Bearer realm="canvas-lms"`:
+
+        expired/invalid session   {"message": "user authorisation required"}
+        no credential at all      {"message": "user authorisation required"}
+        revoked token             {"message": "Invalid access token."}
+
+    A token only ever matched by the accident of its wording containing
+    "invalid access token". A browser session matched NOTHING, so an expired
+    one was read as a network blip: the launch restored it optimistically
+    (signed in, no name), the course list showed "We couldn't reach Canvas",
+    and the 30-second re-check got the same answer for ever. Reported by the
+    product owner 2026-09-28. Both spellings of "authoris/zation required" are
+    matched because the text is Canvas' and Canvas is not ours to pin.
 
     Deliberately does NOT match 403/Forbidden (a permission issue on a valid
     token) - those are not "reconnect your account" situations.
     """
     if exc is None:
         return False
-    if isinstance(exc, Unauthorized):
+    if isinstance(exc, (Unauthorized, InvalidAccessToken)):
         return True
     if getattr(exc, 'status_code', None) == 401:
         return True
@@ -1024,6 +1044,8 @@ def is_auth_error(exc) -> bool:
     return ('401' in msg
             or 'unauthorized' in msg
             or 'user not authorised' in msg
+            or 'authorisation required' in msg
+            or 'authorization required' in msg
             or 'invalid access token' in msg
             or 'expired' in msg)
 
@@ -1447,7 +1469,12 @@ class CanvasManager:
             # We attempt to fetch the user. This validates both the URL and Token.
             self.user = self.canvas.get_current_user()
             return True, f'Logged in as: {self.user.name}'
-        except Unauthorized as e:
+        # BOTH 401 types. Real Canvas raises `InvalidAccessToken` (a sibling,
+        # not a subclass - see `is_auth_error`), so catching `Unauthorized`
+        # alone left this branch reachable only by test doubles, and an
+        # expired browser session came back as Canvas' bare "user authorisation
+        # required", which nothing downstream recognised as a sign-in problem.
+        except (Unauthorized, InvalidAccessToken) as e:
             # The single most common failure over the app's lifetime: the saved
             # token is no longer accepted. Lead with a phrase the UI matches, and
             # let Canvas's own text (appended in the parentheses) be the thing

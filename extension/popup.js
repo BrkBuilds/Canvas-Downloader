@@ -296,8 +296,8 @@ async function read() {
     return show({
       step: 2, tone: "warn",
       title: "Nearly there",
-      body: "In Canvas Downloader, click “Use the Canvas tab in my "
-          + "browser”. Then come straight back here.",
+      body: "In Canvas Downloader, click “Sign in with the "
+          + "extension”. Then come straight back here.",
       enabled: false,
     });
   }

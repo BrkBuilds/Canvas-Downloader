@@ -294,32 +294,63 @@ def test_the_link_renders_inside_the_login_form():
     assert form < call < submit
 
 
-def test_the_token_row_gives_the_shortcut_more_room_than_the_url_row():
-    """This used to require the two rows to use the SAME ratio, so the
-    shortcut would line up under the institution picker. That property died on
-    2026-09-14: the token field moved into its own card in the right-hand
-    column and the URL field stayed in the login card above, which is twice as
-    wide. There is no shared line left for them to land on.
+def _login_page_ast():
+    import ast
+    tree = ast.parse(_AUTH_SRC)
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "render_login_page")
+    parents = {}
+    for node in ast.walk(fn):
+        for child in ast.iter_child_nodes(node):
+            parents[child] = node
+    return fn, parents
 
-    What survives is the reason underneath it - the shortcut must be wide
-    enough to say what it does. Measured across widths with both rows on
-    [1.6, 1]: at 1366px, one of the commonest laptop widths there is, the
-    token card is 330px, the button gets 100px, and "Get a token" is cut to
-    "Get a to...". It needs 103px for its icon, gap, padding and label.
 
-    So the token row takes a SMALLER first number than the URL row, which
-    gives its second column a larger share. Equal would be a regression here,
-    and larger would be one too.
-    """
-    ratios = re.findall(r"st\.columns\(\[([^\]]+)\], vertical_alignment=\"bottom\"\)",
-                        _AUTH_SRC[_AUTH_SRC.index('with st.form("auth_form"'):])
-    assert len(ratios) == 2, f"expected the URL row and the token row, got {ratios}"
-    url_first = float(ratios[0].split(",")[0])
-    tok_first = float(ratios[1].split(",")[0])
-    assert tok_first < url_first, (
-        f"the token row is in a card half the width of the URL row's and must "
-        f"give its shortcut a bigger share, not the same one: {ratios}"
-    )
+def test_the_token_field_is_not_squeezed_into_a_column():
+    """The token field takes the card's FULL width and the shortcut sits under
+    it. Product owner, 2026-09-28: a Canvas token is ~70 characters and the
+    side-by-side row gave the field well under the card's width - while the
+    shortcut still needed its own column just to fit "Get a token" (cut to
+    "Get a to..." at 1366px on an even split). Stacked, neither competes.
+
+    Read from the AST, not the text: the old layout named its columns `_c_tok`
+    and `_c_link`, and a comment mentioning either would satisfy a grep."""
+    import ast
+    fn, parents = _login_page_ast()
+    field = next(
+        n for n in ast.walk(fn)
+        if isinstance(n, ast.Call)
+        and any(k.arg == "key" and isinstance(k.value, ast.Constant)
+                and k.value.value == "token_input" for k in n.keywords))
+    node = field
+    while node in parents:
+        node = parents[node]
+        if isinstance(node, ast.With):
+            ctx = " ".join(ast.unparse(i.context_expr) for i in node.items)
+            assert "columns" not in ctx and not ctx.startswith("_c_"), (
+                f"the token field is inside a column again: `with {ctx}`")
+    # And the shortcut follows it in the SAME block, i.e. directly beneath.
+    link = next(n for n in ast.walk(fn)
+                if isinstance(n, ast.Call)
+                and ast.unparse(n.func).endswith("token_link_html"))
+    stmt_f, stmt_l = field, link
+    while not isinstance(stmt_f, ast.stmt):
+        stmt_f = parents[stmt_f]
+    while not isinstance(stmt_l, ast.stmt):
+        stmt_l = parents[stmt_l]
+    assert parents[stmt_f] is parents[stmt_l], (
+        "the shortcut is no longer in the same block as the token field")
+    assert stmt_f.lineno < stmt_l.lineno, "the shortcut must sit UNDER the field"
+
+
+def test_the_shortcut_sizes_to_its_label():
+    """Under a full-width field a full-width shortcut would read as a second
+    primary beside Log In, and a fixed share could truncate it again."""
+    block = _css_block('div[class*="st-key-login_card_wrapper"] .cd-tokenlink-btn {')
+    assert re.search(r"(?<![-\w])width: auto", block), block
+    # `max-width: 100%` is wanted (it keeps a narrow card safe); a bare
+    # `width: 100%` is the regression.
+    assert not re.search(r"(?<![-\w])width: 100%", block), block
 
 
 def test_reauth_mode_passes_the_saved_url_as_the_fallback():

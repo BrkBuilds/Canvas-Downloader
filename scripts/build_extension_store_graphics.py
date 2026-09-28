@@ -656,7 +656,7 @@ def generate_screenshot_2():
             <div class="step-num">&#10003;</div>
             <div class="step-content">
                 <h3>2. Choose browser tab in Canvas Downloader</h3>
-                <p>In the desktop app, select <em>"Use the Canvas tab in my browser"</em>. The app opens a secure local listener.</p>
+                <p>In the desktop app, select <em>"Sign in with the extension"</em>. The app opens a secure local listener.</p>
             </div>
         </div>
 

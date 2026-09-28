@@ -55,6 +55,7 @@ swallows every exception**.  The sampler is a daemon thread.  psutil is optional
 from __future__ import annotations
 
 import json
+import ntpath
 import os
 import platform
 import re
@@ -121,9 +122,16 @@ def reap_webview_orphans(profile_dir: str) -> tuple[int, list]:
     be the reason the app fails to start.
     """
     killed: list = []
-    target = os.path.normcase(os.path.abspath(profile_dir or ""))
-    if not target or sys.platform != "win32":
+    if not profile_dir or sys.platform != "win32":
         return 0, killed
+    # `ntpath`, not `os.path`: everything below compares WINDOWS paths, and
+    # says so rather than borrowing the host's path module. On Windows the two
+    # are the same object, so this changes nothing there. Off Windows the
+    # branch is only reached by a test answering `sys.platform` as win32, and
+    # with `os.path` = posixpath `C:\cfg\webview` never matched its own
+    # `...\EBWebView` - so the macOS CI job failed "the wedged orphan
+    # survived" on every push from 2026-09-13 to 2026-09-28.
+    target = ntpath.normcase(ntpath.abspath(profile_dir))
     try:
         import psutil
     except Exception:
@@ -143,8 +151,8 @@ def reap_webview_orphans(profile_dir: str) -> tuple[int, list]:
             return False
         if not m:
             return False
-        udd = os.path.normcase(os.path.abspath(m.group(1).strip('"')))
-        return udd == target or udd.startswith(target + os.sep)
+        udd = ntpath.normcase(ntpath.abspath(m.group(1).strip('"')))
+        return udd == target or udd.startswith(target + ntpath.sep)
 
     try:
         matches = []

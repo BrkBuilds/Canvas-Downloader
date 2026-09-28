@@ -1931,6 +1931,27 @@ def test_a_wedged_web_view_holding_our_profile_is_reaped(monkeypatch):
     assert n == 2 and set(pids) == {1, 2}
 
 
+def test_the_reaper_compares_WINDOWS_paths_whatever_the_host(monkeypatch):
+    """The test above failed on the macOS CI job on every push from 2026-09-13
+    to 2026-09-28: it answers `sys.platform` as win32, and the reaper compared
+    the Windows paths with the HOST's `os.path` - posixpath on a Mac, where
+    `C:\\cfg\\webview` never contains its own `\\EBWebView`. Reproduced here on
+    any machine by giving the module posixpath, which is what a Mac gives it."""
+    import posixpath
+    import core.health_log as hl
+
+    profile = r"C:\cfg\webview"
+    udd = f'--user-data-dir="{profile}\\EBWebView"'
+    browser = _FakeProc(1, "msedgewebview2.exe", ["msedgewebview2.exe", udd])
+    monkeypatch.setattr(hl.sys, "platform", "win32")
+    monkeypatch.setattr(hl.os, "path", posixpath)
+    monkeypatch.setattr(hl.os, "sep", "/")
+    monkeypatch.setitem(sys.modules, "psutil", _fake_psutil([browser]))
+
+    n, _pids = hl.reap_webview_orphans(profile)
+    assert browser.killed and n == 1, "a Mac host could not recognise our profile"
+
+
 def test_a_LIVE_instance_keeps_its_web_view(monkeypatch):
     """The app's single-instance guard fails open in three documented ways, so a
     second live instance legitimately shares this profile. Killing its WebView2

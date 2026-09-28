@@ -373,7 +373,7 @@ BROWSER_LOGIN_MUTANTS = [
     ("the reaper matches only the exact profile folder, so WebView2's own "
      "EBWebView subfolder never matches and nothing is ever reaped",
      HEALTH,
-     "        return udd == target or udd.startswith(target + os.sep)",
+     "        return udd == target or udd.startswith(target + ntpath.sep)",
      "        return udd == target"),
 
     ("the reaper stops asking whether the owner is alive, so a second running "

@@ -20,7 +20,7 @@ builds the upload. Until then it is a Developer-mode install:
 ## Using it
 
 1. Open your Canvas page in a tab.
-2. In Canvas Downloader, click **Use the Canvas tab in my browser**.
+2. In Canvas Downloader, click **Sign in with the extension**.
 3. Click the Canvas Downloader icon in the toolbar, then **Sign me in**.
 
 The first time, Chrome asks whether the extension may use that site. Choose

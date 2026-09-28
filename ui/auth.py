@@ -92,7 +92,10 @@ RETIRED_CONFIG_KEYS = {
     'mac_api_token',      # ditto, the macOS-specific variant
 }
 
-#: Where a student gets the browser extension. EMPTY until it is published.
+#: Where a student gets the browser extension. Published on the Chrome Web
+#: Store 2026-09-22 (v1.1.0, "Canvas Downloader Connector"); Edge installs
+#: straight from the same listing, which is why step 1 can say "Chrome or Edge"
+#: with one link.
 #:
 #: ONE constant, and publishing is a one-line change, because the alternative
 #: is what this screen already did once: advertise a thing with no way to get
@@ -106,7 +109,18 @@ RETIRED_CONFIG_KEYS = {
 #: placeholder to be filled in later and forgotten: `_extension_cta_html`
 #: renders "not in the store yet" instead of a button that goes nowhere. A
 #: dead `href="#"` is the one shape that must not ship, because it looks live.
-EXTENSION_STORE_URL = ''
+EXTENSION_STORE_URL = ('https://chromewebstore.google.com/detail/'
+                       'canvas-downloader-connect/lijagdnejjaimhckbgdmjegheignpkkh')
+
+#: The extension card's action, in its two states. ONE slot, so the element
+#: count is identical whether or not a handoff is in flight - Streamlit
+#: reconciles by position. The idle wording is what the extension's own popup
+#: quotes back at the student ("click ... in Canvas Downloader"), so a change
+#: here is a change to `extension/popup.js`, `popup.html` and the store listing
+#: too - and the PUBLISHED extension keeps quoting the old words until a new
+#: version clears review.
+HANDOFF_START_LABEL = 'Sign in with the extension'
+HANDOFF_STOP_LABEL = 'Stop waiting'
 
 #: Icons for the login page. Inline SVG rather than a data URI: these sit in
 #: `st.markdown` content, which lands in the main DOM where CSS can reach
@@ -2790,7 +2804,11 @@ def _browser_notice_html(state: str) -> str:
             "<span>One more click, over in Chrome</span></div>"
             f"<div class='kc-body'>{where} Up by the address bar, click the "
             "<b>Canvas Downloader</b> button, then <b>Sign me in</b>. You do "
-            "not have to come back here - this page carries on by itself.</div>"
+            "not have to come back here - this page carries on by itself. "
+            # The way OUT, named where the student is looking. The button
+            # itself sits inside the extension card further down, and a wait
+            # with no visible exit reads as the app having hung.
+            f"Changed your mind? Press <b>{HANDOFF_STOP_LABEL}</b> below.</div>"
             # THE SENTENCE THAT SAVES THE MOST PEOPLE. Chrome hides new
             # extensions behind the puzzle-piece by default, so a student who
             # has just installed it is looking for a button that is not on
@@ -4186,8 +4204,11 @@ def render_login_page(fetch_courses_fn):
     div[class*="st-key-login_card_wrapper"] .cd-tok-status[data-state="ok"] { color: #4ade80 !important; }
     div[class*="st-key-login_card_wrapper"] .cd-tok-status b { font-weight: 700 !important; }
     /* ── "Get my Canvas token" ─────────────────────────────────────────────
-       A copy of the guide's token-settings link, sitting beside the access
-       token field the way the picker sits beside the URL field. It is an
+       A copy of the guide's token-settings link, sitting UNDER the access
+       token field (it sat beside it until 2026-09-28 and squeezed a field
+       built for a 70-character value). CONTENT-SIZED, not full width: a
+       second full-width button in this card would read as a rival to Log In
+       below it, and sized to its label it can never truncate. It is an
        anchor and not an st.button because it lives inside st.form, where a
        button cannot rerun; its href is derived from the URL field by the
        picker's bridge (ui/institution_picker.py:token_link_html).
@@ -4199,21 +4220,23 @@ def render_login_page(fetch_courses_fn):
     div[class*="st-key-login_card_wrapper"] .cd-tokenlink {
         width: 100% !important;
     }
-    /* Streamlit's -16px stMarkdownContainer margin would pull the button up
-       out of line with the input beside it - the same correction the picker
-       trigger needs one row above. */
+    /* Streamlit's -16px stMarkdownContainer margin would pull the walkthrough
+       line below up onto the button - the same correction the picker trigger
+       needs one row above. */
     div[class*="st-key-login_card_wrapper"]
         [data-testid="stMarkdownContainer"]:has(> .cd-tokenlink) {
         margin-bottom: 0 !important;
     }
     div[class*="st-key-login_card_wrapper"] .cd-tokenlink-btn {
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         gap: 7px !important;
-        width: 100% !important;
-        height: 40px !important;
-        padding: 0 8px !important;
+        width: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        height: 36px !important;
+        padding: 0 14px !important;
         border-radius: 8px !important;
         /* OUTLINE, in this route's colour. It was solid #1f77b4 - the same
            fill as the one primary on the screen - which made a helper that
@@ -4382,12 +4405,11 @@ def render_login_page(fetch_courses_fn):
         color: #cbd5e1;
         font-weight: 600;
     }
-    div[class*="st-key-login_card_wrapper_"] .login-handoff-live {
-        color: #4da8da;
-    }
-    div[class*="st-key-login_card_wrapper_"] .login-handoff-live b {
-        color: #4da8da;
-    }
+    /* The live line keeps the card's own neutral greys (the rules above).
+       It was info-blue, and the product owner disliked it (2026-09-28): the
+       blue notice above the form already says a sign-in is in flight, so a
+       second blue line inside the card repeated the signal instead of simply
+       stating where things are. */
     /* The card is the LAST element in the extension disclosure, and every
        stMarkdownContainer carries Streamlit's `margin-bottom: -16px` - so the
        live line ate the disclosure's bottom padding and sat on its edge,
@@ -4648,34 +4670,44 @@ def render_login_page(fetch_courses_fn):
         font-weight: 600;
     }
 
-    /* The store button. Solid, icon-led and full width, so it reads as the
-       thing to press rather than as a link buried in a paragraph - the shape
-       the product owner asked for. Same BLUE_DEEP and the same inset highlight
-       as every other solid button in the app, chosen deliberately over a
-       distinct colour: it IS a primary action, just the primary action of this
-       section rather than of the screen. */
+    /* The store link. SMALL, OUTLINED and sized to its label - the same
+       shape as "Get a token" in the sibling card, in this route's colour.
+       It was solid and full width, which made a one-time install link the
+       loudest thing in the card and left the route's actual action, "Sign in
+       with the extension", looking secondary beneath it. Product owner,
+       2026-09-28: the weights were upside down. A student installs once and
+       signs in every time, so the sign-in button carries the weight. */
     div[class*="st-key-login_card_wrapper_"] .login-ext-cta {
-        margin: 0 0 22px 0;
+        margin: 0 0 14px 0;
     }
     div[class*="st-key-login_card_wrapper_"] .login-ext-btn {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 9px;
-        width: 100%;
+        gap: 6px;
+        width: auto;
+        max-width: 100%;
         box-sizing: border-box;
-        padding: 11px 18px;
+        height: 32px;
+        padding: 0 12px;
         border-radius: 8px;
-        background-color: #b89dfe;
-        color: #151c24 !important;
+        background-color: transparent;
+        border: 1px solid rgba(184, 157, 254, 0.38);
+        color: #b89dfe !important;
         text-decoration: none !important;
-        font-size: 0.92rem;
+        font-size: 0.84rem;
         font-weight: 600;
-        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        white-space: nowrap;
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
     div[class*="st-key-login_card_wrapper"] .login-ext-btn:hover {
-        background-color: #cbb6ff;
-        box-shadow: 0 4px 15px rgba(184, 157, 254, 0.22);
+        background-color: rgba(184, 157, 254, 0.14);
+        border-color: rgba(184, 157, 254, 0.70);
+        color: #cbb6ff !important;
+    }
+    div[class*="st-key-login_card_wrapper_"] .login-ext-btn .login-cta-ico {
+        width: 14px;
+        height: 14px;
     }
     div[class*="st-key-login_card_wrapper_"] .login-cta-ico {
         flex-shrink: 0;
@@ -5251,14 +5283,26 @@ def render_login_page(fetch_courses_fn):
                 with st.container(border=False, key="login_card_wrapper_ext"):
                     with st.expander("Use the browser extension instead",
                                      expanded=False):
-                        st.markdown(_extension_guide_html(),
-                                    unsafe_allow_html=True)
-                        # The link, or an honest line saying there is not one
-                        # yet. Never a dead href - see `_extension_cta_html`.
+                        # The link FIRST, above the steps (product owner,
+                        # 2026-09-28): step 1 is "add it", so the way to add it
+                        # belongs before the list, not after step 3. Small, so
+                        # it opens the card without outweighing the sign-in
+                        # button at the bottom. Never a dead href - see
+                        # `_extension_cta_html`.
                         st.markdown(_extension_cta_html(),
                                     unsafe_allow_html=True)
+                        st.markdown(_extension_guide_html(),
+                                    unsafe_allow_html=True)
+                        # ONE button, two jobs. While the app is listening it
+                        # is the way to stop, because the wait otherwise runs
+                        # its full window with nothing on screen that ends it.
+                        # Same slot and key in both states, so nothing below
+                        # it shifts when a handoff starts or stops.
+                        _handoff_live_now = bool(
+                            st.session_state.get('handoff_waiting'))
                         _handoff_clicked = st.form_submit_button(
-                            'Use the Canvas tab in my browser',
+                            HANDOFF_STOP_LABEL if _handoff_live_now
+                            else HANDOFF_START_LABEL,
                             use_container_width=True, key="login_handoff_btn")
                         # ONE element, CONTENT varying by state - never a
                         # conditional element.
@@ -5269,31 +5313,39 @@ def render_login_page(fetch_courses_fn):
                 with st.container(border=False, key="login_card_wrapper_token"):
                     with st.expander("Use an access token instead",
                                      expanded=False):
-                        _c_tok, _c_link = st.columns([1.2, 1], vertical_alignment="bottom")  # see test_the_token_row_gives_the_shortcut_more_room_than_the_url_row
-                        with _c_tok:
-                            st.text_input(
-                                'Your Canvas Access Token',
-                                type="password",
-                                key="token_input",
-                                help=(
-                                    "**Why is this needed?**  \n"
-                                    "This token acts as a private key that allows the app to fetch your course files directly from your school's Canvas instance, which it connects to.\n\n"
-                                    "**Is it safe?**  \n"
-                                    "Yes! Your token is stored securely on your device, in your operating system."
-                                )
+                        # FULL WIDTH, with the shortcut UNDER it rather than
+                        # beside it. A Canvas token is ~70 characters, and in a
+                        # card half the width of the page the side-by-side row
+                        # gave the field under 60% of that half while the
+                        # shortcut needed its column just to fit "Get a token"
+                        # (measured: cut to "Get a to..." at 1366px on an even
+                        # split). Stacked, the field gets the whole card and the
+                        # shortcut sizes to its own label at every width, so
+                        # neither competes for the other's room. Product owner,
+                        # 2026-09-28: "it makes no sense to squeeze the input
+                        # when we know the token is long".
+                        st.text_input(
+                            'Your Canvas Access Token',
+                            type="password",
+                            key="token_input",
+                            help=(
+                                "**Why is this needed?**  \n"
+                                "This token acts as a private key that allows the app to fetch your course files directly from your school's Canvas instance, which it connects to.\n\n"
+                                "**Is it safe?**  \n"
+                                "Yes! Your token is stored securely on your device, in your operating system."
                             )
-                        with _c_link:
-                            # What to point at when the FIELD says nothing. Two cases,
-                            # and both hold a URL this machine has already logged in
-                            # with: reauth mode renders no field, and a returning login
-                            # renders an empty one (the address lives in config, not in
-                            # the widget). Only ever a verified URL - the same rule the
-                            # guide's copy of this button uses, so the two cannot sit
-                            # on one page disagreeing about whether we know the school.
-                            _link_fallback = _saved_url if (
-                                _reauth_mode or st.session_state.get('url_verified')) else ''
-                            st.markdown(institution_picker.token_link_html(_link_fallback),
-                                        unsafe_allow_html=True)
+                        )
+                        # What to point at when the FIELD says nothing. Two cases,
+                        # and both hold a URL this machine has already logged in
+                        # with: reauth mode renders no field, and a returning login
+                        # renders an empty one (the address lives in config, not in
+                        # the widget). Only ever a verified URL - the same rule the
+                        # guide's copy of this button uses, so the two cannot sit
+                        # on one page disagreeing about whether we know the school.
+                        _link_fallback = _saved_url if (
+                            _reauth_mode or st.session_state.get('url_verified')) else ''
+                        st.markdown(institution_picker.token_link_html(_link_fallback),
+                                    unsafe_allow_html=True)
 
                         # The walkthrough, AT THE POINT OF NEED. It used to live in an
                         # expander at the bottom of the page - which is the one place
@@ -5363,7 +5415,15 @@ def render_login_page(fetch_courses_fn):
                             type="primary", use_container_width=True, key="login_submit_btn")
 
 
-            if _handoff_clicked:
+            if _handoff_clicked and _handoff_live_now:
+                # "Stop waiting". The one teardown every other exit already
+                # uses (logout, a finished sign-in), so a stopped attempt
+                # leaves exactly the state a finished one does: no listener,
+                # no notice, no failure card for something the student chose.
+                cancel_browser_handoff()
+                st.rerun(scope="app")
+
+            if _handoff_clicked and not _handoff_live_now:
                 # The extension reports the host it read, so the address is
                 # still not REQUIRED here and nothing is validated into an
                 # error - `adopt_pending_handoff` adopts through the same door

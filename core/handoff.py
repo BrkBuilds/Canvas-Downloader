@@ -369,7 +369,26 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 
 class _Server(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
-    allow_reuse_address = False        # never inherit somebody else's socket
+    # SO_REUSEADDR means OPPOSITE things on the two families, so it is set on
+    # exactly one of them.
+    #
+    # * Windows: "bind even if another process is LISTENING" - measured in this
+    #   repo handing out occupied ports (`release-and-packaging.md`). Off, or
+    #   anything on the machine could sit on the handoff port. Windows also
+    #   binds straight through TIME_WAIT without it (measured 2026-09-13), so
+    #   nothing is lost.
+    # * macOS / Linux: "bind even though the port still has connections in
+    #   TIME_WAIT", and nothing more - an active listener still refuses the
+    #   bind. Without it every handoff that answered a request leaves its port
+    #   unbindable for ~30s, so three presses of the button inside that window
+    #   use up 53127-53129 and the fourth says the sign-in cannot start.
+    #   OBSERVED on the macOS CI job, every push 2026-09-13 to 2026-09-28: the
+    #   first four `listening` tests of `test_handoff.py` pass and every later
+    #   one finds all three ports taken, within the seconds the file takes to
+    #   run, while the same file is green on Windows. TIME_WAIT is the reading
+    #   that fits both halves; it is INFERRED, not yet measured on a Mac - the
+    #   next macOS CI run after this change is that measurement.
+    allow_reuse_address = sys.platform != 'win32'
 
     def server_bind(self):
         """Bind WITHOUT the hostname lookup ``HTTPServer`` adds.

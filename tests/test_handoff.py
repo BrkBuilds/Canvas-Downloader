@@ -393,6 +393,54 @@ def test_stopping_closes_the_socket(listening):
             "listener accepting Canvas sessions")
 
 
+def test_SO_REUSEADDR_is_set_off_Windows_and_ONLY_off_Windows():
+    """On Windows the flag lets another process bind a port we are LISTENING
+    on (measured in this repo), so it must stay off there. On macOS/Linux it
+    only lets a bind through TIME_WAIT, and without it the handoff ports run
+    out after a few quick attempts - the macOS CI job was red on every push
+    from 2026-09-13 to 2026-09-28 with exactly that shape.
+
+    Asserted on the expression as well as the value, because on any ONE
+    machine a constant would match the value and pass."""
+    assert handoff._Server.allow_reuse_address is (sys.platform != 'win32')
+    tree = ast.parse(Path(handoff.__file__).read_text(encoding='utf-8'))
+    cls = next(n for n in ast.walk(tree)
+               if isinstance(n, ast.ClassDef) and n.name == '_Server')
+    value = next(ast.unparse(s.value) for s in cls.body
+                 if isinstance(s, ast.Assign)
+                 and any(getattr(t, 'id', '') == 'allow_reuse_address'
+                         for t in s.targets))
+    assert value == "sys.platform != 'win32'", value
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Windows binds through TIME_WAIT without the flag "
+                           "(measured 2026-09-13); this is the POSIX half, and "
+                           "it runs on the macOS CI job")
+def test_a_QUICK_re_press_after_a_USED_listener_gets_the_first_port_again():
+    """The behaviour itself, and the measurement for the fix above: five
+    start -> request -> stop cycles in a row must each get the FIRST port.
+    Without SO_REUSEADDR on POSIX, each request parks its port in TIME_WAIT
+    and the cycles walk 53127 -> 53128 -> 53129 -> nothing.
+
+    NOTE for whoever reads a green Windows run: this test is SKIPPED there.
+    It is only covered by the macOS (and any Linux) CI job."""
+    handoff.stop()
+    first = handoff.start()
+    if not first:
+        pytest.skip("the handoff ports are held by another program")
+    try:
+        for attempt in range(5):
+            port = handoff.start()
+            assert port == handoff.PORTS[0], (
+                f"attempt {attempt}: got {port}, so the previous attempt's "
+                f"port was not bindable again")
+            _call(port, '/not-a-handoff', origin=EXT)
+            handoff.stop()
+    finally:
+        handoff.stop()
+
+
 def test_starting_twice_re_arms_rather_than_losing_the_listener(listening):
     """A user pressing the button again must not end up with no listener."""
     again = handoff.start()

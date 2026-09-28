@@ -86,8 +86,13 @@ def is_login_redirect(visited_urls) -> bool:
     ``/courses/<id>/modules/items/..``  302 -> /login      302 -> /login
     ==================================  =================  ====================
 
-    So the API is at parity and needs nothing: canvasapi raises ``Unauthorized``
-    for both and :func:`core.canvas_logic.is_auth_error` already routes it. The
+    So the API is at parity on STATUS. It was NOT at parity in this app until
+    2026-09-28: Canvas sends ``WWW-Authenticate`` on every API 401, so
+    canvasapi raises ``InvalidAccessToken`` (a sibling of ``Unauthorized``,
+    not a subclass), and the session's body - "user authorisation required" -
+    matched nothing :func:`core.canvas_logic.is_auth_error` looked for. An
+    expired session was therefore read as a network failure. See that
+    function's docstring for the measurement. The
     file download is NOT. Follow that 302 - which every HTTP client does by
     default - and the chain ends at the institution's identity provider serving
     **HTTP 200** and 45 KB of HTML login page. A downloader that trusts a 200

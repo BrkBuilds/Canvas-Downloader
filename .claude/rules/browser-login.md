@@ -269,6 +269,8 @@ through by the same amount in both places.
 **`EXTENSION_STORE_URL` is empty and that is a STATE.** Empty renders an honest
 line instead of a button; a dead `href="#"` would preserve the old failure
 (advertise a thing nobody can get) while looking live. Publishing is one line.
+**SET 2026-09-28** to the live Chrome Web Store listing; see the section of
+that date at the end of this file for what changed on the card with it.
 
 **The URL guide is the field's tooltip now**, carrying the ANSWER and not the
 procedure. A hover tooltip dismisses the moment the pointer moves toward the
@@ -1153,8 +1155,12 @@ Measured against real Canvas, no credential at all, 2026-09-12:
 | `/courses/<id>/files/<id>/download` | **401** | **302 -> /login** |
 | `/courses/<id>/modules/items/<id>` | 302 -> /login | 302 -> /login |
 
-**The API is at parity and needed nothing** - canvasapi raises `Unauthorized`
-for both and `is_auth_error` already routes it. Everything outside the API was
+~~**The API is at parity and needed nothing** - canvasapi raises `Unauthorized`
+for both and `is_auth_error` already routes it.~~ **WRONG, and it shipped a
+defect - see "2026-09-28: AN EXPIRED SESSION READ AS A NETWORK BLIP" at the end
+of this file.** Canvas sends `WWW-Authenticate` on every API 401, so canvasapi
+raises `InvalidAccessToken`, which is NOT an `Unauthorized`, and the session's
+body matched none of `is_auth_error`'s words. Everything outside the API was
 not. Follow that 302 - which every HTTP client does by default - and the chain
 ends at the institution's identity provider answering **HTTP 200 with 45,524
 bytes of HTML login page**.
@@ -3128,3 +3134,106 @@ a real institution can differ in the `expires_at` it grants, in whether it
 re-sets `_csrf_token`, and in what its WAF does to any of these requests. What
 is now proven is that **the app does the right thing with each of those
 answers**, which is what was untested before.
+
+
+# 2026-09-28: AN EXPIRED SESSION READ AS A NETWORK BLIP
+
+Reported by the product owner from the installed 2.0.3 build: the app opened
+straight onto the course selector, no name in the sidebar, and an amber "We
+couldn't reach Canvas" where the courses should be. The stored extension
+session had expired and nothing noticed.
+
+## The measurement, through the app's own `CanvasManager`
+
+`GET https://cbscanvas.instructure.com/api/v1/users/self`:
+
+| credential | status | `WWW-Authenticate` | body |
+|---|---|---|---|
+| invalid `canvas_session` | 401 | `Bearer realm="canvas-lms"` | `user authorisation required` |
+| none at all | 401 | same | same |
+| revoked token | 401 | same | `Invalid access token.` |
+
+- **canvasapi raises `InvalidAccessToken` for a 401 carrying that header**, and
+  `InvalidAccessToken` is a SIBLING of `Unauthorized` under `CanvasException`.
+  So `validate_token`'s `except Unauthorized` never ran against real Canvas,
+  and `is_auth_error` recognised a token only because its body happens to
+  contain "invalid access token". The session body is BRITISH ("authorisation")
+  and matched nothing.
+- The chain that followed, each step correct given the one before it: restore
+  judged it a network failure -> **optimistic** sign-in with no `user_name` ->
+  the course fetch raised the same exception -> the network card -> the
+  30-second re-check got the same message -> never `force_reauth`. The handoff
+  path had the same hole in reverse: a refused handover was reported as
+  `unconfirmed` ("could not reach Canvas") rather than `canvas_refused`.
+- **Why 4,900 tests never saw it**: `_Canvasish` in `test_browser_login.py`
+  answers 401 WITHOUT the header, so every test took the `Unauthorized` branch
+  that real Canvas cannot reach. A fake that is right about the STATUS and
+  wrong about one HEADER tests a different program. The new server in
+  `tests/test_expired_session_is_an_auth_error.py` sends it, and its first two
+  tests are the control: with the header canvasapi raises `InvalidAccessToken`,
+  without it `Unauthorized`.
+- **Fixed at the classifier, not at the call sites**: `is_auth_error` takes
+  both types plus both spellings of "authoris/zation required", and
+  `validate_token` catches both, so its message is the normalised
+  "Unauthorized - your Canvas sign-in is no longer valid..." the login screen
+  routes on. The ~30 `except (Unauthorized, ResourceDoesNotExist)` sites in the
+  engine were left alone ON PURPOSE: they mean "this item is locked, skip it",
+  and an expired credential must propagate out of them, not be swallowed as a
+  locked file.
+- Mutation-checked by hand, 4/4 caught, including the one that first SURVIVED:
+  dropping `InvalidAccessToken` from the isinstance was masked by the keyword
+  list, so `test_the_TYPE_decides_whatever_Canvas_writes` feeds it a body in
+  another language.
+- **Still true after the fix, and not fixed here**: the refused session arms
+  `browser_restore_pending`, which renews through the app's own window - so an
+  extension user at CBS is asked for their password. That is "THE ROUTE IS
+  STILL NOT RECORDED" above, unchanged.
+
+## The extension card, same day, to the owner's direction
+
+- `EXTENSION_STORE_URL` is the live listing. The store link is SMALL, outlined
+  and content-sized, and sits ABOVE the steps: a solid full-width "Get the
+  extension" over a tinted sign-in button put the weights upside down - the
+  install happens once, the sign-in every time.
+- The action is `HANDOFF_START_LABEL` ("Sign in with the extension"), and while
+  a handoff is in flight the SAME slot reads `HANDOFF_STOP_LABEL` ("Stop
+  waiting") and calls `cancel_browser_handoff()`. One slot, one key, so nothing
+  below it shifts. **The published extension (v1.1.0) still quotes the old
+  label** in its popup until a new version clears review; `popup.js`,
+  `popup.html`, the README and `LISTING.html` are updated in the repo.
+- The live "Waiting for your browser" line is neutral grey, not info-blue: the
+  notice above the form already carries the in-flight signal.
+- The access-token field is full width with "Get a token" under it,
+  content-sized. The old side-by-side row starved a ~70-character field to
+  make room for an 11-character button.
+
+## The macOS CI job was RED for three pushes, and nobody looked (2026-09-13 to 09-28)
+
+`Tests (macOS)` failed on every push since 2026-09-13 while `Tests (Windows)`
+passed, and the same two defects were in all three logs.
+
+- **26 handoff tests errored with "a listener was LEAKED".** The first four
+  `listening` tests pass; every later one finds 53127-53129 unbindable, inside
+  the few seconds the file takes. `_Server.allow_reuse_address` was False
+  everywhere. The 2026-09-13 entry above ruled TIME_WAIT out - correctly, ON
+  WINDOWS, where a bind goes straight through it. BSD and Linux refuse that
+  bind without `SO_REUSEADDR`, so on a Mac each answered request parks its port
+  for ~30s: three quick presses of the extension button and the fourth cannot
+  start. The flag is now `sys.platform != 'win32'`, because on Windows it
+  means the opposite (bind over a LIVE listener; see
+  `release-and-packaging.md`). **INFERRED, not measured on a Mac**:
+  `test_a_QUICK_re_press_after_a_USED_listener_gets_the_first_port_again` is
+  SKIPPED on Windows and is the measurement, on the next macOS CI run.
+- **"the wedged orphan survived"** - `reap_webview_orphans` compared Windows
+  paths with the HOST's `os.path`. The test answers `sys.platform` as win32 and
+  on a Mac got posixpath, where `C:\cfg\webview` never contains its own
+  `\EBWebView`. Not a product defect (the branch only runs on Windows, where
+  `os.path` IS ntpath), but the test was correct and the code was not saying
+  what it meant: it uses `ntpath` now, and
+  `test_the_reaper_compares_WINDOWS_paths_whatever_the_host` reproduces the Mac
+  on any machine by handing the module posixpath.
+- The third failure in the two older runs, "window took 0.5s against a 0.4s
+  silent clock", did not recur on 09-28 and is a timing margin, not looked at.
+- **The lesson is the one `testing-and-audits.md` already states for Windows
+  CI, in reverse: a red job nobody reads is the same as no job.** Check the
+  macOS run after every push touching the handoff or the reaper.
