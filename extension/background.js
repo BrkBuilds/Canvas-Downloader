@@ -68,34 +68,47 @@ const BADGE_READY = "•";          // a dot, not a count: there is nothing to c
 /**
  * How long to wait for one port before giving up on it.
  *
- * A closed port refuses instantly, so this only ever matters when something
- * ACCEPTS the connection and then says nothing - another program holding the
- * port, a stalled app. Without it that `fetch` never settles, `findApp` never
- * returns, the popup's status request is never answered, and the popup sits on
- * "Checking" for ever. Reported exactly that way on 2026-09-12.
+ * A closed port refuses instantly - measured 2026-10-22 in Chrome 155 on
+ * Windows, 1-62 ms per port from this worker - so this only ever matters when
+ * something ACCEPTS the connection and then says nothing: another program
+ * holding the port, a stalled app. Without it that `fetch` never settles,
+ * `findApp` never returns, the popup's status request is never answered, and
+ * the popup sits on "Checking" for ever. Reported exactly that way on
+ * 2026-09-12.
  */
 const PING_TIMEOUT_MS = 1200;
 
-/** The app's port and whether it is waiting, or null if it is not running. */
-async function findApp() {
-  for (const port of PORTS) {
-    try {
-      const r = await fetch(`http://127.0.0.1:${port}/ping`, {
-        method: "GET",
-        credentials: "omit",
-        cache: "no-store",
-        signal: AbortSignal.timeout(PING_TIMEOUT_MS),
-      });
-      if (!r.ok) continue;
-      const body = await r.json();
-      if (body && body.app === "canvas-downloader") {
-        return { port, waiting: !!body.waiting };
-      }
-    } catch (e) {
-      /* Nothing listening on this port. Try the next. */
+/** One port's answer: `{ port, waiting }` if the app is there, else null. */
+async function pingPort(port) {
+  try {
+    const r = await fetch(`http://127.0.0.1:${port}/ping`, {
+      method: "GET",
+      credentials: "omit",
+      cache: "no-store",
+      signal: AbortSignal.timeout(PING_TIMEOUT_MS),
+    });
+    if (!r.ok) return null;
+    const body = await r.json();
+    if (body && body.app === "canvas-downloader") {
+      return { port, waiting: !!body.waiting };
     }
+  } catch (e) {
+    /* Nothing listening on this port, or nothing that answers. */
   }
   return null;
+}
+
+/**
+ * The app's port and whether it is waiting, or null if it is not running.
+ *
+ * ALL PORTS AT ONCE, so the worst case is one `PING_TIMEOUT_MS` rather than
+ * one per port. Asked one after another, three ports that accept and say
+ * nothing held the popup on "Checking" for 3.6 seconds. The lowest port that
+ * answers still wins, which is the order the app tries them in.
+ */
+async function findApp() {
+  const answers = await Promise.all(PORTS.map(pingPort));
+  return answers.find(Boolean) || null;
 }
 
 /**
@@ -211,21 +224,40 @@ chrome.permissions.onAdded.addListener(async () => {
 
 // ── messages from the popup ────────────────────────────────────────────────
 
+/**
+ * Bookkeeping that must never cost the popup its answer.
+ *
+ * Storage and the icon are both Chrome calls that can reject. Awaited bare
+ * between the work and `sendResponse`, one rejection meant the reply was never
+ * sent and the popup waited out its whole deadline before saying anything.
+ */
+async function quietly(what, fn) {
+  try {
+    await fn();
+  } catch (e) {
+    console.warn(`Canvas Downloader: ${what} failed`, e);
+  }
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || typeof msg !== "object") return false;
 
   if (msg.type === "connect") {
     connect(msg.origin, msg.host).then(async (result) => {
-      await setResult(result);
-      await refreshBadge();
+      await quietly("remembering the result", () => setResult(result));
       sendResponse(result);
+      quietly("repainting the icon", () => refreshBadge());
     });
     return true;                       // keep the channel open for the await
   }
 
   if (msg.type === "pending") {
-    setPending({ origin: msg.origin, host: msg.host }).then(() =>
-      sendResponse({ ok: true })
+    setPending({ origin: msg.origin, host: msg.host }).then(
+      () => sendResponse({ ok: true }),
+      (e) => {
+        console.warn("Canvas Downloader: could not note the pending sign-in", e);
+        sendResponse({ ok: false });
+      },
     );
     return true;
   }
@@ -240,7 +272,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       // anything. Through `refreshBadge` rather than painting from `app`
       // alone, so the "only on a granted Canvas tab" rule is applied in ONE
       // place and this path cannot drift away from it.
-      refreshBadge();
+      quietly("repainting the icon", () => refreshBadge());
     });
     return true;
   }

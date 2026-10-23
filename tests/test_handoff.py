@@ -1183,6 +1183,115 @@ def test_the_popup_ALWAYS_SAYS_whether_the_app_is_running():
         "on the wrong tab is told nothing about whether the app is even open")
 
 
+def test_the_popup_can_NEVER_be_left_on_CHECKING():
+    """Measured 2026-10-22 in Chrome 155: one Chrome call failing inside
+    `read()` left the popup on "Checking / One moment" for good, with nothing
+    to press. Every way into `read()` must go through `guarded`, which ends on
+    a screen with a button whatever happens.
+
+    A census: a new bare `read()` call fails here until it is guarded.
+    """
+    import re
+    js = _popup_js_src()
+    assert 'guarded(async function start()' in js, (
+        "opening the popup is not guarded, so a failure on open hangs it")
+    assert 'showStuck()' in js[js.index('async function guarded'):], (
+        "the guard catches a failure and then shows nothing")
+
+    start = js.index('guarded(async function start()')
+    outside_start = js[:start]
+    # Calls only: a `read()` in backticks is a comment naming the function.
+    bare = [m.start() for m in re.finditer(
+        r'(?<![\w`])(?<!function )read\(\)(?!`)', outside_start)]
+    # The one allowed: the stuck screen's own "Try again", which runs through
+    # `goAction` and so through `guarded` too.
+    allowed = [m.start() for m in re.finditer(r'action: \(\) => read\(\)',
+                                              outside_start)]
+    unguarded = [i for i in bare
+                 if not any(a <= i <= a + 30 for a in allowed)]
+    assert not unguarded, (
+        f"{len(unguarded)} call(s) of read() bypass `guarded`, so a failure "
+        "there leaves the popup on 'Checking': "
+        + ", ".join(js[i - 40:i + 8].replace('\n', ' ') for i in unguarded))
+    assert 'if (goAction) return guarded(goAction)' in js, (
+        "a screen's own button action is not guarded")
+
+
+def test_the_popup_does_not_call_SILENCE_from_itself_NOT_RUNNING():
+    """`ask` answers null when the extension's own background part says
+    nothing. That is no information about the app, and "Not running" sends the
+    student off to restart a program that may be fine."""
+    js = _popup_js_src()
+    assert 'if (status === null) return showStuck()' in js
+    assert 'Could not check' in js
+
+
+def test_the_worker_asks_every_port_AT_ONCE():
+    """One after another, three ports that accept and never answer held the
+    popup on "Checking" for 4.1 s (measured, Chrome 155); at once, 1.8 s."""
+    bg = (_ROOT / 'extension' / 'background.js').read_text(encoding='utf-8')
+    body = bg[bg.index('async function findApp'):]
+    body = body[:body.index('\n}\n')]
+    assert 'Promise.all(PORTS.map(' in body, (
+        "findApp asks the ports one at a time again")
+    assert 'for (' not in body and 'await fetch' not in body
+
+
+def test_the_worker_ALWAYS_answers_the_popup():
+    """`await setResult(...)` sat bare between the work and `sendResponse`, so
+    a storage failure meant the popup was never answered and waited out its
+    whole deadline. Bookkeeping now goes through `quietly`."""
+    bg = (_ROOT / 'extension' / 'background.js').read_text(encoding='utf-8')
+    handler = bg[bg.index('chrome.runtime.onMessage.addListener'):]
+    handler = handler[:handler.index('\n});\n')]
+    assert 'await setResult' not in handler and 'await refreshBadge' not in handler, (
+        "a rejection in the worker's bookkeeping can stop the reply")
+    assert 'quietly("remembering the result"' in handler
+
+
+def test_the_popup_waits_LONGER_than_the_worker_can_take_to_sign_in():
+    """With a 4 s deadline on a sign-in the worker allows 9.2 s for, a slow
+    but successful sign-in was reported as "Could not reach Canvas
+    Downloader" while it was still going."""
+    import re
+    js = _popup_js_src()
+    bg = (_ROOT / 'extension' / 'background.js').read_text(encoding='utf-8')
+    connect_wait = int(re.search(r'CONNECT_TIMEOUT_MS = (\d+)', js).group(1))
+    ping = int(re.search(r'PING_TIMEOUT_MS = (\d+)', bg).group(1))
+    timeouts = [int(n) for n in re.findall(r'AbortSignal\.timeout\((\d+)\)', bg)]
+    assert timeouts, "the handover POST has no literal deadline to compare"
+    assert connect_wait > ping + max(timeouts), (
+        f"the popup gives up after {connect_wait} ms on a sign-in the worker "
+        f"may still finish after {ping + max(timeouts)} ms")
+    assert 'CONNECT_TIMEOUT_MS)' in js[js.index('type: "connect"'):], (
+        "the sign-in is asked with the short default deadline")
+
+
+def test_the_APP_BEING_OFF_comes_before_anything_about_the_tab():
+    """With the app off, a student on another page was told "Open your Canvas
+    page first", did it, and was only then told the app was not open."""
+    js = _popup_js_src()
+    read = js[js.index('async function read'):]
+    assert read.index('Canvas Downloader is not open') < read.index(
+        'chrome.tabs.query'), (
+        "the app-off screen is decided after the tab checks again")
+
+
+def test_a_screen_with_nothing_to_press_shows_NO_button():
+    """Only `button: null` used to hide it, so every "do this first" screen,
+    which simply left `button` out, still showed a grey "Sign me in" slab -
+    the thing the comment in `show()` says must not happen."""
+    js = _popup_js_src()
+    assert 'els.go.hidden = button === null || (!button && !enabled)' in js
+    html = (_ROOT / 'extension' / 'popup.html').read_text(encoding='utf-8')
+    assert '<button id="go" disabled hidden>' in html, (
+        "the button shows on 'Checking', which has nothing to press")
+
+
+def _popup_js_src() -> str:
+    return (_ROOT / 'extension' / 'popup.js').read_text(encoding='utf-8')
+
+
 # ---------------------------------------------------------------------------
 # 7. Opening the student's Canvas for them
 #

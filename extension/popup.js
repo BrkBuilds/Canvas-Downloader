@@ -39,6 +39,8 @@ let target = null;      // { origin, host }
 let needsPermission = false;
 /** Cancels the countdown if the student does something first. */
 let countdownTimer = null;
+/** What the big button does on a screen that is not the sign-in itself. */
+let goAction = null;
 
 // ── rendering ──────────────────────────────────────────────────────────────
 
@@ -67,7 +69,8 @@ function setSteps(current) {
  * One render for every state. `tone` drives colour only, never meaning: the
  * sentence has to make sense read aloud with no colour at all.
  */
-function show({ step, tone, title, body, site, button, enabled, spin }) {
+function show({ step, tone, title, body, site, button, enabled, spin, action }) {
+  goAction = action || null;
   setSteps(step);
   els.card.className = "card" + (tone ? " " + tone : "");
   els.title.innerHTML = (spin ? '<span class="spin"></span>' : "") + title;
@@ -81,7 +84,11 @@ function show({ step, tone, title, body, site, button, enabled, spin }) {
   // A screen with nothing to press shows no button at all. A disabled one is
   // still the biggest, heaviest thing on the screen, and on the finished screen
   // it was drawing the eye to the one element that does nothing.
-  els.go.hidden = button === null;
+  // Leaving `button` out of a screen that cannot be pressed counts too: only
+  // `null` used to hide it, so every "go and do this first" screen still showed
+  // a grey "Sign me in" slab (seen in Chrome 155, 2026-10-22). A screen that
+  // names its own label, like "Signing you in", keeps it as a progress line.
+  els.go.hidden = button === null || (!button && !enabled);
   els.go.textContent = button || "Sign me in";
   els.go.disabled = !enabled;
   els.go.classList.toggle("ghost", button === "Allow access");
@@ -182,7 +189,15 @@ async function showDone() {
  */
 const ASK_TIMEOUT_MS = 4000;
 
-function ask(message) {
+/**
+ * The sign-in itself gets longer, because the worker's own bounds add up to
+ * more than `ASK_TIMEOUT_MS`: one ping round (1.2 s) and then the handover
+ * (8 s). With the short deadline a slow but successful sign-in was reported to
+ * the student as "Could not reach Canvas Downloader" while it was still going.
+ */
+const CONNECT_TIMEOUT_MS = 12000;
+
+function ask(message, timeoutMs = ASK_TIMEOUT_MS) {
   return new Promise((resolve) => {
     let settled = false;
     const done = (value) => {
@@ -190,7 +205,7 @@ function ask(message) {
       settled = true;
       resolve(value);
     };
-    const timer = setTimeout(() => done(null), ASK_TIMEOUT_MS);
+    const timer = setTimeout(() => done(null), timeoutMs);
     try {
       chrome.runtime.sendMessage(message, (reply) => {
         clearTimeout(timer);
@@ -211,15 +226,62 @@ function ask(message) {
  * a sign-in yet, and telling somebody "not running" then would be a lie that
  * sends them looking for the wrong problem.
  */
-function showAppState(app) {
+function showAppState(app, known = true) {
   const on = !!app;
   const ready = !!(app && app.waiting);
   els.appState.className = "appstate " + (ready ? "on" : on ? "armed" : "off");
-  els.appText.textContent = !on
-    ? "Not running"
-    : ready
-      ? "Running, ready to log in"
-      : "Running, sign-in not started";
+  // NOT KNOWING IS ITS OWN STATE. When the extension's own background part
+  // gives no answer, nothing was learned about the app, and "Not running"
+  // would send the student to restart a program that may be fine.
+  els.appText.textContent = !known
+    ? "Could not check"
+    : !on
+      ? "Not running"
+      : ready
+        ? "Running, ready to log in"
+        : "Running, sign-in not started";
+}
+
+// ── the screen for when this popup itself went wrong ───────────────────────
+
+/**
+ * Shown instead of "Checking" staying up for ever.
+ *
+ * Measured 2026-10-22 in Chrome 155: one Chrome call that failed inside
+ * `read()` left the popup on "Checking / One moment" with no way out, because
+ * nothing caught it. Every way into `read()` now goes through `guarded`, so a
+ * failure always ends on a screen with something to press.
+ */
+function showStuck() {
+  stopCountdown();
+  leaveRest();
+  showAppState(null, false);
+  show({
+    step: 0, tone: "bad", title: "Something got stuck",
+    body: "Click Try again. If this keeps happening, close Chrome completely "
+        + "and open it again.",
+    button: "Try again", enabled: true, action: () => read(),
+  });
+}
+
+/** Longest a check may take before the student is told and offered a way on. */
+const READ_DEADLINE_MS = 8000;
+
+/** Run a screen-deciding step so that it can only end on a real screen. */
+async function guarded(fn) {
+  let timer = null;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error("no answer in time")),
+      READ_DEADLINE_MS);
+  });
+  try {
+    await Promise.race([fn(), deadline]);
+  } catch (e) {
+    console.warn("Canvas Downloader: the popup could not finish checking", e);
+    showStuck();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ── working out where we are ───────────────────────────────────────────────
@@ -233,7 +295,10 @@ async function read() {
   // the single most useful thing the screen can tell them. Reported as a gap
   // on 2026-09-12: the wrong-page screen said nothing about the app.
   const status = await ask({ type: "status" });
-  const app = status && status.app;
+  // `null` is the extension's own background part not answering at all, which
+  // says nothing about the app - so it is not reported as "not running".
+  if (status === null) return showStuck();
+  const app = status.app;
   showAppState(app);
 
   // 0b. Already done? A LIVE REQUEST FOR A SIGN-IN ALWAYS WINS, so this is
@@ -245,13 +310,27 @@ async function read() {
     if (signedIn) return showRest(!!app);
   }
 
+  // 0c. The app is off: that comes before anything about the tab. It used to
+  // be checked after, so a student on any other page was told to "Open your
+  // Canvas page first" - and did, and was then told the app was not open.
+  // With the app off, opening it is the next thing to do wherever they are.
+  if (!app) {
+    return show({
+      step: 0, tone: "warn",
+      title: "Canvas Downloader is not open",
+      body: "Open the Canvas Downloader app on this computer and choose "
+          + "“Sign in with the extension”. Then open this extension again.",
+      enabled: false,
+    });
+  }
+
   // 1. Which tab is the student looking at?
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab || !tab.url || !/^https?:/i.test(tab.url)) {
     return show({
       step: 1, tone: "warn",
       title: "Open your Canvas page first",
-      body: "Go to the tab where you use Canvas, then click this button again.",
+      body: "Go to the tab where you use Canvas, then open this extension again.",
       enabled: false,
     });
   }
@@ -274,24 +353,14 @@ async function read() {
     return show({
       step: 1, tone: "warn",
       title: "This does not look like Canvas",
-      body: "Switch to the tab where your school's Canvas is open, then click "
-          + "this button again. You are currently on:",
+      body: "Switch to the tab where your school's Canvas is open, then open "
+          + "this extension again. You are currently on:",
       site: url.host,
       enabled: false,
     });
   }
 
   // 3. The app's answer, already in hand from step 0.
-  if (!app) {
-    return show({
-      step: 0, tone: "warn",
-      title: "Canvas Downloader is not open",
-      body: "Open the Canvas Downloader app on this computer, then come back "
-          + "to this page.",
-      enabled: false,
-    });
-  }
-
   if (!app.waiting) {
     return show({
       step: 2, tone: "warn",
@@ -334,8 +403,8 @@ async function read() {
 const MESSAGES = {
   no_app: "Canvas Downloader closed. Open it again and try once more.",
   not_waiting:
-    "Canvas Downloader stopped waiting. In the app, click “Use the Canvas "
-    + "tab in my browser”, then come back.",
+    "Canvas Downloader stopped waiting. In the app, click “Sign in with the "
+    + "extension”, then come back.",
   no_permission:
     "Chrome did not let this page be used. Click again and choose Allow.",
   not_signed_in:
@@ -347,6 +416,7 @@ const MESSAGES = {
 };
 
 els.go.addEventListener("click", async () => {
+  if (goAction) return guarded(goAction);
   if (!target) return;
 
   if (needsPermission) {
@@ -363,7 +433,7 @@ els.go.addEventListener("click", async () => {
       /* The popup usually dies before this resolves. That is the point. */
     }
     // If we are somehow still alive, carry on normally.
-    await read();
+    await guarded(read);
     return;
   }
 
@@ -374,7 +444,7 @@ els.go.addEventListener("click", async () => {
 
   const result = await ask({
     type: "connect", origin: target.origin, host: target.host,
-  });
+  }, CONNECT_TIMEOUT_MS);
 
   if (result && result.ok) {
     // Do NOT close the popup here. It used to shut itself after 2.2 seconds,
@@ -409,7 +479,7 @@ els.again.addEventListener("click", async () => {
     /* Worst case the resting screen comes back next time. Still show the
        guide now, which is what was actually asked for. */
   }
-  await read();
+  await guarded(read);
 });
 
 els.recheck.addEventListener("click", async () => {
@@ -418,7 +488,7 @@ els.recheck.addEventListener("click", async () => {
   els.appText.textContent = "Looking for Canvas Downloader";
   els.appState.className = "appstate off";
   try {
-    await read();
+    await guarded(read);
   } finally {
     els.recheck.disabled = false;
     els.recheck.classList.remove("spinning");
@@ -431,7 +501,7 @@ els.foot.addEventListener("click", () => {
 
 // ── on open, including straight after the prompt killed us ─────────────────
 
-(async function start() {
+guarded(async function start() {
   // If the worker finished a sign-in while this popup was closed, say so
   // instead of starting the guide over. Without this, the student reopens the
   // popup after granting and is told to do something that already happened.
@@ -446,4 +516,4 @@ els.foot.addEventListener("click", () => {
     }
   }
   await read();
-})();
+});
