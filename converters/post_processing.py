@@ -1228,11 +1228,19 @@ def run_excel_conversion(files, ui: UIBridge):
 
 
 def run_video_conversion(files, ui: UIBridge):
-    """Extract audio from video files (.mp4, .mov, .mkv) to MP3."""
+    """Extract audio from video files (.mp4, .mov, .mkv) to MP3.
+
+    A video with NO audio track (a silent screen recording) has nothing to
+    extract, so it becomes a PDF of its distinct screens instead - see
+    ``converters.video.convert_silent_video_to_pdf``. Left as a video it failed
+    twice (once more in the retry pass, which cannot change the file) and broke
+    a NotebookLM drag-and-drop of the whole folder.
+    """
     if not files:
         return
     try:
-        from converters.video import convert_video_to_mp3
+        from converters.video import (convert_video_to_mp3, has_audio_track,
+                                      convert_silent_video_to_pdf)
     except ImportError as _imp_err:
         logger.error(f"video_converter unavailable: {_imp_err}")
         _emit(ui, 'error', "Video→MP3 conversion unavailable: module not found", detail=str(_imp_err))
@@ -1249,6 +1257,29 @@ def run_video_conversion(files, ui: UIBridge):
             break
         old_name = video_file.name
         _show_active_file(ui, old_name)
+
+        # `is False`, never falsy: None means the probe could not read the
+        # file, and that must take the MP3 path and fail honestly there.
+        if has_audio_track(video_file) is False:
+            pdf_path_str = convert_silent_video_to_pdf(
+                video_file, dst=_resolve_conversion_target(sm, video_file, '.pdf'),
+                is_cancelled=ui.is_cancelled)
+            if pdf_path_str:
+                pdf_path = Path(pdf_path_str)
+                _update_manifest_path(sm, video_file, pdf_path)
+                if ui.on_detail_update:
+                    ui.on_detail_update(ctx, old_name, pdf_path.name)
+                _emit(ui, 'success', old_name, filename=old_name,
+                      detail='No audio track → screenshots PDF')
+                ui.pp_success_count += 1
+            else:
+                _emit(ui, 'error', old_name, filename=old_name,
+                      detail='No audio track, and the screenshots PDF could not be made')
+                _log_error_to_file(ui.error_log_path, old_name,
+                                   "Silent video to screenshots PDF failed")
+                ui.pp_failure_count += 1
+            _render_dashboard(ui, i, total, "Video files")
+            continue
 
         mp3_path_str = convert_video_to_mp3(
             video_file, dst=_resolve_conversion_target(sm, video_file, '.mp3'))

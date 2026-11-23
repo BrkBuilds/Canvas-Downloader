@@ -590,3 +590,67 @@ A needs none.
   sees a file CHANGE on disk - which it did, because Claude was editing source
   while his dev host ran. The shipped app passes
   `--server.fileWatcherType=none`, so it cannot happen there.
+
+---
+
+## 2026-10-09: "100% NotebookLM ready" was not - NotebookLM rejected the drag
+
+**Status**: fixed in the working tree (NOT committed), real-app download NOT run.
+**Severity**: high for the preset's promise; nothing was lost.
+**Reported**: 2026-10-09, owner, from a real `python dev.py` download of course
+"Computernetværk og distribuerede systemer (LA E26 BINTO2067U)" with the
+"100% AI & NotebookLM Ready" preset. NotebookLM refused the Ctrl+A drag because
+the folder held four `.mov` files.
+
+### Confirmed
+
+- **The four videos have NO audio track.** ffmpeg lists exactly one stream each
+  (h264 3440x1440, macOS ReplayKit screen recordings). So Video -> MP3 had
+  nothing to extract: each was reported "Audio extraction failed" TWICE (the
+  retry pass re-ran a conversion that cannot change) and stayed a `.mov`.
+- **The preset was not flat by its own settings.** Both definitions
+  (`core/preset_manager.py` `builtin_notebooklm`, `ui/quick_download.py`
+  `quick_notebooklm`) set `dl_isolate_secondary: True` (Canvas Content into
+  `Assignments/`, `Announcements/`...) and `pan_layout: 'separate'` ("Panopto
+  Recordings/"). `panopto/runner.py:video_dir` confirms `'match'` in flat mode is
+  the course root.
+
+### Fixed (working tree)
+
+- A video with no audio track now becomes ONE PDF of its distinct screens
+  (`converters/video.py:convert_silent_video_to_pdf`, routed from
+  `run_video_conversion` when `has_audio_track(...) is False`). Measured on the
+  owner's four files: 6 / 12 / 13 / 16 pages, 2.0-5.5 MB against 54-124 MB,
+  15-31 s each, full-resolution frames. Ran through the real
+  `run_all_conversions` against a copy of the folder and its real
+  `.canvas_sync.db`: all four rows repointed to the PDFs.
+- Both NotebookLM preset definitions: `dl_isolate_secondary: False`,
+  `pan_layout: 'match'`, plus the help copy that promised a "separate Recordings
+  folder".
+- `tests/test_silent_video_screenshots.py` (19); 18/18 mutants caught (the pass
+  script lives in the session scratchpad, not in `scripts/`). Full suite 4946
+  passed; architecture audit 0.
+
+### Still open
+
+1. **Real-app download with the preset was NOT run** - it needs the owner's
+   Canvas sign-in. Check: the course root has no subfolders except unpacked
+   zips, Canvas Content sits in the root, Panopto audio sits in the root.
+2. **The owner's folder ALREADY had Canvas Content in the root** (e.g.
+   `Announcement 2026-08-18 - ....md`) although the preset said isolate. So the
+   subfolder half was established by reading the preset, never seen in his run.
+   Why his run was flat is UNKNOWN - worth one look before believing the fix
+   was what changed anything there.
+3. **Zip folders are still subfolders, deliberately.** An archive is unpacked
+   and left alone (decision 2026-07-29, `run_all_conversions` "NOTE ON
+   ARCHIVES"). A NotebookLM drag of the course folder therefore still leaves
+   out unpacked projects. Not changed; it is the owner's call.
+4. **One unexplained ffmpeg failure**: the frame extraction for `4-goaccess.mov`
+   exited `4294967295` (-1) once, during a concurrent full test run; the retry
+   pass recovered it and six repeats all succeeded. Cause unknown. ffmpeg's own
+   stderr is now logged so a recurrence is diagnosable.
+5. **Sync review labels a video as MP3** (`shared/helpers._EFFECTIVE_EXT_MAP`)
+   even when it will become a PDF. Silence cannot be known before the download,
+   so the label is cosmetic only.
+6. The owner's real folder still holds the four `.mov` files; post-processing
+   is scoped to a run's own downloads, so they convert on the next download.

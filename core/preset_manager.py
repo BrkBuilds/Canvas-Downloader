@@ -141,14 +141,17 @@ class PresetManager:
             'description': (
                 'Everything in one flat folder with all file types '
                 'converted to AI-friendly formats (PPTX, Word, Excel, '
-                'HTML, code, links, video). Panopto audio saved '
-                'separately. Drag-and-drop ready for NotebookLM.'
+                'HTML, code, links, video). Canvas Content and Panopto '
+                'audio land in the same folder. Drag-and-drop ready for '
+                'NotebookLM.'
             ),
             'is_builtin': True,
             'settings': {
                 'download_mode': 'flat',
                 'file_filter': 'all',
-                'dl_isolate_secondary': True,
+                # Flat, not per-category subfolders: NotebookLM imports no
+                # subfolders, so content in one is content the drag leaves out.
+                'dl_isolate_secondary': False,
                 'dl_assignments': True,
                 'dl_syllabus': True,
                 'dl_announcements': True,
@@ -170,7 +173,8 @@ class PresetManager:
                 'pan_out_mp3': True,
                 'pan_out_txt': False,
                 'pan_out_srt': False,
-                'pan_layout': 'separate',
+                # 'match' in flat mode is the course folder itself.
+                'pan_layout': 'match',
             },
             'include_path': False,
             'download_path': '',

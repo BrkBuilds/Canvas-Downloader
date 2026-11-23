@@ -121,8 +121,10 @@ LONG_PATH_COURSE_FOLDER_MUTANTS = [
      "        with open(tmp_path, 'w', encoding='utf-8') as f:"),
     ("the video converter's source delete loses the prefix, so it silently no-ops",
      VIDEO,
-     "Path(make_long_path(abs_video)).unlink(missing_ok=True)",
-     "Path(abs_video).unlink(missing_ok=True)"),
+     # Anchored on its 16-space indent: convert_silent_video_to_pdf has the
+     # same statement at 8 spaces, and an unindented anchor matched both.
+     "                Path(make_long_path(abs_video)).unlink(missing_ok=True)",
+     "                Path(abs_video).unlink(missing_ok=True)"),
 
     # -- the census guard itself ---------------------------------------------
     # A census that cannot fail is worse than none: it is recorded as protection.

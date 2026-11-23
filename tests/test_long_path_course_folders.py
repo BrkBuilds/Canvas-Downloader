@@ -597,6 +597,10 @@ def test_no_prefixed_path_is_stored_returned_or_appended():
         ("sync/execution.py", "_root_lp"):
             "the os.walk root and the relpath base; the stored value is the "
             "RELATIVE path, which carries no prefix",
+        ("converters/video.py", "part_lp"):
+            "the screenshot PDF's temp file: reaches Pillow's save() and "
+            "os.replace() only; convert_silent_video_to_pdf returns the CLEAN "
+            "abs_pdf, which is what the manifest is repointed at",
         ("converters/archive.py", "abs_archive_lp"):
             "passed to open() only, so zipfile/tarfile get a file OBJECT and "
             "never a path; abs_archive stays clean and is what names the "

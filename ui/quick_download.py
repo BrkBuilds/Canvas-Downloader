@@ -68,7 +68,9 @@ _QUICK_PRESETS = [
         'icon': 'icon_preset_builtin.png',
         'settings': {
             'download_mode': 'flat', 'file_filter': 'all',
-            'dl_isolate_secondary': True,
+            # Canvas Content inline, not in per-category subfolders: NotebookLM
+            # imports no subfolders, so a subfolder is content the drag misses.
+            'dl_isolate_secondary': False,
             'dl_assignments': True, 'dl_syllabus': True, 'dl_announcements': True,
             'dl_discussions': True, 'dl_quizzes': True,
             'dl_submissions': True, 'dl_secondary_master': True,
@@ -76,9 +78,10 @@ _QUICK_PRESETS = [
             'convert_zip': True,  'convert_pptx': True,  'convert_word': True,
             'convert_excel': True, 'convert_html': True, 'convert_code': True,
             'convert_urls': True,  'convert_video': True,
-            # Panopto: audio only, in a separate "Panopto Recordings" folder.
+            # Panopto: audio only, in the course folder itself ('match' is the
+            # course root in flat mode), for the same reason.
             'pan_out_url': False, 'pan_out_mp4': False, 'pan_out_mp3': True,
-            'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'separate',
+            'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
     {
@@ -847,7 +850,7 @@ div.st-key-page_nav_quick_start button p {{
             "<ul style='margin-top: 5px; margin-bottom: 10px; padding-left: 20px; font-size: 0.9rem; line-height: 1.5;'>"
             "<li><b>Complete Canvas Download</b>: Downloads everything (files, assignments, quizzes, etc.) keeping everything organized just like canvas, <b>including full Panopto lecture videos</b>. Best for a complete, 1:1 backup.</li>"
             "<li><b>Daily study pack (Optimized)</b>: Downloads all files, converting PowerPoints and outdated Word filetypes to PDF for best AI compatibility, <b>plus Panopto lecture video &amp; audio</b>.</li>"
-            "<li><b>100% AI & NotebookLM Ready</b>: All files in one folder, everything AI-Optimized, and ready to drag into notebookLM or your favorite AI, <b>plus Panopto lecture audio</b> in a separate Recordings folder.</li>"
+            "<li><b>100% AI & NotebookLM Ready</b>: All files in one folder, everything AI-Optimized, and ready to drag into notebookLM or your favorite AI, <b>plus Panopto lecture audio</b> in the same folder.</li>"
             "<li><b>Slides & PDFs Only</b>: Only downloads lecture slides and PDFs, skipping all other files (no Panopto recordings). Good if you want to focus only on the essentials.</li>"
             "<li><b>Files Only</b>: Pure files - only downloads teacher-uploaded files while skipping all Canvas text-based content (e.g. Assignment descriptions and announcements) and Panopto recordings.</li>"
             "</ul>"

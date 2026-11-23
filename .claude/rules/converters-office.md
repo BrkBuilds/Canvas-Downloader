@@ -129,3 +129,28 @@ by default even with WSL present.
 - The gate is the same `converters.verify` pair every source-deleting converter already applies afterwards, placed **at the promotion** - the boundary all three converters cross, so a fourth gets it free. Asking in both places is not redundant: this decides what the user's FOLDER gains, the converter's decides whether the ORIGINAL may be deleted.
 - **The no-container path is asymmetric on purpose**: a reject that created a new file is removed; a reject that OVERWROTE something is KEPT and reported, because deleting it would turn a damaged file into a missing one and a manifest row may point there.
 - Same class as `converters/archive.py:_decline`, in the module that fix did not reach. `tests/test_office_product_gate.py`; all **9** mutations caught.
+
+## A video with no audio track becomes a screenshots PDF (2026-10-09)
+A silent screen recording failed Video -> MP3 twice and stayed a video, which
+broke a NotebookLM drag of the whole folder. `converters/video.py:
+convert_silent_video_to_pdf` now turns it into one PDF of its distinct screens.
+Owner report and open items: `tests/audit/OWNER_REPORTS.md`, 2026-10-09.
+- **`has_audio_track` is three-valued and the runner tests `is False`.** `None`
+  (ffmpeg could not read the file) must take the MP3 path and fail honestly
+  there, never become a PDF of nothing. A mutant using `not` is caught.
+- **ffmpeg's scene detector is the wrong tool**: at 0.3 it fired 0-1 times per
+  real recording, because a new terminal line is a tiny fraction of pixels.
+  Change is measured against the LAST KEPT frame, so small edits accumulate.
+- **"Settled?" needs a far finer pixel delta than "changed?"** (6 vs 24 grey
+  levels). With one threshold a red->blue fade moves each pixel at most 23 levels
+  per sample, reads as still, and a half-faded frame became a page. Found by a
+  test, not by the four real videos, which gave the same page counts either way.
+- **Frames are extracted in ONE pass selected by index on the analysis grid,**
+  never by seeking: a seek to the last timestamp can land past the end and
+  return nothing (crashed the first prototype).
+- **Pages are written with Pillow `append=True`, one frame in memory at a time.**
+  Counting `/Type /Page` in the result is WRONG (each append rewrites the page
+  tree: 136 matches for 16 pages); the last `/Count` matched PyMuPDF on all four.
+- Gated by `pdf_looks_real` before the video is deleted, target chosen by
+  `_resolve_conversion_target` (a teacher's `X.pdf` diverts us to `X (1).pdf`).
+- `tests/test_silent_video_screenshots.py` (19), 18/18 mutants caught.
