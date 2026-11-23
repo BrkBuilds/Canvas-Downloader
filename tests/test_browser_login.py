@@ -953,13 +953,14 @@ class _UnloadedIdP(_TitledIdP):
         self.titles.append(value)
 
 
-def _drive(monkeypatch, interactive, log, window_cls=_StuckOnIdP):
+def _drive(monkeypatch, interactive, log, window_cls=_StuckOnIdP,
+           silent=0.4, interactive_timeout=1.6, sample_after=True):
     """Run a real login attempt against a fake web view. No GUI, no network."""
     from core import browser_login as bl
     import core.canvas_logic as cl
 
-    monkeypatch.setattr(bl, "SILENT_TIMEOUT", 0.4)
-    monkeypatch.setattr(bl, "INTERACTIVE_TIMEOUT", 1.6)
+    monkeypatch.setattr(bl, "SILENT_TIMEOUT", silent)
+    monkeypatch.setattr(bl, "INTERACTIVE_TIMEOUT", interactive_timeout)
     monkeypatch.setattr(bl, "POLL_INTERVAL", 0.05)
 
     fake_webview = types.SimpleNamespace(
@@ -991,7 +992,8 @@ def _drive(monkeypatch, interactive, log, window_cls=_StuckOnIdP):
     # first changes is what let two mutants through; sleeping past
     # INTERACTIVE_TIMEOUT instead catches the honest timeout and fails against
     # correct code.
-    time.sleep(bl.SILENT_TIMEOUT * 1.5)
+    if sample_after:
+        time.sleep(bl.SILENT_TIMEOUT * 1.5)
     settled = bl.status()
     bl.reset()
     return state, settled, elapsed
@@ -1052,12 +1054,19 @@ def test_the_window_appears_as_soon_as_the_page_stops_moving(monkeypatch):
     """
     from core import browser_login as bl
     log = []
-    state, _settled, elapsed = _drive(monkeypatch, True, log)
+    # A LONG silent clock for this one test, so the two outcomes cannot meet:
+    # the settle rule shows the window after SETTLE_POLLS * POLL_INTERVAL
+    # (~0.2s), the clock would take the full 2.0s. With the shared 0.4s clock
+    # a slow CI runner measured 0.44s on the settle path (macos-15,
+    # 2026-11-23) - the margin was the flake, not the product.
+    state, _settled, elapsed = _drive(monkeypatch, True, log, silent=2.0,
+                                      interactive_timeout=8.0,
+                                      sample_after=False)
     assert state == "needs_user", state
     assert "show" in log, log
-    # The settle path, not the clock: SETTLE_POLLS * POLL_INTERVAL is well under
-    # SILENT_TIMEOUT in the harness, so only the new rule can get here this fast.
-    assert elapsed < bl.SILENT_TIMEOUT, (
+    # The settle path, not the clock: only the settle rule can get here in
+    # well under half the silent clock.
+    assert elapsed < bl.SILENT_TIMEOUT / 2, (
         f"window took {elapsed:.2f}s against a {bl.SILENT_TIMEOUT}s silent "
         f"clock - it waited out the clock instead of noticing the settled page")
 

@@ -87,10 +87,24 @@ def test_pressing_it_while_waiting_STOPS_and_does_not_restart():
     assert "cancel_browser_handoff" not in start[0], start
 
 
-def test_the_waiting_card_names_the_way_out(monkeypatch):
-    monkeypatch.setattr(auth, "st", type("S", (), {"session_state": {}})())
-    html = auth._browser_notice_html("handoff")
-    assert auth.HANDOFF_STOP_LABEL in html
+def test_the_waiting_status_sits_DIRECTLY_above_the_way_out():
+    """The status used to live above the form and had to NAME the Stop button,
+    because the button sat in another card. Since 2026-11-23 the status is in
+    the extension card, rendered immediately before the button that ends the
+    wait, so the way out is the next thing on screen."""
+    fn = _login_page()
+    status = stop = None
+    for n in ast.walk(fn):
+        if not isinstance(n, ast.Call):
+            continue
+        if isinstance(n.func, ast.Name) and n.func.id == "_handoff_card_html":
+            status = n.lineno
+        if any(k.arg == "key" and isinstance(k.value, ast.Constant)
+               and k.value.value == "login_handoff_btn" for k in n.keywords):
+            stop = n.lineno
+    assert status and stop, (status, stop)
+    assert status < stop, "the live status renders below the Stop button"
+    assert auth.HANDOFF_STOP_LABEL == "Stop waiting"
 
 
 def test_the_store_link_is_QUIETER_than_the_sign_in_button():
@@ -122,3 +136,97 @@ def test_the_extension_card_links_to_the_store():
     html = auth._extension_cta_html()
     assert f"href='{auth.EXTENSION_STORE_URL}'" in html
     assert "Not in the Chrome store yet" not in html
+
+
+# ---------------------------------------------------------------------------
+# The store link can be put away (product owner, 2026-11-23)
+# ---------------------------------------------------------------------------
+
+def _cta_row(fn):
+    """The `with st.container(key="login_ext_cta_row")` block."""
+    for n in ast.walk(fn):
+        if not isinstance(n, ast.With):
+            continue
+        for item in n.items:
+            c = item.context_expr
+            if isinstance(c, ast.Call) and any(
+                    k.arg == "key" and isinstance(k.value, ast.Constant)
+                    and k.value.value == "login_ext_cta_row" for k in c.keywords):
+                return n
+    raise AssertionError("the store link row is gone")
+
+
+def test_the_link_row_holds_BOTH_children_in_EVERY_state():
+    """Streamlit reconciles by position, so the link and its toggle are both
+    rendered whatever the state; only their CONTENT changes. A conditional
+    child here would hand the steps below the toggle's DOM node."""
+    row = _cta_row(_login_page())
+    assert all(isinstance(s, ast.Expr) for s in row.body), (
+        "something in the link row is conditional")
+    calls = [ast.unparse(s.value.func) for s in row.body]
+    assert calls == ["st.markdown", "st.form_submit_button"], calls
+    toggle = row.body[1].value
+    keys = {k.arg: k.value for k in toggle.keywords}
+    assert ast.unparse(keys["on_click"]) == "_toggle_extension_link"
+    assert keys["key"].value == "login_ext_link_toggle"
+
+
+def test_a_HIDDEN_link_renders_no_link_and_a_shown_one_does():
+    shown = auth._extension_cta_html(hidden=False)
+    hidden = auth._extension_cta_html(hidden=True)
+    assert "href=" in shown
+    assert "href=" not in hidden
+    # EMPTY, so the CSS that collapses it can match it.
+    assert hidden == "<div class='login-ext-cta'></div>"
+
+
+class _St:
+    def __init__(self, state=None):
+        self.session_state = dict(state or {})
+
+
+def test_the_link_is_SHOWN_when_the_settings_cannot_be_read(monkeypatch):
+    """Wrong one way costs a link on screen; wrong the other way hides the
+    only route to installing the extension."""
+    monkeypatch.setattr(auth, "st", _St())
+
+    def boom():
+        raise OSError("locked")
+    monkeypatch.setattr(auth, "read_config_for_update", boom)
+    assert auth._extension_link_hidden() is False
+
+
+def test_hiding_is_REMEMBERED_in_the_settings(monkeypatch):
+    monkeypatch.setattr(auth, "st", _St({"_ext_link_hidden": False}))
+    written = []
+    monkeypatch.setattr(auth, "read_config_for_update",
+                        lambda: ({"keep": 1}, True))
+    monkeypatch.setattr(auth, "write_config_atomically",
+                        lambda c: written.append(dict(c)) or True)
+    auth._toggle_extension_link()
+    assert auth.st.session_state["_ext_link_hidden"] is True
+    assert written == [{"keep": 1, auth.EXT_LINK_HIDDEN_KEY: True}], (
+        "the choice was not saved, or the rest of the settings were dropped")
+    auth._toggle_extension_link()
+    assert written[-1][auth.EXT_LINK_HIDDEN_KEY] is False
+
+
+def test_an_UNREADABLE_settings_file_is_never_overwritten(monkeypatch):
+    """`may_write=False` means a transient read failure: writing then would
+    replace every other setting with this one key."""
+    monkeypatch.setattr(auth, "st", _St({"_ext_link_hidden": False}))
+    written = []
+    monkeypatch.setattr(auth, "read_config_for_update", lambda: ({}, False))
+    monkeypatch.setattr(auth, "write_config_atomically",
+                        lambda c: written.append(c) or True)
+    auth._toggle_extension_link()
+    assert written == []
+    # The screen still follows the click.
+    assert auth.st.session_state["_ext_link_hidden"] is True
+
+
+def test_the_toggle_CSS_selects_its_state_off_the_EMPTY_link():
+    """The open-eye glyph for "Show extension link" is chosen from the empty
+    link beside it, so the selector and the hidden markup must agree."""
+    assert ('div[class*="st-key-login_ext_cta_row"]:has(.login-ext-cta:empty)'
+            in _SRC)

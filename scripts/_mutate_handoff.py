@@ -464,7 +464,7 @@ HANDOFF_MUTANTS = [
      "the one feature where telling a student something is listening is "
      "the wrong thing to say about it",
      UI,
-     "            \"<span>Waiting for your browser</span></div>\"",
+     "            \"<span>Waiting for Chrome</span></div>\"",
      "            \"<span>Listening</span></div>\""),
 
     ("the app's OWN Canvas-window failure starts advertising the browser "
@@ -476,15 +476,15 @@ HANDOFF_MUTANTS = [
     ("the puzzle-piece hint is dropped, so a student who has just added "
      "the extension is hunting for a button Chrome has hidden",
      UI,
-     "<b>puzzle-piece</b> icon in Chrome's toolbar first",
-     "button in Chrome's toolbar first"),
+     "Click the <b>puzzle-piece</b> in ",
+     "Click the button in "),
 
     ("the waiting card stops reading whether a tab was opened, so it "
      "tells a student to go and open the page it just opened for them",
      UI,
-     "        where = (\"Your Canvas is now open in another tab.\"\n"
-     "                 if opened else \"Open your Canvas in Chrome.\")",
-     "        where = \"Your Canvas is now open in another tab.\""),
+     "        where = (\"Your Canvas is open in another tab. \"\n"
+     "                 if opened else \"\")",
+     "        where = \"Your Canvas is open in another tab. \""),
 
     ("an uncollected handoff is DISCARDED when the student presses the "
      "button again - which is exactly the student who could not see that "

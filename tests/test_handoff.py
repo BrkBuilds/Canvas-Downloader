@@ -1402,26 +1402,58 @@ def test_the_tab_is_opened_only_AFTER_the_listener_is_armed():
         "the Canvas tab is opened before the listener is armed")
 
 
-def test_the_notice_says_what_ACTUALLY_happened(notice):
-    """Having opened their Canvas for them, telling them to go and open it is
-    both wrong and confusing.
+@pytest.fixture
+def live_card(monkeypatch):
+    """Render the extension card's LIVE status, with a listener that is
+    waiting. Since 2026-11-23 this is the one place the wait is described."""
+    import ui.auth as auth
+    from core import handoff
+
+    class _FakeSt:
+        def __init__(self):
+            self.session_state = {}
+
+    def render(**session):
+        fake = _FakeSt()
+        fake.session_state.update({'handoff_waiting': True, **session})
+        monkeypatch.setattr(auth, 'st', fake)
+        monkeypatch.setattr(handoff, 'waiting', lambda: True)
+        return auth._handoff_card_html()
+
+    return render
+
+
+def test_the_notice_says_what_ACTUALLY_happened(live_card):
+    """Having opened their Canvas for them, the status says so; without a tab
+    opened it must not claim one was.
 
     DRIVEN, not grepped. This was a source test anchored on one sentence, and
     it failed the moment the copy was improved while the behaviour it names was
     perfectly intact - the brittle-anchor trap this repo documents. Rendering
-    both branches tests the thing the test is named after.
+    both branches tests the thing the test is named after. The status moved
+    from the notice above the form into the extension card on 2026-11-23; the
+    property moved with it. "Open your Canvas" is step 2 of the guide directly
+    above the status, so the status no longer repeats it.
     """
-    opened = notice('handoff', handoff_opened_tab=True)
-    not_opened = notice('handoff', handoff_opened_tab=False)
+    opened = live_card(handoff_opened_tab=True)
+    not_opened = live_card(handoff_opened_tab=False)
     assert opened != not_opened, (
-        "the waiting notice reads the same whether or not it opened their "
+        "the waiting status reads the same whether or not it opened their "
         "Canvas, so one of the two is wrong")
     assert 'another tab' in opened, (
-        f"having opened their Canvas, the notice does not say so: {opened}")
-    assert 'Open your Canvas' in not_opened, (
-        f"no tab was opened and the notice does not ask for one: {not_opened}")
-    assert 'Open your Canvas' not in opened, (
-        "it tells the student to go and open the page it just opened for them")
+        f"having opened their Canvas, the status does not say so: {opened}")
+    assert 'another tab' not in not_opened, (
+        "the status claims a tab was opened when none was")
+
+
+def test_nothing_is_said_ABOVE_the_form_while_the_extension_waits(notice):
+    """Product owner, 2026-11-23: the listening screen was messy. A large
+    notice above the form pushed the whole login card ~250px down and repeated
+    what the extension card already said. The slot still renders (the poll
+    fragment inside it collects the sign-in) but carries no text."""
+    import re
+    html = notice('handoff', handoff_opened_tab=True)
+    assert re.sub(r'<[^>]+>', '', html).strip() == '', html
 
 
 def test_cancelling_forgets_that_a_tab_was_opened():
@@ -1983,7 +2015,7 @@ def notice(monkeypatch):
 def _one_root(html: str) -> bool:
     """Exactly one top-level element, which the slot contract requires."""
     import re
-    return len(re.findall(r"<div class='kc-notice", html)) == 1
+    return len(re.findall(r"<div class='kc-(?:notice|none)", html)) == 1
 
 
 def test_EVERY_notice_state_emits_exactly_one_element(notice):
@@ -2290,20 +2322,24 @@ def test_the_PATH_B_card_names_the_extension_and_PATH_A_never_does(notice):
         "path A's failure does not offer the token field, its real fallback")
 
 
-def test_the_WAITING_card_says_where_to_look_when_the_button_is_hidden(notice):
+def test_the_WAITING_card_says_where_to_look_when_the_button_is_hidden(live_card):
     """Chrome hides a new extension behind the puzzle-piece, so a student who
     has just installed it is hunting for a button that is not on screen. Every
     other sentence in that card assumes they can see it."""
-    html = notice('handoff', handoff_opened_tab=True)
+    html = live_card(handoff_opened_tab=True)
     assert 'puzzle' in html.lower(), (
         "the waiting card does not say where Chrome hides a new button")
 
 
-def test_NO_developer_wording_reaches_the_APP_cards_either(notice):
+def test_NO_developer_wording_reaches_the_APP_cards_either(notice, live_card):
     """The extension's copy rules were a product-owner ruling, and the app is
     the other half of the same flow. "Listening" under a spinner is the one
     that was there: on a feature that reads a browser session, a student who
     reads that it is listening has been told the wrong thing about it.
+
+    The extension card's LIVE status is scanned too: since 2026-11-23 it is
+    where the spinner is, and a hand-planted "Listening" there survived while
+    only the notices were checked.
     """
     import re
     import ui.auth as auth
@@ -2311,9 +2347,12 @@ def test_NO_developer_wording_reaches_the_APP_cards_either(notice):
               'endpoint', 'cookie', 'session token', 'origin')
     states = ['waiting', 'handoff', 'handoff_arrived', 'checking', 'cancelled',
               'error'] + ['fail:' + k for k in auth._HANDOFF_FAILURES]
+    rendered = [(s, notice(s, handoff_opened_tab=True)) for s in states]
+    rendered += [('live card, tab opened', live_card(handoff_opened_tab=True)),
+                 ('live card', live_card(handoff_opened_tab=False))]
     offenders = []
-    for state in states:
-        text = re.sub(r'<[^>]+>', ' ', notice(state, handoff_opened_tab=True))
+    for state, html in rendered:
+        text = re.sub(r'<[^>]+>', ' ', html)
         for word in banned:
             if re.search(r'\b' + re.escape(word) + r'\b', text, re.I):
                 offenders.append(f"{state}: {word}")

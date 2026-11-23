@@ -122,6 +122,57 @@ EXTENSION_STORE_URL = ('https://chromewebstore.google.com/detail/'
 HANDOFF_START_LABEL = 'Sign in with the extension'
 HANDOFF_STOP_LABEL = 'Stop waiting'
 
+#: The store link can be put away by a student who already has the extension
+#: (product owner, 2026-11-23). Never automatic: the app cannot know whether
+#: Chrome has it, so only the student can say so. ONE button in ONE slot, its
+#: label the only thing that changes, so the row never changes shape.
+EXT_LINK_HIDDEN_KEY = 'hide_extension_store_link'
+EXT_LINK_HIDE_LABEL = 'Hide'
+EXT_LINK_SHOW_LABEL = 'Show extension link'
+
+
+def _extension_link_hidden() -> bool:
+    """Whether the student has put the store link away. Read once per session.
+
+    Defaults to shown, and an unreadable settings file answers shown too: the
+    cost of being wrong that way is one link on screen, while the other way
+    hides the only route to installing the extension.
+    """
+    if '_ext_link_hidden' not in st.session_state:
+        hidden = False
+        try:
+            config, _may_write = read_config_for_update()
+            hidden = bool(config.get(EXT_LINK_HIDDEN_KEY, False))
+        except Exception:                                          # noqa: BLE001
+            logger.warning("Could not read the extension link setting",
+                           exc_info=True)
+        st.session_state['_ext_link_hidden'] = hidden
+    return bool(st.session_state['_ext_link_hidden'])
+
+
+def _toggle_extension_link() -> None:
+    """`on_click` for the Hide / Show extension link control.
+
+    The screen follows the session value at once; the settings file is what
+    makes the choice survive a restart. A write that cannot happen is logged
+    and the screen still changes, because the student's click must never look
+    ignored over a preference.
+    """
+    hidden = not _extension_link_hidden()
+    st.session_state['_ext_link_hidden'] = hidden
+    try:
+        config, may_write = read_config_for_update()
+        if not may_write:
+            logger.warning("Settings file could not be read; the extension "
+                           "link choice lasts until the app is closed")
+            return
+        config[EXT_LINK_HIDDEN_KEY] = hidden
+        if not write_config_atomically(config):
+            logger.warning("Could not save the extension link choice")
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not save the extension link choice",
+                       exc_info=True)
+
 #: Icons for the login page. Inline SVG rather than a data URI: these sit in
 #: `st.markdown` content, which lands in the main DOM where CSS can reach
 #: `currentColor` - so one glyph serves a hover state, a disabled state and
@@ -2589,7 +2640,7 @@ def _signin_button_label(api_url: str) -> str:
     return institution_picker.SIGNIN_LABEL_PREFIX + md_escape(name)
 
 
-def _extension_cta_html() -> str:
+def _extension_cta_html(hidden: bool = False) -> str:
     """The "get the extension" control, or an honest line saying there is none.
 
     **`EXTENSION_STORE_URL` being empty is a STATE, not a missing value.** The
@@ -2611,6 +2662,11 @@ def _extension_cta_html() -> str:
             "<div class='login-ext-cta login-ext-cta-soon'>"
             "<span>Not in the Chrome store yet. The blue button above "
             "does the same job with no extension at all.</span></div>")
+    if hidden:
+        # Put away by the student. EMPTY, not absent: the row keeps its two
+        # children and CSS collapses this one, so the toggle beside it simply
+        # becomes the first thing in the row.
+        return "<div class='login-ext-cta'></div>"
     return (
         "<div class='login-ext-cta'>"
         f"<a class='login-ext-btn' href='{EXTENSION_STORE_URL}' target='_blank' "
@@ -2682,10 +2738,28 @@ def _handoff_card_html() -> str:
     # cycle. `tests/test_unbound_names.py` caught this as a NameError.
     from core import handoff
     if st.session_state.get('handoff_waiting') and handoff.waiting():
+        # THE ONE PLACE the wait is described (product owner, 2026-11-23: the
+        # listening screen was messy). It used to be said three times - a
+        # large notice above the form that pushed the whole login card ~250px
+        # down, the steps, and a line here - and the notice told the student
+        # to press "Stop waiting below" about a button in another card. Now
+        # the status sits in the card they clicked, directly above the button
+        # that ends it, and adds only what the steps do not already say.
+        opened = bool(st.session_state.get('handoff_opened_tab'))
+        where = ("Your Canvas is open in another tab. "
+                 if opened else "")
         return (
             "<div class='login-handoff login-handoff-live'>"
-            "<b>Waiting for your browser.</b> Click the Canvas Downloader "
-            "button in Chrome while your Canvas tab is open."
+            "<div class='lh-head'><span class='kc-spin'></span>"
+            "<span>Waiting for Chrome</span></div>"
+            # THE SENTENCE THAT SAVES THE MOST PEOPLE, moved here with the
+            # rest: Chrome hides a new extension behind the puzzle-piece, so a
+            # student who has just installed it is hunting for a button that
+            # is not on screen.
+            f"<div class='lh-body'>{where}Can't see the "
+            "<b>Canvas Downloader</b> icon? Click the <b>puzzle-piece</b> in "
+            "Chrome's toolbar first. That is where Chrome keeps new "
+            "extensions.</div>"
             "</div>")
     # THE EXPLAINER THAT USED TO LIVE HERE IS GONE, because as of 2026-09-14
     # it is said twice. This card sits inside the extension disclosure, three
@@ -2791,51 +2865,27 @@ def _browser_notice_html(state: str) -> str:
             "</div>"
         )
     if state == 'handoff':
-        # TWO wordings, because the instruction is genuinely different: having
-        # opened their Canvas for them, telling them to go and open it is both
-        # wrong and confusing. Still ONE element with one child count - the
-        # difference is the sentence, never the shape.
-        opened = bool(st.session_state.get('handoff_opened_tab'))
-        where = ("Your Canvas is now open in another tab."
-                 if opened else "Open your Canvas in Chrome.")
-        return (
-            "<div class='kc-notice'>"
-            f"<div class='kc-head'>{_BROWSER_SVG}"
-            "<span>One more click, over in Chrome</span></div>"
-            f"<div class='kc-body'>{where} Up by the address bar, click the "
-            "<b>Canvas Downloader</b> button, then <b>Sign me in</b>. You do "
-            "not have to come back here - this page carries on by itself. "
-            # The way OUT, named where the student is looking. The button
-            # itself sits inside the extension card further down, and a wait
-            # with no visible exit reads as the app having hung.
-            f"Changed your mind? Press <b>{HANDOFF_STOP_LABEL}</b> below.</div>"
-            # THE SENTENCE THAT SAVES THE MOST PEOPLE. Chrome hides new
-            # extensions behind the puzzle-piece by default, so a student who
-            # has just installed it is looking for a button that is not on
-            # screen, with nothing telling them where it went. Everything else
-            # in this card assumes they can see it.
-            "<div class='kc-body'>Can't see that button? Click the "
-            "<b>puzzle-piece</b> icon in Chrome's toolbar first - that is "
-            "where Chrome keeps new buttons. If it is not there either, you "
-            "have not added the free Canvas Downloader extension to Chrome "
-            "yet: use the blue <b>Sign in</b> button below instead, which "
-            "needs no extension at all.</div>"
-            "<div class='kc-foot'><span class='kc-spin'></span>"
-            "<span>Waiting for your browser</span></div>"
-            "</div>")
+        # NOTHING above the form while the extension route waits. The wait is
+        # described once, inside the extension card, next to its own Stop
+        # button - see `_handoff_card_html`. The poll fragment still renders
+        # this (it is what collects the sign-in, so it must keep running), and
+        # CSS collapses the slot so the login card does not move at all.
+        return "<div class='kc-none'></div>"
     if state == 'handoff_arrived':
         # THE STATE THAT WAS MISSING, and its absence is what let the two
         # halves of one flow contradict each other: the extension showed a
         # green success screen while this page still said "waiting", or worse,
         # showed a failure. Reported 2026-09-13.
+        # QUIET, because it lives about a second before the screen changes:
+        # the full-size notice pushed the whole login card down for that
+        # second, which read as the page jumping right as it succeeded.
         return (
-            "<div class='kc-notice'>"
+            "<div class='kc-notice kc-notice-quiet'>"
             f"<div class='kc-head'>{_BROWSER_SVG}"
             "<span>Got it</span></div>"
-            "<div class='kc-body'>Chrome sent your Canvas sign-in over. "
-            "Signing you in now.</div>"
             "<div class='kc-foot'><span class='kc-spin'></span>"
-            "<span>Almost done</span></div>"
+            "<span>Chrome sent your Canvas sign-in over. Signing you in "
+            "now.</span></div>"
             "</div>")
     if state == 'checking':
         return (
@@ -4423,8 +4473,43 @@ def render_login_page(fetch_courses_fn):
     /* And a little air of its own. The disclosure has no bottom padding (its
        sibling ends on a button, which does not need any), so a line of text
        here sat 14px under the button and flush on the card's floor. */
+    /* The live status is a small panel in this route's own colour, ABOVE the
+       Stop button (2026-11-23). Left-aligned like the steps it follows, so the
+       card reads top to bottom as one column rather than switching to a
+       centred caption for the one line that matters most. */
     div[class*="st-key-login_card_wrapper_"] .login-handoff-live {
-        padding-bottom: 8px;
+        text-align: left;
+        margin: 2px 0 4px 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: rgba(184, 157, 254, 0.08);
+        border: 1px solid rgba(184, 157, 254, 0.24);
+    }
+    div[class*="st-key-login_card_wrapper_"] .login-handoff-live .lh-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #e2e8f0;
+        font-weight: 600;
+        font-size: 0.84rem;
+    }
+    div[class*="st-key-login_card_wrapper_"] .login-handoff-live .lh-body {
+        margin-top: 5px;
+        color: #94a3b8;
+        font-size: 0.78rem;
+        line-height: 1.5;
+    }
+    div[class*="st-key-login_card_wrapper_"] .login-handoff-live .kc-spin {
+        border-color: rgba(184, 157, 254, 0.25);
+        border-top-color: #b89dfe;
+    }
+    /* The notice slot above the form while the EXTENSION waits: the poll
+       fragment must keep rendering (it collects the sign-in), but it has
+       nothing to say there, so the whole slot - wrapper included, or it still
+       pays the form's gap - goes. */
+    div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-browser_login_slot"] .kc-none),
+    div[class*="st-key-browser_login_slot"]:has(.kc-none) {
+        display: none !important;
     }
 
     /* ── The two disclosures, and the glyph on each header ──────────────────
@@ -4678,7 +4763,76 @@ def render_login_page(fetch_courses_fn):
        2026-09-28: the weights were upside down. A student installs once and
        signs in every time, so the sign-in button carries the weight. */
     div[class*="st-key-login_card_wrapper_"] .login-ext-cta {
-        margin: 0 0 14px 0;
+        margin: 0;
+    }
+    /* The store link and its Hide toggle, one row. The row owns the space
+       below it now (the link used to), because while the link is hidden the
+       toggle is the row's only visible child and must keep the same air. */
+    /* min-height is the link's own 32px, so putting the link away does not
+       shift the steps up by 5px under the pointer that just clicked. The
+       bottom margin is MEASURED: the row's element gap already supplies the
+       rest, and 1px lands the steps 13px below it, where the link alone sat. */
+    div[class*="st-key-login_ext_cta_row"] {
+        gap: 12px !important;
+        min-height: 32px;
+        margin-bottom: 1px !important;
+    }
+    div[class*="st-key-login_ext_cta_row"] [data-testid="stMarkdownContainer"] {
+        margin-bottom: 0 !important;
+    }
+    div[class*="st-key-login_ext_cta_row"]
+        div[data-testid="stElementContainer"]:has(.login-ext-cta:empty) {
+        display: none !important;
+    }
+    /* The toggle is TEXT, grey, smaller than the link: it is housekeeping,
+       not an action, and must never compete with the link it puts away. A
+       plain-text button label has no paragraph element in 1.51, so the rules
+       sit on the markdown container, which is there in both shapes. */
+    div.st-key-login_ext_link_toggle button {
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 2px 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #64748b !important;
+        /* Measured 1.5px below the link's optical centre. */
+        transform: translateY(-1.5px);
+    }
+    div.st-key-login_ext_link_toggle button:hover {
+        color: #94a3b8 !important;
+    }
+    div.st-key-login_ext_link_toggle button [data-testid="stMarkdownContainer"] {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px;
+        font-size: 0.78rem !important;
+        font-weight: 500 !important;
+    }
+    div.st-key-login_ext_link_toggle button [data-testid="stMarkdownContainer"] p {
+        font-size: inherit !important;
+        font-weight: inherit !important;
+        margin: 0 !important;
+    }
+    /* The glyph AFTER the word ("Hide" + a closed eye), drawn as a mask so it
+       takes the text's own colour on hover. Base64 so no literal angle
+       bracket or hash ever enters this style block. */
+    div.st-key-login_ext_link_toggle button [data-testid="stMarkdownContainer"]::after {
+        content: "";
+        width: 13px;
+        height: 13px;
+        flex-shrink: 0;
+        background-color: currentColor;
+        -webkit-mask: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScyJyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnPjxwYXRoIGQ9J00xMC43MzMgNS4wNzZhMTAuNzQ0IDEwLjc0NCAwIDAgMSAxMS4yMDUgNi41NzUgMSAxIDAgMCAxIDAgLjY5NiAxMC43NDcgMTAuNzQ3IDAgMCAxLTEuNDQ0IDIuNDknLz48cGF0aCBkPSdNMTQuMDg0IDE0LjE1OGEzIDMgMCAwIDEtNC4yNDItNC4yNDInLz48cGF0aCBkPSdNMTcuNDc5IDE3LjQ5OWExMC43NSAxMC43NSAwIDAgMS0xNS40MTctNS4xNTEgMSAxIDAgMCAxIDAtLjY5NiAxMC43NSAxMC43NSAwIDAgMSA0LjQ0Ni01LjE0MycvPjxwYXRoIGQ9J20yIDIgMjAgMjAnLz48L3N2Zz4=') no-repeat center / contain;
+        mask: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScyJyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnPjxwYXRoIGQ9J00xMC43MzMgNS4wNzZhMTAuNzQ0IDEwLjc0NCAwIDAgMSAxMS4yMDUgNi41NzUgMSAxIDAgMCAxIDAgLjY5NiAxMC43NDcgMTAuNzQ3IDAgMCAxLTEuNDQ0IDIuNDknLz48cGF0aCBkPSdNMTQuMDg0IDE0LjE1OGEzIDMgMCAwIDEtNC4yNDItNC4yNDInLz48cGF0aCBkPSdNMTcuNDc5IDE3LjQ5OWExMC43NSAxMC43NSAwIDAgMS0xNS40MTctNS4xNTEgMSAxIDAgMCAxIDAtLjY5NiAxMC43NSAxMC43NSAwIDAgMSA0LjQ0Ni01LjE0MycvPjxwYXRoIGQ9J20yIDIgMjAgMjAnLz48L3N2Zz4=') no-repeat center / contain;
+    }
+    /* Hidden state: the same control says "Show extension link" with an open
+       eye. Selected off the EMPTY link beside it, which is the one fact in
+       the DOM that already says which state the row is in. */
+    div[class*="st-key-login_ext_cta_row"]:has(.login-ext-cta:empty)
+        div.st-key-login_ext_link_toggle button [data-testid="stMarkdownContainer"]::after {
+        -webkit-mask: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScyJyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnPjxwYXRoIGQ9J00yLjA2MiAxMi4zNDhhMSAxIDAgMCAxIDAtLjY5NiAxMC43NSAxMC43NSAwIDAgMSAxOS44NzYgMCAxIDEgMCAwIDEgMCAuNjk2IDEwLjc1IDEwLjc1IDAgMCAxLTE5Ljg3NiAwJy8+PGNpcmNsZSBjeD0nMTInIGN5PScxMicgcj0nMycvPjwvc3ZnPg==') no-repeat center / contain;
+        mask: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScyJyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnPjxwYXRoIGQ9J00yLjA2MiAxMi4zNDhhMSAxIDAgMCAxIDAtLjY5NiAxMC43NSAxMC43NSAwIDAgMSAxOS44NzYgMCAxIDEgMCAwIDEgMCAuNjk2IDEwLjc1IDEwLjc1IDAgMCAxLTE5Ljg3NiAwJy8+PGNpcmNsZSBjeD0nMTInIGN5PScxMicgcj0nMycvPjwvc3ZnPg==') no-repeat center / contain;
     }
     div[class*="st-key-login_card_wrapper_"] .login-ext-btn {
         display: inline-flex;
@@ -5289,9 +5443,36 @@ def render_login_page(fetch_courses_fn):
                         # it opens the card without outweighing the sign-in
                         # button at the bottom. Never a dead href - see
                         # `_extension_cta_html`.
-                        st.markdown(_extension_cta_html(),
-                                    unsafe_allow_html=True)
+                        #
+                        # A ROW of two, always: the link and a quiet toggle
+                        # that puts it away for a student who already has the
+                        # extension. Both children render in both states (the
+                        # link's markup is simply empty while hidden), so the
+                        # row never changes shape. A form_submit_button because
+                        # a plain st.button cannot rerun inside st.form; the
+                        # `on_click` is the whole action, and no handler below
+                        # reads its return value, so it can trigger nothing
+                        # else in the form.
+                        _ext_link_hidden = _extension_link_hidden()
+                        with st.container(key="login_ext_cta_row",
+                                          horizontal=True,
+                                          vertical_alignment="center",
+                                          gap="small"):
+                            st.markdown(
+                                _extension_cta_html(hidden=_ext_link_hidden),
+                                unsafe_allow_html=True, width="content")
+                            st.form_submit_button(
+                                EXT_LINK_SHOW_LABEL if _ext_link_hidden
+                                else EXT_LINK_HIDE_LABEL,
+                                type="tertiary", key="login_ext_link_toggle",
+                                on_click=_toggle_extension_link)
                         st.markdown(_extension_guide_html(),
+                                    unsafe_allow_html=True)
+                        # The live status sits ABOVE the button that ends it,
+                        # so "what is happening" and "how to stop it" are read
+                        # together. ONE element, CONTENT varying by state -
+                        # never a conditional element.
+                        st.markdown(_handoff_card_html(),
                                     unsafe_allow_html=True)
                         # ONE button, two jobs. While the app is listening it
                         # is the way to stop, because the wait otherwise runs
@@ -5304,10 +5485,6 @@ def render_login_page(fetch_courses_fn):
                             HANDOFF_STOP_LABEL if _handoff_live_now
                             else HANDOFF_START_LABEL,
                             use_container_width=True, key="login_handoff_btn")
-                        # ONE element, CONTENT varying by state - never a
-                        # conditional element.
-                        st.markdown(_handoff_card_html(),
-                                    unsafe_allow_html=True)
 
             with _col_tok:
                 with st.container(border=False, key="login_card_wrapper_token"):

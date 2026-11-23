@@ -3237,3 +3237,66 @@ passed, and the same two defects were in all three logs.
 - **The lesson is the one `testing-and-audits.md` already states for Windows
   CI, in reverse: a red job nobody reads is the same as no job.** Check the
   macOS run after every push touching the handoff or the reaper.
+
+## 2026-11-23: the extension card, to the owner's direction
+
+### The listening state is described ONCE, in the card the student clicked
+Measured before, in the real app at 1440x1000: pressing "Sign in with the
+extension" put a ~250px notice ("One more click, over in Chrome") ABOVE the
+form, pushing the whole login card down, and the same instruction was then on
+screen three times (that notice, the steps, a line under the button). The
+notice also said "Press Stop waiting below" about a button in a different card.
+- `_browser_notice_html('handoff')` now returns an empty `kc-none` div and CSS
+  collapses the `browser_login_slot` wrapper. **The poll fragment must keep
+  rendering**: it is the only thing that asks for the run which collects the
+  credential (see "ARRIVAL SWITCHED OFF THE COLLECTOR"). Hide the slot, never
+  stop calling the fragment.
+- The live status is `_handoff_card_html`, rendered ABOVE the Stop button: a
+  spinner, "Waiting for Chrome", the opened-tab sentence and the puzzle-piece
+  sentence. It does not repeat step 3, which sits directly above it.
+- `handoff_arrived` is a quiet one-line notice: it lives about a second before
+  the screen changes, and the full-size one made the page jump at the moment of
+  success.
+- Measured after: the login card does not move when the wait starts.
+
+### The store link can be put away, by the student only
+"Hide" (grey text, closed-eye glyph) beside "Get the extension"; once hidden the
+same control reads "Show extension link" with an open eye. Never automatic: the
+app cannot know whether Chrome has the extension. Saved as
+`hide_extension_store_link` through `read_config_for_update` /
+`write_config_atomically`; an unreadable file is never written, and a read
+failure answers SHOWN.
+- The row is `st.container(key="login_ext_cta_row", horizontal=True)` holding
+  BOTH children in both states; hidden, the link's markup is an empty div that
+  CSS collapses, and the glyph swap selects off that empty div. No st.columns:
+  the card is already two levels of columns deep.
+- A `form_submit_button` with `on_click`, because a plain button cannot rerun
+  inside `st.form`. No submit handler reads its return value, so it triggers
+  nothing else, and Enter in the URL field still hits the FIRST submit button
+  ("Sign in to ..."), which renders before it.
+- Measured: 13px from the row to the steps in both states, the toggle's centre
+  on the link's centre to the pixel, and no shift when toggling (the row keeps
+  the link's 32px as `min-height`).
+- `tests/test_handoff_stop_button.py`, hand mutation pass 5/5 caught.
+
+### macOS CI, first green handoff run on a real Mac (2026-11-23)
+`macos-14` was retired by GitHub ("configuration not supported"), so the macOS
+job could not start at all from late October; both workflows are on `macos-15`.
+On its first run there, every handoff test passed, including
+`test_a_QUICK_re_press_after_a_USED_listener_gets_the_first_port_again`, which
+is SKIPPED on Windows and is the measurement the 2026-09-28 `SO_REUSEADDR` entry
+was waiting for. The one failure was the 0.4s silent-clock timing test (0.44s
+measured); it now runs on a 2.0s clock and asserts under half of it, mutation
+checked by disabling the settle rule.
+
+### How long an extension sign-in lasts, as the product owner measures it (2026-11-23)
+Stated from his own daily use: an extension sign-in lasts **about 2 days** for
+him (CBS), and **up to about a week** at some institutions. That is longer than
+the one-day `expire_after` default read out of Canvas' source above, which fits
+the rolling refresh (`refreshed_credential()`) doing its job, and the spread
+fits Consul overriding the default per institution. Treat it as field
+experience, not a controlled measurement.
+- **His positioning**: the extension is the EASIEST and FASTEST route, at the
+  cost of a shorter remembered sign-in than a token. He has published a YouTube
+  walkthrough of it. Copy may say "lasts a few days, then one click again";
+  it must not promise weeks.
