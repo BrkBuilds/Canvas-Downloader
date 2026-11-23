@@ -511,10 +511,10 @@ HANDOFF_MUTANTS = [
     ("the popup's status reply paints the icon from its own answer, so "
      "that path drifts away from the one function that knows the rule",
      BG,
-     "      refreshBadge();\n"
-     "    });",
-     "      paintBadge(!!(app && app.waiting));\n"
-     "    });"),
+     "      // place and this path cannot drift away from it.\n"
+     "      quietly(\"repainting the icon\", () => refreshBadge());",
+     "      // place and this path cannot drift away from it.\n"
+     "      quietly(\"repainting the icon\", () => paintBadge(!!(app && app.waiting)));"),
 
     ("dev.py stops keeping the session record, so health.log is never "
      "written under the tool built to exercise production faithfully",
