@@ -857,7 +857,8 @@
       <div class="toc-title">On this page</div>
       <a href="#getting-started">Getting Started</a>
       <a href="#canvas-url" class="sub">Your Canvas URL</a>
-      <a href="#api-token" class="sub">Your Canvas Access Token</a>
+      <a href="#sign-in" class="sub">Signing in</a>
+      <a href="#api-token" class="sub">Using an access token</a>
       <a href="#selecting-courses" class="sub">Selecting Courses</a>
       <a href="#quick-download">Quick Download</a>
       <a href="#quick-presets" class="sub">The 5 Presets</a>
@@ -929,10 +930,45 @@
           </p>
         </div>
 
-        <h3 class="sub-title reveal" id="api-token">Your Canvas Access Token</h3>
+        <h3 class="sub-title reveal" id="sign-in">Signing in</h3>
         <p class="body-text reveal">
-          Canvas Downloader uses your <strong>Canvas Access Token</strong> to access your courses, the same way Canvas' own mobile app connects.
-          The token only grants access to <strong>your own student account</strong>: your enrolled courses, your files, and your grades. There is no way to access other students' data.
+          Once your school is picked, click the big blue button, <strong>Sign in to &lt;your university&gt;</strong> (it says <strong>Sign in to Canvas</strong> if the app does not know the school's name).
+          It opens your university's own login page in a window of the app, and you sign in there exactly as you do in your browser, with single sign-on and two-step verification working as usual.
+          The caption under the button says it plainly: "Opens your university's own login page in a window. Your password goes to them, never to this app."
+          After that the app keeps your Canvas session, the same way a browser does, and uses it only to talk to your school's Canvas.
+        </p>
+        <p class="body-text reveal">
+          This works at every school, including the ones that have switched off student access tokens. You do not need a token for anything.
+        </p>
+
+        <div class="info-card reveal">
+          <h4>Already signed in to Canvas in Chrome? This is the quickest way</h4>
+          <p>
+            Open <strong>Use the browser extension instead</strong> under the sign-in button.<br/>
+            <strong>1.</strong> Add the free <a href="https://chromewebstore.google.com/detail/canvas-downloader-connect/lijagdnejjaimhckbgdmjegheignpkkh" target="_blank" rel="noopener" style="color: var(--cyan); text-decoration: none;">Canvas Downloader Connector</a> extension from the Chrome Web Store.<br/>
+            <strong>2.</strong> Open Canvas in a Chrome tab.<br/>
+            <strong>3.</strong> Click <strong>Sign in with the extension</strong> in the app, then click the extension's button.
+          </p>
+          <p>
+            The extension hands your Canvas session to the app on the same computer only. Nothing goes to any server of ours, because there is none.
+            The app remembers it for a few days, up to about a week at some schools, and then it is the same two clicks again.
+          </p>
+        </div>
+
+        <!-- The extension walkthrough. Same click-to-load `.guide-embed[data-yt]`
+             as the token clip below, with its own poster. -->
+        <div class="guide-embed reveal" data-yt="qdZeUlemPkw" data-poster="assets/extension-video-poster.jpg"
+          data-title="1-Click Login with Chrome Extension"></div>
+        <p class="media-cap">The whole extension sign-in, from installing it to the first course list.</p>
+
+        <div class="callout info reveal">
+          <strong>Where your school allows it, the app makes itself a token.</strong> A Canvas session runs out much sooner than a token does, so after you sign in the app quietly creates a Canvas access token named "Canvas Downloader". You can see it, and delete it, under <strong>Account &#8594; Settings &#8594; Approved Integrations</strong>. If your school does not allow student tokens, the app keeps using your session instead, and when that session ends you simply sign in again.
+        </div>
+
+        <h3 class="sub-title reveal" id="api-token">Using an access token instead</h3>
+        <p class="body-text reveal">
+          The access token route still works exactly as before, for anyone who prefers it or already has one. Open <strong>Use an access token instead</strong> on the sign-in screen and paste your <strong>Canvas Access Token</strong>.
+          A token connects the same way Canvas' own mobile app does, and it only grants access to <strong>your own student account</strong>: your enrolled courses, your files, and your grades. There is no way to access other students' data.
           Instructure puts the same thing in one line, and it is worth reading before you create one:
           <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: none;">what a Canvas access token is, and what it cannot do</a>.
         </p>
@@ -964,13 +1000,14 @@
           which is all the clip is really for, is unchanged.</p>
 
         <div class="callout info reveal">
-          <strong>You only do this once.</strong> After the first login the token is kept in your operating system's
-          password vault, either Windows Credential Manager or macOS Keychain, and the app signs you in on its own. If it
-          ever expires or you revoke it, the app says so and asks for a fresh one, with your school already filled in.
+          <strong>You only do this once.</strong> Whichever way you signed in, the app keeps your Canvas sign-in on
+          your computer, protected by Windows for your user account or in the macOS Keychain, and signs you in on its own
+          next time. If it ever expires or you revoke it, the app says so and asks you to sign in again, with your school
+          already filled in.
         </div>
 
         <div class="callout info reveal">
-          <strong>100% local.</strong> Your token is stored only on your computer. It is never sent to any server other than your university's own Canvas instance.
+          <strong>100% local.</strong> Your Canvas sign-in, session or token, is stored only on your computer. It is never sent to any server other than your university's own Canvas instance. Logging out in the app deletes it.
         </div>
 
         <h3 class="sub-title reveal" id="selecting-courses">Selecting Courses</h3>

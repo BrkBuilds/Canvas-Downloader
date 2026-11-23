@@ -301,17 +301,27 @@
   function loginScreen() {
     return {
       eyebrow: 'Step 4 of 5',
-      title: 'Log in to Canvas',
-      sub: 'Enter your Canvas URL and a personal API token.',
+      title: 'Sign in to Canvas',
+      sub: 'Sign in with your normal university login. No access token needed.',
       body:
-        ytEmbed(YT_TOKEN, 'How to get your Canvas API token') +
-        '<p class="mw-media-cap">Creating an API token takes about 30 seconds - the clip shows exactly how.</p>' +
         '<ul class="mw-steps">' +
-          '<li>Type your <strong>Canvas URL</strong> (for example <strong>https://your-school.instructure.com</strong>).</li>' +
-          '<li>Paste your personal <strong>API token</strong>, then click <strong>Log In</strong>.</li>' +
+          '<li>Click <strong>Find your institution</strong> beside the address field and type your school’s name. Not listed? Paste your Canvas address (for example <strong>https://your-school.instructure.com</strong>).</li>' +
+          '<li>Click the big blue button, <strong>Sign in to &lt;your university&gt;</strong>, and sign in on your university’s own login page as usual.</li>' +
         '</ul>' +
-        note('cyan', ICO.lock(18), 'Your token is stored securely in your Mac’s Keychain and is only ever used to talk to your university’s Canvas server. The app has no backend - everything runs locally.') +
-        '<p class="mw-hint">The login screen also has built-in guides for finding your Canvas URL and generating a token, in case you’d rather read along.</p>'
+        note('cyan', ICO.lock(18), 'Your password goes to your university, never to the app. The app keeps your Canvas sign-in in your Mac’s Keychain and only ever uses it to talk to your university’s Canvas server. The app has no backend, so everything runs locally.') +
+        '<p class="mw-hint">On a Mac the sign-in window does not remember your university password, so you may type it a bit more often than on Windows. The macOS build of 2.0.4 is marked beta.</p>' +
+        '<details class="mw-help-card">' +
+          '<summary>' +
+            '<span class="mw-help-icon">' + ICO.help(18) + '</span>' +
+            '<span class="mw-help-text">Prefer an access token, or the browser extension?</span>' +
+            '<span class="mw-help-chevron">' + ICO.chevron(16) + '</span>' +
+          '</summary>' +
+          '<div class="mw-help-body">' +
+            '<p style="margin-bottom: 14px;">Both still work. Under the sign-in button, <strong>Use the browser extension instead</strong> is for when you are already signed in to Canvas in Chrome, with the free <a href="https://chromewebstore.google.com/detail/canvas-downloader-connect/lijagdnejjaimhckbgdmjegheignpkkh" target="_blank" rel="noopener" style="color: var(--mw-cyan); text-decoration: underline;">Canvas Downloader Connector</a> extension. <strong>Use an access token instead</strong> is the access token route, shown in the clip below.</p>' +
+            ytEmbed(YT_TOKEN, 'How to get your Canvas access token') +
+            '<p class="mw-media-cap">The access token route, the alternative to signing in. Creating a token takes about 30 seconds.</p>' +
+          '</div>' +
+        '</details>'
     };
   }
 

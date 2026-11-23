@@ -377,22 +377,29 @@
          and this page's job is to get someone from installer to first
          download. mac-setup.html's Step 4 is the same three points. -->
     <div class="setup-card">
-      <h2><span class="num">C</span> Log in to Canvas</h2>
-      <p>The app opens on a login screen asking for two things: your school's Canvas address, and a personal access
-        token you create yourself. Two minutes, once.</p>
+      <h2><span class="num">C</span> Sign in to Canvas</h2>
+      <p>The app opens on a sign-in screen. You sign in with your normal university login, the same one you use for
+        Canvas in your browser. No access token needed.</p>
       <ol>
-        <li>For the address, use <strong>Find your institution</strong> beside the field and start typing your school's name, and the address fills itself in. Not listed? Paste it yourself; every Canvas works, listed or
+        <li>Use <strong>Find your institution</strong> beside the address field and start typing your school's name, and the address fills itself in. Not listed? Paste your Canvas address yourself; every Canvas works, listed or
           not.</li>
-        <li>For the token, click <strong>Get a token</strong> beside the token field. It opens your own Canvas token
-          page, where <strong>Approved Integrations</strong> &rarr; <strong>+ New Access Token</strong> generates one
-          in about 30 seconds.</li>
-        <li>Copy it straight away, because Canvas shows it only once, and paste it in. The app then remembers it in Windows
-          Credential Manager, so you are not typing it again. Canvas now puts a time limit on tokens, so it will ask
-          you for a fresh one when yours runs out. Wondering what a token actually gives away?
-          <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: underline; text-underline-offset: 0.18em;">Here is what it can and cannot do</a>.</li>
+        <li>Click the big blue button, <strong>Sign in to &lt;your university&gt;</strong>. It opens your
+          university's own login page in a window, and you sign in there exactly as you normally would, two-step
+          verification included. Your password goes to your university, never to the app.</li>
+        <li>That's it. The app remembers the sign-in on this computer, protected by Windows for your user account, so
+          you are not signing in every time. If Canvas ends the session later, you just sign in again.</li>
       </ol>
-      <p style="margin-top: 12px;">Want it in pictures? The <a href="guide.html#api-token">step-by-step
-        walkthrough</a> in the guide has the whole thing, clip included.</p>
+      <p style="margin-top: 12px;">Two other routes sit under the button. <strong>Use the browser extension instead</strong> is for when you are already signed in to Canvas in Chrome: add the free
+        <a href="https://chromewebstore.google.com/detail/canvas-downloader-connect/lijagdnejjaimhckbgdmjegheignpkkh" target="_blank" rel="noopener" style="color: var(--cyan); text-decoration: underline; text-underline-offset: 0.18em;">Canvas Downloader Connector</a>,
+        open Canvas in a Chrome tab, click <strong>Sign in with the extension</strong> in the app, then the extension's button.
+        It is the quickest way in, and the app remembers it for a few days, then it is the same two clicks again
+        (<a href="https://www.youtube.com/watch?v=qdZeUlemPkw" target="_blank" rel="noopener" style="color: var(--cyan); text-decoration: underline; text-underline-offset: 0.18em;">watch the 1-click walkthrough</a>).
+        <strong>Use an access token instead</strong> works exactly as before, if you prefer a token or already have one: <strong>Get a token</strong> opens your Canvas
+        token page, where <strong>Approved Integrations</strong> &rarr; <strong>+ New Access Token</strong> makes one. Copy it
+        straight away, because Canvas shows it only once.
+        <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: underline; text-underline-offset: 0.18em;">What a token can and cannot do</a>.</p>
+      <p style="margin-top: 12px;">Want it in pictures? The <a href="guide.html#sign-in">step-by-step
+        walkthrough</a> in the guide covers all three routes.</p>
     </div>
   </div>
 

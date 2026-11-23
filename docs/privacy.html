@@ -8,17 +8,17 @@
   <link rel="canonical" href="https://canvasdownloader.app/privacy.html" />
   <meta property="og:url" content="https://canvasdownloader.app/privacy.html" />
   <meta name="description"
-    content="Canvas Downloader runs 100% locally. No backend, no analytics, no telemetry. Your Canvas Access Token never leaves your computer." />
+    content="Canvas Downloader runs 100% locally. No backend, no analytics, no telemetry. Your Canvas sign-in or access token never leaves your computer, and your university password never reaches the app." />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Privacy Policy - Canvas Downloader" />
-  <meta property="og:description" content="Canvas Downloader runs 100% locally. No backend, no analytics, no telemetry. Your Canvas Access Token never leaves your computer." />
+  <meta property="og:description" content="Canvas Downloader runs 100% locally. No backend, no analytics, no telemetry. Your Canvas sign-in or access token never leaves your computer, and your university password never reaches the app." />
   <meta property="og:image" content="https://canvasdownloader.app/assets/og-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Privacy Policy - Canvas Downloader" />
-  <meta name="twitter:description" content="Canvas Downloader runs 100% locally. No backend, no analytics, no telemetry. Your Canvas Access Token never leaves your computer." />
+  <meta name="twitter:description" content="Canvas Downloader runs 100% locally. No backend, no analytics, no telemetry. Your Canvas sign-in or access token never leaves your computer, and your university password never reaches the app." />
   <meta name="twitter:image" content="https://canvasdownloader.app/assets/og-card.png" />
   <meta name="twitter:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
   <meta name="robots" content="index, follow" />
@@ -484,7 +484,7 @@
     <div class="container">
       <div class="label">Privacy</div>
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 14 September 2026</p>
+      <p class="updated">Last updated: 23 November 2026</p>
 
       <div class="tldr">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -494,7 +494,7 @@
         <div>
           <strong>The short version</strong>
           <span>Canvas Downloader runs 100% on your own computer. It has no backend, no servers, no accounts, no
-            analytics, and no telemetry. Your Canvas Access Token and your files never leave your device, except when the
+            analytics, and no telemetry. Your Canvas sign-in (or access token) and your files never leave your device, except when the
             app talks directly to your own university's Canvas server to download your content. The developer never sees, receives, or stores any of your data.</span>
         </div>
       </div>
@@ -510,9 +510,9 @@
       <p>Canvas Downloader only handles the information it needs to download your own course materials. Specifically:
       </p>
       <ul>
-        <li><strong>Your Canvas Access Token.</strong> You generate this yourself in your Canvas account settings and paste
-          it into the app. It is used solely to authenticate to your university's Canvas server on your behalf.</li>
-        <li><strong>An access token the app creates for you (only if you sign in with Canvas).</strong> A Canvas
+        <li><strong>Your Canvas sign-in.</strong> You sign in on your own university's login page in a window the app opens, or hand over the sign-in you already have in Chrome with the browser extension. The app keeps the resulting Canvas session and uses it solely to authenticate to your university's Canvas server on your behalf.</li>
+        <li><strong>Your Canvas Access Token (only if you use one).</strong> If you prefer, you can generate a token yourself in your Canvas account settings and paste it into the app instead. It is used solely to authenticate to your university's Canvas server on your behalf.</li>
+        <li><strong>An access token the app creates for you (only after a sign-in).</strong> A Canvas
           sign-in normally lasts about a day, which would mean signing in again almost every time you open the app. So
           straight after you sign in, the app asks Canvas for a long-lived access token of your own, named
           <em>Canvas Downloader</em>, and uses that instead. Two things worth knowing: it is created in your Canvas
@@ -532,11 +532,8 @@
           locally so the app remembers your setup between sessions.</li>
       </ul>
       <p>The app does <strong>not</strong> ask for your name, email, payment details, location, or contacts.</p>
-      <p><strong>About your password.</strong> If you use an Access Token, your password is never involved at all. If
-        you choose <em>Sign in with Canvas</em>, you type it into your own university's real sign-in page, shown in a
-        window the app opens for it. The app does not read it, store it itself, or send it anywhere. Because that
-        window is a browser, it can offer to remember the password for you, exactly as Microsoft Edge would: if you
-        accept, Windows encrypts it for your account only and it stays on your computer. Signing out of the app
+      <p><strong>About your password.</strong> If you use an Access Token or the browser extension, your password is never involved at all. If you click <em>Sign in to &lt;your university&gt;</em>, you type it into your own university's real sign-in page, shown in a
+        window the app opens for it. The app does not read it, store it itself, or send it anywhere. On Windows, because that window is a browser, it can offer to remember the password for you, exactly as Microsoft Edge would: if you accept, Windows encrypts it for your account only and it stays on your computer. Signing out of the app
         deletes it again, along with your Canvas session.</p>
 
       <h2>How your information is used</h2>
@@ -555,7 +552,7 @@
           file in its own settings folder that Windows encrypts for your account only. Either way it stays on your
           computer, is never written as plain text and is never sent to the developer. Signing out deletes it and clears
           the sign-in window.</li>
-        <li><strong>A password you asked the sign-in window to remember:</strong> kept in that window's own storage on
+        <li><strong>A password you asked the sign-in window to remember (Windows only):</strong> kept in that window's own storage on
           your computer, encrypted by Windows for your account only, in the same way Microsoft Edge keeps a saved
           password. It is only there if you said yes when asked. Signing out of the app removes it, so a shared
           computer does not leave it for the next person.</li>
@@ -602,16 +599,14 @@
         </li>
       </ul>
 
-      <p><strong>One exception, and it is the only one.</strong> If you choose <em>Sign in with Canvas</em>, the app asks
+      <p><strong>One exception, and it is the only one.</strong> After you sign in, through the sign-in window or the browser extension, the app asks
         Canvas to create an access key in your own name, called <em>Canvas Downloader</em>, so that you do not have to
-        sign in again every day. That is the single thing the app ever writes to your Canvas account, it happens only on
-        that sign-in route, and many universities switch it off for students, in which case nothing is created at all.
+        sign in again every day. That is the single thing the app ever writes to your Canvas account, it never happens when you paste in a token of your own, and many universities switch it off for students, in which case nothing is created at all.
         You can see it and delete it yourself at any time under <em>Account, Settings, Approved Integrations</em>.</p>
 
       <h2>Third parties</h2>
       <ul>
-        <li><strong>Your university's Canvas (Instructure).</strong> The app connects directly to the Canvas server your
-          token belongs to in order to download your content. Your use of Canvas is governed by your institution's and
+        <li><strong>Your university's Canvas (Instructure).</strong> The app connects directly to the Canvas server your account belongs to in order to download your content. Your use of Canvas is governed by your institution's and
           Instructure's own privacy policies.</li>
         <li><strong>Your university's Panopto server (optional).</strong> Only if you enable lecture recording
           downloads: the app connects to the Panopto instance your university links from Canvas, authenticated through
@@ -658,8 +653,7 @@
           That question goes to <code>127.0.0.1</code> and nowhere else, and it is not a question about you.</li>
         <li><strong>Where it sends it.</strong> To <code>127.0.0.1</code>, which is your own computer and nowhere else.
           The request cannot leave the machine. Nothing is sent to the developer, and there is no server involved.</li>
-        <li><strong>The app only listens when you ask.</strong> The connection opens when you press <em>Use the Canvas
-          tab in my browser</em> in the app, it accepts one sign-in and then closes, and it closes on its own after a
+        <li><strong>The app only listens when you ask.</strong> The connection opens when you press <em>Sign in with the extension</em> in the app, it accepts one sign-in and then closes, and it closes on its own after a
           few minutes if nothing arrives. It answers only a browser extension, never a web page and never another
           program on your computer, and it never sends anything back.</li>
         <li><strong>You are shown whose account it is.</strong> The app checks the sign-in with Canvas and then puts the
@@ -690,7 +684,7 @@
       <h2>Data retention and deletion</h2>
       <p>You are always in full control of your data because it lives on your machine:</p>
       <ul>
-        <li>Remove your saved token at any time from within the app, or by deleting the "Canvas Downloader" entry in
+        <li>Remove your saved sign-in or token at any time by logging out in the app, or by deleting the "Canvas Downloader" entry in
           your
           OS credential vault.</li>
         <li>Delete downloaded files like any other files on your computer.</li>

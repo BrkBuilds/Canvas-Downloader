@@ -72,7 +72,7 @@
         "description": "Every way to get your Canvas course files onto your computer, compared: Download as Zip, submissions, browser extensions, scripts and a desktop app.",
         "inLanguage": "en",
         "datePublished": "2026-08-20",
-        "dateModified": "2026-08-27",
+        "dateModified": "2026-11-23",
         "author": {
           "@id": "https://canvasdownloader.app/#author"
         },
@@ -95,7 +95,7 @@
             "name": "Can I download all my Canvas courses at once?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Not with anything built into Canvas. Canvas zips one course's Files tab at a time, and that zip leaves out Pages, assignments, announcements and quizzes. Downloading every course in one run needs a tool that talks to the Canvas API with an access token, such as a script or a desktop app like Canvas Downloader."
+              "text": "Not with anything built into Canvas. Canvas zips one course's Files tab at a time, and that zip leaves out Pages, assignments, announcements and quizzes. Downloading every course in one run needs a tool that talks to the Canvas API, such as a script or a desktop app like Canvas Downloader."
             }
           },
           {
@@ -678,7 +678,7 @@
     <div class="container wide">
       <h1>How to download all your files from Canvas</h1>
       <p class="sub">Canvas has no button that downloads everything. Here is every route that works, what each one really collects, and which to pick.</p>
-      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-20">20 August 2026</time></span><span class="sep">&middot;</span><span>Updated <time datetime="2026-08-27">27 August 2026</time></span></p>
+      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-20">20 August 2026</time></span><span class="sep">&middot;</span><span>Updated <time datetime="2026-11-23">23 November 2026</time></span></p>
     </div>
   </div>
 
@@ -696,8 +696,7 @@
         <a href="what-canvas-download-as-zip-misses.html">Measured across 33 real
         courses</a>, that non-file content came to <strong>173 items</strong>,
         against a file-level gap of <strong>3</strong>. Getting everything from every course
-        needs a browser extension, a script, or a desktop app that reads the
-        Canvas API with an access token. All five routes are compared below.</p>
+        needs a browser extension, a script, or a desktop app that reads the Canvas API. All five routes are compared below.</p>
       </div>
 
       <div class="toc">
@@ -866,9 +865,7 @@
       <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank"
       rel="noopener">public on GitHub</a>, so every claim below can be checked rather than taken on trust.</p>
 
-      <p>It signs in with
-      <a href="canvas-access-token-explained.html">an access token you create
-      yourself</a> in Canvas, then uses the same official API the Canvas mobile
+      <p>You sign in with your normal university login, in a window that shows your university's own login page, or with <a href="canvas-access-token-explained.html">an access token you create yourself</a> in Canvas if you prefer. It then uses the same official API the Canvas mobile
       apps use. Because it works at the account level rather than the page
       level, it can do the two things the other methods cannot:</p>
 
@@ -889,10 +886,7 @@
       or subtitles, with the transcription running on your own machine.</p>
 
       <div class="note warn">
-        <p><strong>The honest caveat:</strong> it needs an access token. A small number of institutions have turned off students' ability to create
-        one. If your Canvas account settings have no "New Access Token" button,
-        no API-based tool can work for you, and Methods 1 to 3 are your options.
-        Check before you install anything, and see
+        <p><strong>The honest caveat:</strong> some institutions have turned off students' ability to create an access token. If your Canvas account settings have no "New Access Token" button, every tool that needs a token is closed to you. This app no longer needs one: since version 2.0.4 you can sign in with your university login instead. See
         <a href="canvas-access-token-explained.html">what a Canvas access token
         is and what it cannot do</a> if you are weighing up whether to make
         one.</p>
@@ -952,7 +946,7 @@
             <tr>
               <td>Works without an access token</td>
               <td class="yes">Yes</td><td class="yes">Yes</td>
-              <td class="yes">Yes</td><td class="no">No</td><td class="no">No</td>
+              <td class="yes">Yes</td><td class="no">No</td><td class="yes">Yes</td>
             </tr>
           </tbody>
         </table>
@@ -1022,7 +1016,7 @@
       <h2 id="faq">Common questions</h2>
       <details class="faq">
         <summary>Can I download all my Canvas courses at once?</summary>
-        <div><p>Not with anything built into Canvas. Canvas zips one course's Files tab at a time, and that zip leaves out Pages, assignments, announcements and quizzes. Downloading every course in one run needs a tool that talks to the Canvas API with an access token, such as a script or a desktop app like <a href="index.html">Canvas Downloader</a>.</p></div>
+        <div><p>Not with anything built into Canvas. Canvas zips one course's Files tab at a time, and that zip leaves out Pages, assignments, announcements and quizzes. Downloading every course in one run needs a tool that talks to the Canvas API, such as a script or a desktop app like <a href="index.html">Canvas Downloader</a>.</p></div>
       </details>
       <details class="faq">
         <summary>Why are some course files missing from the Files tab?</summary>

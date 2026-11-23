@@ -72,7 +72,7 @@
         "description": "What a Canvas access token grants, what it cannot reach, why yours now expires, and what to check before pasting one into any tool.",
         "inLanguage": "en",
         "datePublished": "2026-08-27",
-        "dateModified": "2026-08-27",
+        "dateModified": "2026-11-23",
         "author": {
           "@id": "https://canvasdownloader.app/#author"
         },
@@ -127,7 +127,7 @@
             "name": "There is no New Access Token button in my Canvas settings",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Your institution has switched off token generation for students, which administrators have been able to do since September 2025. Nothing works around it. What is left is the routes built into Canvas: Download as Zip for a course's Files tab, and the offline HTML export from the Modules page if your institution allows that one."
+              "text": "Your institution has switched off token generation for students, which administrators have been able to do since September 2025. No tool that depends on a token can work around it. What is left is the routes built into Canvas (Download as Zip for a course's Files tab, and the offline HTML export from the Modules page if your institution allows that one), browser extensions that use your Canvas session, and tools you sign in to with your normal university login. Canvas Downloader works that way since version 2.0.4 and needs no token."
             }
           },
           {
@@ -678,7 +678,7 @@
     <div class="container wide">
       <h1>What a Canvas access token is, and what it cannot do</h1>
       <p class="sub">It grants exactly what you already have, and nothing else. The useful detail is in what that includes, what it excludes, and why Canvas keeps shortening its life.</p>
-      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-27">27 August 2026</time></span></p>
+      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-27">27 August 2026</time></span><span class="sep">&middot;</span><span>Updated <time datetime="2026-11-23">23 November 2026</time></span></p>
     </div>
   </div>
 
@@ -845,16 +845,38 @@
       <a class="src" href="https://community.instructure.com/en/discussion/618390/how-to-download-all-course-files-and-media-on-canvas" target="_blank" rel="noopener">"Previously, I used access tokens to run an application for downloading the files, but my school has recently removed that feature."</a></p>
 
       <p>If the <strong>+ New Access Token</strong> button is missing from
-      Account then Settings, that is what has happened, and no API-based tool can
-      work around it. Two routes survive. The ones built into Canvas -
+      Account then Settings, that is what has happened, and no tool that
+      depends on a token can work around it. Three routes survive. The ones built into Canvas:
       <a href="how-to-download-all-canvas-files.html">Download as Zip and the
       other built-in methods</a> for files, and
       <a href="save-canvas-pages-quizzes-discussions.html">the offline HTML
-      export</a> for the parts that are not files. And <strong>browser
+      export</a> for the parts that are not files. <strong>Browser
       extensions</strong>, which ride the Canvas session your browser already
       has and never touch a token: see
       <a href="canvas-download-tools-compared.html">how the download tools
-      compare</a>.</p>
+      compare</a>. And tools that let you sign in to Canvas the normal way.</p>
+
+      <h3>Canvas Downloader no longer needs a token</h3>
+
+      <p>Since version 2.0.4 this app works at schools that have switched
+      student tokens off. You pick your school and click
+      <strong>Sign in to &lt;your university&gt;</strong>, which opens your
+      university's own login page in a window. You sign in there as you
+      normally would, and the app then uses that Canvas session the way a
+      browser does. Your password goes to your university, not to the app. If
+      you are already signed in to Canvas in Chrome, the free Canvas Downloader
+      Connector extension can hand that session to the app instead.</p>
+
+      <p>A session reaches exactly what you can reach in your browser, so the
+      limits in the section above apply to it in the same way. It does not last
+      as long as a token, though. When it runs out, you sign in again.</p>
+
+      <p>Where your school does allow tokens, the app makes one for itself
+      after you sign in, named "Canvas Downloader", because it lasts longer
+      than a session. It shows up under Approved Integrations like any other,
+      and you can delete it there. Pasting a token you made yourself, under
+      <strong>Use an access token instead</strong>, still works exactly as it
+      did.</p>
 
       <h2 id="safe">Keeping one safe</h2>
 
@@ -891,10 +913,11 @@
         this app that submits, posts, edits or deletes anything in Canvas. The
         source is public, and a search for the write methods across the whole
         codebase returns nothing.</li>
-        <li><strong>The token stays on your computer</strong>, in Windows
-        Credential Manager or the macOS Keychain, which is the same place your
-        other saved logins live. It is not sent anywhere except to your own
-        Canvas.</li>
+        <li><strong>Your token or session stays on your computer</strong>,
+        protected by Windows for your user account or in the macOS Keychain,
+        which is the same place your other saved logins live. It is not sent
+        anywhere except to your own Canvas, and logging out in the app deletes
+        it.</li>
         <li><strong>There is no server.</strong> The app runs locally, talks to
         your institution's Canvas, and writes files to a folder you pick.
         Nothing routes through anybody else, because there is nobody else.</li>
@@ -903,17 +926,17 @@
       </ul>
 
       <p>Canvas's expiry applies here like anywhere else. The app remembers the
-      token so you are not retyping it, and when Canvas expires it the app says
-      so and sends you to the right page.</p>
+      token or session so you are not retyping anything, and when Canvas expires
+      it the app says so and asks you to sign in again.</p>
 
       <div class="cta-box">
         <h3>Your own access, pointed at your own disk</h3>
-        <p>Canvas Downloader uses your token to do one thing: read the courses
+        <p>Canvas Downloader uses your Canvas sign-in to do one thing: read the courses
         you are already enrolled on and write them to a folder you choose. Every
         course in one run, with the slides, the readings, the
         <strong>Panopto lecture recordings</strong>, the quizzes, the discussions
         and the feedback you were given.</p>
-        <p>Free and open source, Windows and macOS. It reads and never writes; there is no account and no server. The token never leaves your machine.</p>
+        <p>Free and open source, Windows and macOS. It reads and never writes; there is no account and no server. Your sign-in never leaves your machine, and you do not need a token at all.</p>
         <div class="cta-row">
           <a href="releases.html" class="btn-nav">Download</a>
           <a href="index.html#features" class="btn-nav-ghost"><span>See it in action</span></a>
@@ -940,7 +963,7 @@
       </details>
       <details class="faq">
         <summary>There is no New Access Token button in my Canvas settings</summary>
-        <div><p>Your institution has switched off token generation for students, which administrators have been able to do since September 2025. Nothing works around it. What is left is the routes built into Canvas: Download as Zip for a course's Files tab, and the offline HTML export from the Modules page if your institution allows that one.</p></div>
+        <div><p>Your institution has switched off token generation for students, which administrators have been able to do since September 2025. No tool that depends on a token can work around it. What is left is the routes built into Canvas (Download as Zip for a course's Files tab, and the offline HTML export from the Modules page if your institution allows that one), browser extensions that use your Canvas session, and tools you sign in to with your normal university login. Canvas Downloader works that way since version 2.0.4 and needs no token.</p></div>
       </details>
       <details class="faq">
         <summary>Is it against Canvas policy to paste a token into an app?</summary>

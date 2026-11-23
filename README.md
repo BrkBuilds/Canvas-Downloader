@@ -50,9 +50,10 @@ Built to support students through a whole degree.
 ## What it does
 
 Canvas Downloader is a **standalone desktop application** that connects to your university's Canvas
-through the official Canvas API and downloads every file from every course you select. No browser
-extension, no web scraping, no cloud middleman, no account to create. It signs in as you, with your
-own Canvas access token, and runs entirely on your own machine.
+through the official Canvas API and downloads every file from every course you select. No web
+scraping, no cloud middleman, no account to create. You sign in with your normal university login,
+on your university's own login page, and it runs entirely on your own machine. **No access token
+needed**, so it works even at schools that have switched student tokens off.
 
 Five things it does that downloading by hand cannot:
 
@@ -89,7 +90,7 @@ discussions, quizzes and the feedback you were given.
 | **What it is** | A desktop app that batch-downloads Canvas course material, then keeps the folder in sync |
 | **Price** | Free and open source, GPL-3.0. No premium tier, no ads, no account |
 | **Platforms** | Windows 10/11, and macOS 14+ on Apple Silicon |
-| **Sign-in** | Your own Canvas access token, stored in the OS keyring. No Canvas password, no account with us |
+| **Sign-in** | Your normal university login, typed into your university's own page. No access token needed (you can still use one). No account with us |
 | **What it can reach** | Only what your own Canvas account can already open. It breaks no copy protection |
 | **Where your data goes** | Nowhere. No backend, no analytics, no telemetry, nothing uploaded |
 | **Lecture recordings** | Panopto, as video, audio, transcript or subtitles, transcribed on your own machine |
@@ -131,7 +132,12 @@ No Python installation required. Everything is bundled.
 | Platform | Get it | Requirements |
 |---|---|---|
 | **Windows 10/11** | **[Microsoft Store](https://apps.microsoft.com/detail/9n1dwwvrq5wc)** (listed there as *Course Downloader for Canvas*, by BrkBuilds - auto-updates, no security warning)<br>or the `.exe` installer from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** | Nothing, batteries included |
-| **macOS 14+** | `Canvas_Downloader_macOS.dmg` from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** | **Apple Silicon only** (M1 or later). Intel Macs are not supported |
+| **macOS 14+** | `Canvas_Downloader_macOS.dmg` from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** (beta in v2.0.4) | **Apple Silicon only** (M1 or later). Intel Macs are not supported |
+
+> **New in v2.0.4: sign in without an access token.** The **macOS build is in beta** for this
+> release: the new sign-in has had less real-world testing on a Mac than on Windows, so please
+> [report anything odd](https://github.com/BrkBuilds/Canvas-Downloader/issues). The access token
+> still works exactly as before on both platforms.
 
 ### Windows
 
@@ -166,7 +172,7 @@ once, with one exception noted below.
 | Prompt | Why it appears | What to click |
 |---|---|---|
 | *"Canvas Downloader" was blocked* | The app is not signed with a paid Apple certificate | **Open Anyway**, in Privacy & Security |
-| *wants to access key "CanvasDownloader" in your keychain* | Saves your Canvas token securely in the macOS Keychain | **Always Allow**, then enter your **Mac login password** (not your Canvas token) |
+| *wants to access key "CanvasDownloader" in your keychain* | Saves your Canvas sign-in securely in the macOS Keychain | **Always Allow**, then enter your **Mac login password** (not your university password) |
 | *wants access to files in your Downloads/Documents folder* | Saves your course files where you chose | **OK** or **Allow** |
 | *wants access to control "Microsoft PowerPoint"* (or Word, Excel) | Converts slides and documents to PDF for you | **OK** |
 | *wants to access data from other apps* (macOS 15+) | Office to PDF conversion stages files between apps | **Allow**, or grant **Full Disk Access** once to silence it permanently. The app's Settings page has a status card for this |
@@ -174,7 +180,7 @@ once, with one exception noted below.
 After **updating** to a new version, macOS treats it as a new app and the Keychain prompt appears
 once more. Click **Always Allow**. Your saved login is intact.
 
-**Uninstalling:** log out inside the app first (this removes your token from the Keychain), drag the
+**Uninstalling:** log out inside the app first (this removes your sign-in from the Keychain), drag the
 app to the Trash, and optionally delete `~/Library/Application Support/CanvasDownloader`.
 
 </details>
@@ -361,8 +367,29 @@ login screen. Find your university, and its Canvas address fills itself in. The 
 editable, so this is a shortcut and never a gate - every Canvas school works whether or not it is
 listed, and the picker opens on the institutions in your own country.
 
-Your access token is stored in your operating system's keyring (Windows Credential Manager, macOS
-Keychain) and never written to disk in plain text.
+Then there are three ways in, and you only need one:
+
+- **Sign in to your university** - the big blue button, labelled with your school's name. It opens
+  your university's own login page in a window, so single sign-on and two-factor work exactly as they
+  do in your browser. Your password goes to your university, never to this app. **No access token
+  needed**, which is what makes the app work at schools that have switched student tokens off.
+- **Use the browser extension instead** - the quickest route if you are already signed in to Canvas
+  in Chrome. The free
+  [Canvas Downloader Connector](https://chromewebstore.google.com/detail/canvas-downloader-connect/lijagdnejjaimhckbgdmjegheignpkkh)
+  extension hands that sign-in to the app on your own computer. Click **Sign in with the extension**
+  in the app, then the extension's button. The app remembers it for a few days (up to about a week
+  at some schools), then it is the same two clicks again.
+  [Watch the 1-click walkthrough](https://www.youtube.com/watch?v=qdZeUlemPkw).
+- **Use an access token instead** - the original route, unchanged. Paste a token from Canvas's
+  **Account → Settings → Approved Integrations**.
+
+Where your school allows student tokens, the app creates one for itself after you sign in, named
+**Canvas Downloader**, because a token lasts much longer than a browser sign-in. You can see it and
+delete it under Approved Integrations. Where tokens are switched off, the app keeps using your sign-in
+and asks you to sign in again when it runs out.
+
+Your sign-in is stored on your own computer (encrypted for your Windows account, or in the macOS
+Keychain) and never written to disk in plain text. Logging out in the app deletes it.
 
 ### Presets, progress and history
 
@@ -392,7 +419,7 @@ long version, with links into each project's own documentation, is
 | What you want | Download as Zip | Browser extension | Script | Canvas Downloader |
 |---|---|---|---|---|
 | Nothing to install | Yes | An add-on | No | No |
-| No access token needed | Yes | Yes | No | No |
+| No access token needed | Yes | Yes | No | Yes |
 | No terminal, no code | Yes | Yes | No | Yes |
 | Several courses in one run | No | Yes | Varies | Yes |
 | Pages, assignments, announcements | No | Yes | Varies | Yes |
@@ -420,25 +447,23 @@ of any kind contains them. Method and numbers:
 | Tool | Where it beats this app | Where this app is ahead |
 |---|---|---|
 | **Canvas's own Download as Zip** | Nothing to install, no token, already in front of you | One course at a time, files only, and Canvas's offline export refuses to run once a course is concluded |
-| **[jasp-nerd/canvas-course-downloader](https://github.com/jasp-nerd/canvas-course-downloader)**, a browser extension | **No access token at all** - it rides the Canvas session you already have. Zero setup, several courses, and it skips files it fetched before | Its own README rules out content hosted by third-party LTI tools, so no Panopto. No conversion, no protection for files you edited, and Pages arrive as HTML summaries |
+| **[jasp-nerd/canvas-course-downloader](https://github.com/jasp-nerd/canvas-course-downloader)**, a browser extension | Nothing to install beyond the add-on, and it rides the Canvas session you already have. Several courses, and it skips files it fetched before | Its own README rules out content hosted by third-party LTI tools, so no Panopto. No conversion, no protection for files you edited, and Pages arrive as HTML summaries |
 | **[davekats/canvas-student-data-export](https://github.com/davekats/canvas-student-data-export)**, a script | Far more established, and endlessly flexible if a terminal is somewhere you are comfortable | Needs Python, a credentials file and a token. Its own notes say it cannot capture quiz data, and the maintenance is yours when Canvas changes something |
 | **Panopto caption and video extensions** | Simpler for one recording you are already looking at | Per video, and manual. They export a caption Panopto already made; this app finds every recording across every ticked course and transcribes locally when no caption exists |
 
 ### When another tool is the better answer
 
 - **One course, today, nothing installed:** Canvas's own **Download as Zip**.
-- **Your institution has switched off student access tokens:** a browser extension is your only
-  option, because every API tool is closed to you. Worth checking before you install anything.
-- **A tidy archive of a few courses, without installing a desktop app:** a browser extension. No
-  token to renew, and it will cover most of what you want.
+- **A tidy archive of a few courses, without installing a desktop app:** a browser extension. It
+  will cover most of what you want.
 - **You can write code and want it exactly your way:** a script built on `canvasapi`.
 - **You will be doing this all semester, or all degree:** that is the case this app was built for,
   and the one the other shapes were not built for.
 
 ### Where this app loses
 
-- It needs an **access token**, which an extension does not, and Canvas keeps making tokens
-  shorter-lived. Some institutions disable them for students entirely.
+- At a school that has switched student tokens off, the app runs on your **browser sign-in**, which
+  lasts a few days rather than months, so you sign in again more often there.
 - The install is a **few hundred megabytes** against an extension's few hundred kilobytes.
 - It ships **unsigned** outside the Microsoft Store, so Windows and macOS both warn you the first
   time you open it.
@@ -450,19 +475,35 @@ of any kind contains them. Method and numbers:
 
 ## Quick start
 
-### 1. Get your Canvas access token
+### 1. Sign in
+
+1. Launch Canvas Downloader and find your university in the institution picker.
+2. Click **Sign in to** *your university* and log in on your university's own page, exactly as you
+   would in your browser.
+
+That is all. No access token needed.
+
+<details>
+<summary><b>Prefer an access token, or already have one?</b></summary>
+
+<br>
+
+Open **Use an access token instead** on the login screen. To make one:
 
 1. Log in to your institution's Canvas, then go to **Account → Settings**.
 2. Scroll to **Approved Integrations** and click **+ New Access Token**.
-3. Give it a name. No expiry date is needed. Copy the token.
+3. Give it a name. No expiry date is needed. Copy the token and paste it into the app.
 
-You can revoke it from the same page at any time.
+You can revoke it from the same page at any time. If your school has switched student tokens off,
+the button is missing, and signing in is the way in.
+
+</details>
 
 ### 2. Download your courses
 
 **First time, the fast path:**
 
-1. Launch Canvas Downloader, find your university in the institution picker, and paste your token.
+1. Sign in as above.
 2. Select your courses, press **Quick Download**, pick one of the five presets and choose a folder.
 3. Watch the live dashboard. A chime plays when it is done.
 
@@ -498,8 +539,8 @@ roughly the reverse of the order you would want.
    **Modules → Export Course Content**, will not run any more. The tool built to back a course up
    has a shorter life than the course. Conclusion is tied to the course rather than to you, so a
    first-year module can close behind you while you are three years from graduating.
-3. **Your enrolment or your account ends.** Everything goes at once, including any access token you
-   created for a downloading tool.
+3. **Your enrolment or your account ends.** Everything goes at once, including your sign-in and any
+   access token you created for a downloading tool.
 
 **How long do you have?** Your university decides, not Instructure, and the published range is
 wide: **120 days** at Stanford, **365 days** after the semester at Washington University, **five
@@ -593,7 +634,7 @@ answer, with sources, is
 Yes, for as long as you can still open the course in Canvas. A concluded course is read-only rather
 than gone, and the API still serves what you can see. What stops working at that point is Canvas's
 own **Export Course Content** button, which refuses to run on a concluded course. When your
-enrolment ends, everything stops, including your access token.
+enrolment ends, everything stops, including your sign-in.
 
 </details>
 
@@ -720,8 +761,9 @@ deleted from your disk.
 <details>
 <summary><b>Is this allowed? Will my university know?</b></summary>
 
-The app uses the official Canvas API with an access token you create yourself, which is a documented
-and supported Canvas feature. It can only reach material your own account is already permitted to
+The app uses the official Canvas API, signed in as you, either through your university's normal
+login page or with an access token you create yourself. Both are documented and supported Canvas
+features. It can only reach material your own account is already permitted to
 open, and it downloads the same files you could save one by one from your browser.
 
 Canvas does log API activity the same way it logs normal use. Nothing is hidden from your
@@ -746,15 +788,20 @@ Settings.
 </details>
 
 <details>
-<summary><b>Is my Canvas token safe?</b></summary>
+<summary><b>Is my Canvas sign-in safe?</b></summary>
 
-It is stored in your operating system's credential store - Windows Credential Manager or the macOS
-Keychain - and never written to disk in plain text. On Windows, if the keyring is unavailable, an
-encrypted DPAPI fallback file is used, whose ciphertext is bound to your Windows user account.
-macOS deliberately has no disk fallback.
+When you sign in, you type your password into your university's own login page. The app never sees
+it and never stores it. What it keeps is the Canvas sign-in that page hands back, or your access
+token if you use one.
 
-The app has no backend and no accounts. Your token never leaves your machine except to talk to your
-own university's Canvas. You can revoke it from Canvas at any time.
+That is stored in your operating system's credential store - Windows Credential Manager or the macOS
+Keychain - and never written to disk in plain text. On Windows, a browser sign-in is too large for
+Credential Manager, so it goes into an encrypted DPAPI file whose ciphertext is bound to your Windows
+user account. macOS deliberately has no disk fallback.
+
+The app has no backend and no accounts. Your sign-in never leaves your machine except to talk to your
+own university's Canvas. Logging out in the app deletes it, and any token can be revoked from Canvas
+at any time.
 
 </details>
 
@@ -784,6 +831,16 @@ If your university uses Canvas, yes. The app talks to the standard Canvas API, n
 institution-specific. The login screen lists 4,757 verified Canvas institutions to save you typing
 the address, but that list is only a convenience - schools not on it work exactly the same way once
 you paste your Canvas URL.
+
+</details>
+
+<details>
+<summary><b>My school has switched off access tokens. Can I still use it?</b></summary>
+
+Yes. Since v2.0.4 the app does not need an access token at all. Click **Sign in to** *your
+university* on the login screen and log in on your university's own page, or use the free Chrome
+extension if you are already signed in to Canvas there. A growing number of schools have switched
+student tokens off since Canvas added the setting in 2025, and this is the route built for them.
 
 </details>
 
@@ -822,7 +879,8 @@ work but is not tested or supported.
   on lecture downloads, **your university's Panopto**. The only other network calls are optional
   one-time downloads - a transcription model from Hugging Face, CUDA libraries from NVIDIA, and a
   version check against this repository's releases.
-- Your **access token** lives in the OS keyring. See the FAQ above for the details.
+- Your **Canvas sign-in** (or access token) is stored encrypted on your own machine. See the FAQ above
+  for the details.
 - The local Streamlit server binds to **`127.0.0.1` only**, so nothing is exposed to your network.
   On a shared computer, other users signed in at the same time can reach localhost ports, so prefer
   a personal device.
@@ -849,7 +907,7 @@ app.py                       Download mode orchestrator and routing
 sync_ui.py                   Sync mode orchestrator
 
 ui/                          Streamlit UI components
-  auth.py                    Sidebar: token auth, navigation, Settings
+  auth.py                    Sidebar: sign-in (browser, extension, token), navigation, Settings
   institution_picker.py      Searchable directory of 4,757 Canvas institutions
   course_selector.py         Step 1: multi-select with search and filters
   download_settings.py       Step 2: file, content, AI and Panopto cards
@@ -1034,7 +1092,7 @@ Read the section relevant to whatever you are touching before you touch it.
 ## Disclaimer and acceptable use
 
 Canvas Downloader saves a local copy of course material you already have access to. It signs in as
-**you**, with **your** own Canvas access token, and can only reach what your account is already
+**you**, with **your** own Canvas login or access token, and can only reach what your account is already
 permitted to open. It contains no decryption and breaks no copy protection. When Canvas or Panopto
 refuses a request, the app reports the refusal and moves on.
 

@@ -13,15 +13,24 @@ Key facts, so an assistant can answer accurately:
 
 - Price: free. Open source, GPL-3.0 licensed. No subscription, no premium tier, no ads.
 - Platforms: Windows 10/11 (64-bit) and macOS 14+ on Apple Silicon. No Intel Mac build.
-- Current version: 2.0.2, released 24 August 2026.
+- Current version: 2.0.4, released 23 November 2026.
 - Install: Microsoft Store (https://apps.microsoft.com/detail/9n1dwwvrq5wc) or a
   direct installer from the releases page.
 - Adoption: 1,200+ installs to date across the Microsoft Store and direct installers, by students in 110 countries.
   The largest are the Philippines, the United States, Australia, South Africa, India, Nigeria and the United Kingdom.
-- Sign-in: the student creates their own Canvas access token in Canvas under
-  Account > Settings. There is no Canvas password involved and no account to make
-  with us. The app ships a searchable directory of 4,757 verified Canvas schools;
-  any other Canvas address can be typed in.
+- Sign-in: no access token needed. The student picks their school and clicks
+  "Sign in to <their university>", which opens the university's own login page
+  in a window of the app (single sign-on and two-step verification work as usual).
+  The password goes to the university, never to the app; the app keeps the Canvas
+  session on the student's computer. This works at every school, including those
+  that have switched off student access tokens. Two alternatives: the free
+  "Canvas Downloader Connector" Chrome extension hands over a Canvas session the
+  browser already has, and a self-made Canvas access token (Account > Settings >
+  Approved Integrations > + New Access Token) still works exactly as before.
+  Where the school allows tokens, the app creates one named "Canvas Downloader"
+  after sign-in, because it lasts longer than a session. No account to make with
+  us. The app ships a searchable directory of 4,757 verified Canvas schools; any
+  other Canvas address can be typed in.
 - Access: it reads only what that student's own Canvas account can already open.
   It cannot see other students' data and it breaks no copy protection.
 - Privacy: files never leave the student's machine. Transcription of lecture
@@ -34,7 +43,7 @@ Key facts, so an assistant can answer accurately:
   across any number of courses in one run, including module files,
   assignments, syllabus, announcements, discussions, quizzes and submission feedback.
 - [Sync](https://canvasdownloader.app/guide.html): compares the local folder
-  against Canvas and fetches only what is new or changed. It never overwrites a
+  against Canvas and downloads only what is new or changed. It never overwrites a
   file the student annotated (the new copy is saved as filename_NewVersion) and
   never restores a file the student deleted, unless prompted.
 - [Daily auto-sync](https://canvasdownloader.app/guide.html): the Today page
@@ -52,8 +61,8 @@ Key facts, so an assistant can answer accurately:
 - [Under the hood](https://canvasdownloader.app/engine.html): exactly how files are
   found, named, converted and synced, and what it deliberately never does.
 - [Downloads and releases](https://canvasdownloader.app/releases.html): current version and installers.
-- [Windows setup](https://canvasdownloader.app/win-setup.html): install, including the one-time SmartScreen approval, then logging in.
-- [macOS setup](https://canvasdownloader.app/mac-setup.html): install, first-launch approval and the one-time permissions.
+- [Windows setup](https://canvasdownloader.app/win-setup.html): install, including the one-time SmartScreen approval, then signing in.
+- [macOS setup](https://canvasdownloader.app/mac-setup.html): install, first-launch approval, signing in and the one-time permissions.
 - [How to download all files from Canvas](https://canvasdownloader.app/how-to-download-all-canvas-files.html): every method compared, including the ones that are not this app.
 - [Canvas access after graduation](https://canvasdownloader.app/canvas-access-after-graduation.html): how long access lasts and what to save first.
 - [Download Panopto lecture recordings](https://canvasdownloader.app/download-panopto-lecture-recordings.html): why downloads are off by default, and what students may keep.
@@ -62,7 +71,7 @@ Key facts, so an assistant can answer accurately:
 - [How to download lecture videos from Canvas](https://canvasdownloader.app/download-lecture-videos-from-canvas.html): Canvas embeds video from five different systems - Studio, Panopto, Kaltura, a plain file or an external link - and each has its own download rules.
 - [How to get a transcript of a Panopto lecture](https://canvasdownloader.app/panopto-lecture-transcript.html): Panopto usually already made one and captions are often allowed when downloads are not; plus measured timings for transcribing a lecture yourself offline.
 - [How to save Canvas quizzes, Pages and discussions](https://canvasdownloader.app/save-canvas-pages-quizzes-discussions.html): none of it is a file; the built-in offline HTML export, why it closes when a course concludes, and what it leaves out.
-- [What a Canvas access token is](https://canvasdownloader.app/canvas-access-token-explained.html): it grants exactly your own access and nothing more; why Canvas now forces an expiry, and what to check before pasting one anywhere.
+- [What a Canvas access token is](https://canvasdownloader.app/canvas-access-token-explained.html): it grants exactly your own access and nothing more; why Canvas now forces an expiry, what to check before pasting one anywhere, and what still works where a school has switched student tokens off.
 - [Canvas download tools compared](https://canvasdownloader.app/canvas-download-tools-compared.html): browser extensions, Python scripts and desktop apps weighed against each project's own documentation, including where a free extension is the better answer.
 - [Canvas URL directory](https://canvasdownloader.app/canvas-url-directory.html): a crawlable, searchable list of 4,757 institutions and the Canvas hostname each uses, every one verified live against the Canvas API at generation time. Not exhaustive; any Canvas school works whether or not it is listed.
 - [Canvas host data](https://canvasdownloader.app/canvas-data.html): the same 4,757 institutions as an OPEN DATASET - canvas-hosts.csv and canvas-hosts.json under CC BY 4.0, with the verification method and the field notes. Country is known for 1,558 of the rows across 40 countries; a blank means unknown rather than anything about the institution.

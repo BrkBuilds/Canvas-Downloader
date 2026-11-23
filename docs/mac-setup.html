@@ -1013,24 +1013,53 @@
         <!-- ─────────────────── STEP 4 ─────────────────── -->
         <section class="step-section" id="login">
           <div class="step-label">Step 4</div>
-          <h2 class="step-title">Log in to Canvas</h2>
+          <h2 class="step-title">Sign in to Canvas</h2>
 
           <div class="card">
-            <div class="guide-embed" data-yt="VadvcIvrrhU" data-title="How to create a Canvas access token"></div>
-            <p class="media-cap">Creating a Canvas Access Token takes about 30 seconds. The clip shows exactly how.</p>
-
-            <p class="card-p">The app opens on a login screen asking for two things: your school's Canvas address and
-              a personal Canvas Access Token.</p>
-            <p class="card-p">For the address, use <strong>Find your institution</strong> beside the field and type your school's name. The address fills itself in. Not listed? Paste it yourself (e.g. <code
+            <p class="card-p">The app opens on a sign-in screen. You sign in with your normal university login, the
+              same one you use for Canvas in your browser. No access token needed.</p>
+            <p class="card-p">First, use <strong>Find your institution</strong> beside the address field and type your school's name. The address fills itself in. Not listed? Paste it yourself (e.g. <code
                 class="ic">https://school.instructure.com</code>); every Canvas works, listed or not.</p>
-            <p class="card-p">For the token, click <strong>Get a token</strong> beside the token field: it opens your
-              own Canvas token page, where <strong>Approved Integrations &#8594; + New Access Token</strong> generates
-              one in about 30 seconds. Copy it straight away, because Canvas shows it only once, and paste it in. Canvas
-              now puts a time limit on tokens, so expect to make a fresh one when yours runs out.
-              <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: none;">What a token can and cannot do</a> is worth two
-              minutes before you create one. The
-              <a href="guide.html#api-token">step-by-step walkthrough</a> in the guide has the whole thing, clip included.</p>
+            <p class="card-p">Then click the big blue button, <strong>Sign in to &lt;your university&gt;</strong>. It
+              opens your university's own login page in a window, and you sign in there as usual, two-step verification
+              included. Your password goes to your university, never to the app. The app keeps the sign-in in your
+              Mac's Keychain, so you are not signing in every time, and if Canvas ends the session later you just sign
+              in again.</p>
+
+            <div class="version-note">
+              <strong>On a Mac:</strong> the sign-in window does not remember your university password between
+              sign-ins, so you may type it a bit more often than you would on Windows. The macOS build of 2.0.4 is
+              marked beta.
+            </div>
           </div>
+
+          <details>
+            <summary><span class="arr">▶</span> Already signed in to Canvas in Chrome? Use the browser extension, the quickest way.</summary>
+            <div class="details-body">
+              <p>Add the free <a href="https://chromewebstore.google.com/detail/canvas-downloader-connect/lijagdnejjaimhckbgdmjegheignpkkh" target="_blank" rel="noopener" style="color: var(--cyan); text-decoration: underline; text-underline-offset: 0.18em;">Canvas Downloader Connector</a>
+                extension to Chrome and open Canvas in a tab. In the app, open <strong>Use the browser extension
+                instead</strong>, click <strong>Sign in with the extension</strong>, then click the extension's button.
+                It hands your Canvas session to the app on this Mac only; nothing goes to any server. The app remembers
+                it for a few days, up to about a week at some schools, and then it is the same two clicks again.</p>
+              <div class="guide-embed" data-yt="qdZeUlemPkw" data-poster="assets/extension-video-poster.jpg" data-title="1-Click Login with Chrome Extension"></div>
+            </div>
+          </details>
+
+          <details>
+            <summary><span class="arr">▶</span> Prefer an access token? That still works too.</summary>
+            <div class="details-body">
+              <div class="guide-embed" data-yt="VadvcIvrrhU" data-title="How to create a Canvas access token"></div>
+              <p class="media-cap">The access token route, the alternative to signing in. Creating a token takes about
+                30 seconds.</p>
+              <p>Open <strong>Use an access token instead</strong> on the sign-in screen and click <strong>Get a
+                token</strong>: it opens your own Canvas token page, where <strong>Approved Integrations &#8594; + New
+                Access Token</strong> generates one. Copy it straight away, because Canvas shows it only once, and paste
+                it in. Canvas puts a time limit on tokens, so expect to make a fresh one when yours runs out.
+                <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: underline; text-underline-offset: 0.18em;">What a token can and cannot do</a>
+                is worth two minutes before you create one. The
+                <a href="guide.html#sign-in">step-by-step walkthrough</a> in the guide covers every route.</p>
+            </div>
+          </details>
         </section>
 
         <!-- ─────────────────── STEP 5 ─────────────────── -->
