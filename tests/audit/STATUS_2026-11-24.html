@@ -177,8 +177,8 @@ Fortæl gerne testeren, at det blå login-knap-flow kræver en rigtig universite
 <h2>8. Stadig åbent</h2>
 <table>
   <tr><th>Punkt</th><th>Hvorfor det betyder noget</th></tr>
-  <tr><td>Ruten huskes ikke</td><td>Når et extension-login udløber, fornyer appen via sit eget vindue med fuld adgangskode i stedet for at bede om extensionen igen. Rammer netop extension-brugerne.</td></tr>
-  <tr><td>Log ud tilbagekalder ikke det automatisk lavede token</td><td>Tokenet "Canvas Downloader" bliver liggende i Canvas efter log ud.</td></tr>
+  <tr><td><s>Ruten huskes ikke</s></td><td><b>Løst 24. november</b> (efter 2.0.4). Et udløbet extension-login åbner nu extension-kortet med "Your Chrome sign-in has run out" i stedet for appens vindue. Afprøvet i den rigtige app.</td></tr>
+  <tr><td><s>Log ud tilbagekalder ikke det automatisk lavede token</s></td><td><b>Løst 24. november</b> (efter 2.0.4). Log ud sletter nu tokenet i Canvas, men kun det appen selv har lavet. Ikke afprøvet mod en rigtig Canvas endnu.</td></tr>
   <tr><td>To indstillinger uden kontakt i Settings</td><td><code>keep_signed_in</code> og token-opgraderingen kan kun ændres i filen.</td></tr>
   <tr><td>Den automatiske 120-dages nøgle</td><td>Aldrig set virke mod en rigtig Canvas. Isabellas test (trin 5) afgør det.</td></tr>
   <tr><td>Google-SSO-skoler på Mac</td><td>Umålt. Google blokerer officielt den type indlejret browser, Mac-appen bruger.</td></tr>

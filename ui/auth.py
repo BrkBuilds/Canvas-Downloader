@@ -122,6 +122,90 @@ EXTENSION_STORE_URL = ('https://chromewebstore.google.com/detail/'
 HANDOFF_START_LABEL = 'Sign in with the extension'
 HANDOFF_STOP_LABEL = 'Stop waiting'
 
+#: HOW the last browser sign-in happened, so it can be RENEWED the same way
+#: (2026-11-24). Both routes produce the same credential and `auth_method` was
+#: the only thing recorded, so an expired extension sign-in was renewed through
+#: the app's own window - whose web view profile has never been signed in for
+#: an extension user, so it asked for the full institutional password: the
+#: exact friction the extension exists to remove. See browser-login.md, "THE
+#: EXTENSION IS NOT THE LONG-LASTING ROUTE".
+SIGNIN_ROUTE_KEY = 'browser_signin_route'
+ROUTE_EXTENSION = 'extension'
+ROUTE_WINDOW = 'window'
+
+
+#: Seconds a logout waits for Canvas to confirm the revoke before carrying on.
+#: The revoke keeps running in the background after that; a logout must never
+#: hang on a slow network.
+REVOKE_WAIT_SECONDS = 4.0
+
+#: Settings keys that describe a token the APP minted. Cleared at logout with
+#: the token itself, so the next sign-in does not inherit bookkeeping about a
+#: credential that no longer exists.
+_MINTED_KEYS = ('minted_token_id', 'minted_token_expires_at',
+                'minted_token_days', 'minted_token_capped', 'token_source')
+
+
+def _revoke_minted_token_on_logout() -> None:
+    """Delete, in Canvas, the token the app created for itself. Never raises.
+
+    Logging out used to leave the "Canvas Downloader" token valid in Canvas
+    for the rest of its up-to-120 days. Only a token with
+    ``token_source == 'minted'`` is touched: one the student pasted is theirs.
+    Runs on a daemon thread and is waited on briefly, so a dead network costs
+    a few seconds at most and the logout itself always completes.
+    """
+    try:
+        config, _may_write = read_config_for_update()
+        if config.get('token_source') != 'minted':
+            return
+        token_id = str(config.get('minted_token_id') or '')
+        token = st.session_state.get('api_token')
+        api_url = st.session_state.get('api_url') or config.get('api_url') or ''
+        if not token_id or not isinstance(token, str) or not token:
+            return
+        from core import token_mint
+        worker = threading.Thread(
+            target=token_mint.revoke, args=(token, api_url, token_id),
+            name="revoke-minted-token", daemon=True)
+        worker.start()
+        worker.join(REVOKE_WAIT_SECONDS)
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not revoke the access token the app created",
+                       exc_info=True)
+
+
+def _record_signin_route(route: str) -> None:
+    """Remember which route this sign-in took. Never blocks a sign-in."""
+    try:
+        config, may_write = read_config_for_update()
+        if not may_write:
+            return
+        config[SIGNIN_ROUTE_KEY] = route
+        if not write_config_atomically(config):
+            logger.warning("Could not save how this sign-in happened")
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not save how this sign-in happened",
+                       exc_info=True)
+
+
+def _signin_route() -> str:
+    """The route the last browser sign-in took. Unknown answers WINDOW.
+
+    WINDOW is the pre-2.0.4 behaviour exactly, so a sign-in recorded before
+    this key existed, or a settings file that cannot be read, renews the way
+    it always did rather than guessing.
+    """
+    try:
+        config, _may_write = read_config_for_update()
+        route = config.get(SIGNIN_ROUTE_KEY)
+    except Exception:                                              # noqa: BLE001
+        logger.warning("Could not read how the last sign-in happened",
+                       exc_info=True)
+        return ROUTE_WINDOW
+    return route if route in (ROUTE_EXTENSION, ROUTE_WINDOW) else ROUTE_WINDOW
+
+
 #: The store link can be put away by a student who already has the extension
 #: (product owner, 2026-11-23). Never automatic: the app cannot know whether
 #: Chrome has it, so only the student can say so. ONE button in ONE slot, its
@@ -854,6 +938,7 @@ def _reset_browser_login_state() -> None:
     st.session_state.pop('browser_login_pending', None)
     st.session_state.pop('browser_login_failed', None)
     st.session_state.pop('browser_restore_pending', None)
+    st.session_state.pop('handoff_renewal_offer', None)
     # The extension listener is the THIRD way a sign-in can be in flight, and
     # it is stopped HERE rather than at the two callers for the reason this
     # function exists at all: a logout that leaves a loopback socket open and
@@ -1996,6 +2081,8 @@ def begin_browser_handoff(api_url: str = '') -> int:
     st.session_state.pop('handoff_failed', None)
     st.session_state.pop('browser_login_failed', None)
     st.session_state.pop('handoff_arrived_shown', None)
+    # The renewal offer has been taken up; from here the live status speaks.
+    st.session_state.pop('handoff_renewal_offer', None)
     port = handoff.start()
     st.session_state['handoff_waiting'] = bool(port)
     if not port:
@@ -2104,6 +2191,10 @@ def adopt_pending_handoff() -> bool:
     st.session_state.pop('reauth_reason', None)
     st.session_state.pop('browser_restore_pending', None)
     cancel_browser_handoff()
+    # Recorded BEFORE the upgrade, so a minted token that later expires is also
+    # renewed through the extension rather than through a window this student
+    # has never signed in to.
+    _record_signin_route(ROUTE_EXTENSION)
 
     # Same upgrade the in-app sign-in gets, for the same reason: a session is
     # a day, and a token the institution allows is months. It also removes the
@@ -2211,6 +2302,9 @@ def adopt_pending_browser_login() -> bool:
     st.session_state['url_verified'] = True
     st.session_state.pop('reauth_reason', None)
     st.session_state.pop('browser_restore_pending', None)
+    # The app's own window: its web view profile now holds the identity
+    # provider session, so this route can renew itself silently.
+    _record_signin_route(ROUTE_WINDOW)
 
     # Trade this one sign-in for a credential that outlives it. A session is a
     # DAY; a token the user is allowed to mint is up to 120, renews itself off
@@ -2774,6 +2868,18 @@ def _handoff_card_html() -> str:
     # it qualified nobody - the product owner's own correction, and the reason
     # the disclosure title names the cost instead.
     #
+    if st.session_state.get('handoff_renewal_offer'):
+        # An EXPIRED extension sign-in (2026-11-24). Said here, in the card the
+        # student will act in, and directly above the button that renews it -
+        # the same placement as the live status - rather than in a notice above
+        # the form pointing "below".
+        return (
+            "<div class='login-handoff login-handoff-live login-handoff-renew'>"
+            "<div class='lh-head'><span>Your Chrome sign-in has run out</span></div>"
+            f"<div class='lh-body'>Press <b>{HANDOFF_START_LABEL}</b> "
+            "below. Your Canvas opens in Chrome; click the "
+            "<b>Canvas Downloader</b> icon there, then <b>Sign me in</b>.</div>"
+            "</div>")
     # The element stays, always, because this slot is the live state's home and
     # Streamlit reconciles by position: a card that comes and goes hands the
     # next element its DOM node. It simply has nothing to say until there is.
@@ -5169,7 +5275,17 @@ def render_login_page(fetch_courses_fn):
                 # during init, where a browser window is the blocking-init failure
                 # `.claude/rules/macos.md` documents.
                 if st.session_state.pop('browser_restore_pending', False):
-                    if _saved_url and not st.session_state.get('browser_login_pending'):
+                    if _saved_url and _signin_route() == ROUTE_EXTENSION:
+                        # The student signed in through CHROME, so the app's
+                        # own window has nothing to renew from: its web view
+                        # profile was never signed in, and opening it means a
+                        # full institutional password. Offer the extension
+                        # again instead. NOT armed automatically: the listener
+                        # opens only when the student presses the button, which
+                        # is the consent its whole threat model rests on (see
+                        # browser-login.md, "The threat model").
+                        st.session_state['handoff_renewal_offer'] = True
+                    elif _saved_url and not st.session_state.get('browser_login_pending'):
                         # INTERACTIVE, even though the point is to be silent. Both
                         # modes start the window HIDDEN and give it the same short
                         # clock, so the silent attempt is identical either way -
@@ -5205,7 +5321,13 @@ def render_login_page(fetch_courses_fn):
                         # access-token creation off entirely, so "generate a fresh
                         # token" is not merely the wrong route - it is one they
                         # cannot take. Both strings are literals from this file.
-                        + ("<div class='lra-hint'>Press the blue <b>Sign in</b> button below - "
+                        + ("<div class='lra-hint'>You signed in through Chrome last time: use "
+                           f"<b>{HANDOFF_START_LABEL}</b> below - two clicks.</div>"
+                           # Checked before the credential kind: an extension
+                           # sign-in that was upgraded to a minted token is
+                           # renewed through the extension too.
+                           if st.session_state.get('handoff_renewal_offer') else
+                           "<div class='lra-hint'>Press the blue <b>Sign in</b> button below - "
                            "your school will usually sign you straight back in.</div>"
                            if _browser_mode else
                            "<div class='lra-hint'>Generate a fresh access token (guide below) and paste it here "
@@ -5435,8 +5557,14 @@ def render_login_page(fetch_courses_fn):
                 _col_ext, _col_tok = st.columns(2, gap="small")
             with _col_ext:
                 with st.container(border=False, key="login_card_wrapper_ext"):
+                    # OPEN when it has something to say - a renewal to offer or
+                    # a wait in flight - because both messages live inside it,
+                    # and a collapsed card hides the one thing the student
+                    # needs to read.
                     with st.expander("Use the browser extension instead",
-                                     expanded=False):
+                                     expanded=bool(
+                                         st.session_state.get('handoff_renewal_offer')
+                                         or st.session_state.get('handoff_waiting'))):
                         # The link FIRST, above the steps (product owner,
                         # 2026-09-28): step 1 is "add it", so the way to add it
                         # belongs before the list, not after step 3. Small, so
@@ -5731,11 +5859,7 @@ def render_login_page(fetch_courses_fn):
                     # a token this machine no longer has - and
                     # `_token_was_minted` would keep offering "Sign in with
                     # Canvas" to somebody who has just chosen not to.
-                    for _minted_key in ('minted_token_id',
-                                        'minted_token_expires_at',
-                                        'minted_token_days',
-                                        'minted_token_capped',
-                                        'token_source'):
+                    for _minted_key in (*_MINTED_KEYS, SIGNIN_ROUTE_KEY):
                         config_data.pop(_minted_key, None)
                     if 'concurrent_downloads' in st.session_state:
                         config_data['concurrent_downloads'] = st.session_state['concurrent_downloads']
@@ -7495,6 +7619,9 @@ content: 'Unavailable while running' !important;
 }
 </style>""")
             if st.button('\u200b', use_container_width=False, key="nav_btn_logout", disabled=_is_executing) and not _is_executing:
+                # FIRST, while the token is still in hand: it is the credential
+                # that authorises its own deletion.
+                _revoke_minted_token_on_logout()
                 try:
                     keyring_user = st.session_state.get('api_url', '') or 'default'
                     _safe_keyring_delete(KEYRING_SERVICE, keyring_user)
@@ -7543,6 +7670,10 @@ content: 'Unavailable while running' !important;
                             config_data = _migrate_config(json.load(f))
                         # (api_token / mac_api_token are in RETIRED_CONFIG_KEYS,
                         #  so _migrate_config has already removed them.)
+                        # The minted token was revoked above and its stored
+                        # copy deleted, so its bookkeeping goes with it.
+                        for _minted_key in _MINTED_KEYS:
+                            config_data.pop(_minted_key, None)
                         tmp_path = CONFIG_FILE + '.tmp'
                         with open(tmp_path, 'w', encoding='utf-8') as f:
                             json.dump(config_data, f)

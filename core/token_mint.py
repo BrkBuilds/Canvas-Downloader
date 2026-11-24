@@ -485,3 +485,50 @@ def extend(token: str, api_url: str, token_id: str, *,
                 "expiry at %s; not asking again.", fresh)
     return MintResult(reason=CAPPED, expires_at=fresh,
                       detail='the institution caps this token'"'"'s lifetime')
+
+
+def revoke(token: str, api_url: str, token_id: str) -> bool:
+    """Delete a token THIS APP minted, at logout. Answers whether it is gone.
+
+    ``DELETE /api/v1/users/self/tokens/:id`` (Canvas' documented "Delete an
+    access token"), authenticated with the token itself - the same Bearer
+    reasoning :func:`extend` records: deleting something an administrator
+    already allowed is not walking round a setting.
+
+    **Only ever for a minted token.** The caller checks ``token_source ==
+    'minted'``; a token the student pasted is theirs, may be shared with other
+    tools, and is never touched by a logout here.
+
+    "Gone" includes Canvas answering that it does not exist (404) or that the
+    token no longer authenticates (401): either way nothing is left to revoke,
+    and reporting a failure would be a warning about a logout that worked.
+    """
+    if not token or not token_id:
+        return False
+    base = (api_url or '').rstrip('/')
+    if not base:
+        return False
+    if '://' not in base:
+        base = f'https://{base}'
+    # ASK THE CREDENTIAL for the header - see extend(): `canvas_auth` is the
+    # only place in the app that formats `Bearer`, and a census enforces it.
+    from core.canvas_auth import from_token
+    headers = dict(from_token(token).auth_headers())
+    headers['Accept'] = 'application/json'
+    try:
+        import requests
+        response = requests.delete(
+            urljoin(base + '/', f'api/v1/users/self/tokens/{token_id}'),
+            headers=headers, timeout=TIMEOUT)
+    except Exception as e:                                      # noqa: BLE001
+        logger.warning("Could not reach Canvas to revoke the access token the "
+                       "app created: %s", e)
+        return False
+    status = getattr(response, 'status_code', 0)
+    if status in (200, 204, 401, 404):
+        logger.info("Revoked the Canvas access token the app created "
+                    "(id=%s, HTTP %s).", token_id, status)
+        return True
+    logger.warning("Canvas would not revoke the access token the app created "
+                   "(id=%s, HTTP %s).", token_id, status)
+    return False

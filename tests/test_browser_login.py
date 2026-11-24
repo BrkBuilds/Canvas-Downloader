@@ -1847,7 +1847,12 @@ def test_the_reconnect_screen_speaks_the_users_own_credential():
     take."""
     assert "_browser_mode = browser_session_active()" in _AUTH_SRC
     i = _AUTH_SRC.index("Your Canvas address is saved:")
-    block = _AUTH_SRC[i:i + 1200]
+    # 2000, not 1200: an extension sign-in's instruction (2026-11-24) sits
+    # first in the same expression, and the window only has to span it.
+    block = _AUTH_SRC[i:i + 2000]
+    assert "handoff_renewal_offer" in block, (
+        "an expired EXTENSION sign-in is told to press the button that opens "
+        "the app's own window, which asks for the full password")
     # By SIGHT, not by label: the button says "Sign in to <the student's own
     # university>" now, so no literal can name it. See the census below.
     assert "<b>Sign in</b> button below" in block, (

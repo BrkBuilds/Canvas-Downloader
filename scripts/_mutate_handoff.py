@@ -444,9 +444,9 @@ HANDOFF_MUTANTS = [
      UI,
      "    st.session_state.pop('browser_login_failed', None)\n"
      "    st.session_state.pop('handoff_arrived_shown', None)\n"
-     "    port = handoff.start()",
+     "    # The renewal offer has been taken up",
      "    st.session_state.pop('handoff_arrived_shown', None)\n"
-     "    port = handoff.start()"),
+     "    # The renewal offer has been taken up"),
 
     ("a failure the app can set loses its card and silently falls back "
      "to the generic one - the defect this section exists for, in a hat",
@@ -631,8 +631,8 @@ HANDOFF_MUTANTS = [
      "arrival skips the card",
      UI,
      "    st.session_state.pop('handoff_arrived_shown', None)\n"
-     "    port = handoff.start()",
-     "    port = handoff.start()"),
+     "    # The renewal offer has been taken up",
+     "    # The renewal offer has been taken up"),
 
     ("the popup's [hidden] rule is dropped, so 'Finishing up in 5' is back "
      "on every screen - measured 2026-09-14 in Chromium 149",

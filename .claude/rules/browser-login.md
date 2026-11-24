@@ -3300,3 +3300,43 @@ experience, not a controlled measurement.
   cost of a shorter remembered sign-in than a token. He has published a YouTube
   walkthrough of it. Copy may say "lasts a few days, then one click again";
   it must not promise weeks.
+
+## 2026-11-24: THE ROUTE IS RECORDED, and an expired extension sign-in is renewed through the extension
+Closes "THE ROUTE IS STILL NOT RECORDED" (2026-09-15) and the 2026-09-14 entry
+on the extension being the shortest route. Asked for by the product owner.
+- `browser_signin_route` in the settings file: `extension` (written by
+  `adopt_pending_handoff`, BEFORE the token upgrade, so an upgraded token that
+  later expires is renewed the same way) or `window` (written by
+  `adopt_pending_browser_login`). Unknown, garbage or an unreadable file answers
+  `window`, which is the pre-2.0.4 behaviour exactly. A pasted token clears it.
+- The login page's `browser_restore_pending` branch now asks the route. For
+  `extension` it does NOT call `begin_browser_signin` (the web view profile was
+  never signed in, so that window means a full institutional password) and it
+  does NOT arm the listener either: the listener opens only on the student's
+  press, which is the consent the handoff threat model rests on. It sets
+  `handoff_renewal_offer`, which opens the extension disclosure and puts "Your
+  Chrome sign-in has run out" in the card's status slot, above the button.
+  The reconnect header names the extension button for the same case. The
+  button's name is interpolated from `HANDOFF_START_LABEL`, never written
+  literally (the label census in test_browser_login enforces that).
+- **Driven in the real app**, isolated config, a stored session that a real
+  Canvas refuses with 401: route `extension` -> disclosure open, renewal text
+  shown, no window attempted, no listener open; route `window` (the control) ->
+  the window attempt as before. **Use a host that answers 401**:
+  `canvas.instructure.com` answers 503, which the app correctly reads as a
+  network failure and restores OPTIMISTICALLY, so the renewal path is never
+  reached and the check measures nothing. `umich.instructure.com` answered 401.
+
+## 2026-11-24: logout revokes the token the APP minted
+`core.token_mint.revoke` sends `DELETE /api/v1/users/self/tokens/:id` with the
+token itself (Bearer from `canvas_auth`, as `extend` does). 401/404 count as
+gone. `_revoke_minted_token_on_logout` runs FIRST in the logout handler (the
+token authorises its own deletion), only when `token_source == 'minted'` and
+`api_token` is a string, on a daemon thread waited on for
+`REVOKE_WAIT_SECONDS` (4s) so a dead network cannot hang a logout. A token the
+student pasted is never touched. The minted bookkeeping (`_MINTED_KEYS`, now
+the one list the token-paste path uses too) is cleared at logout.
+- **NOT verified against real Canvas**: revoking needs a real minted token,
+  which only a permitting institution issues. Driven against a local server
+  that answers like Canvas' `tokens#destroy`.
+- `tests/test_signin_route_and_revoke.py` (26); hand mutation pass 8/8.
